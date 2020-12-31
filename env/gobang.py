@@ -1,7 +1,7 @@
 # -*- coding:utf-8  -*-
 from random import randrange
-from simulators.gridgame import GridGame
-from obs_interfaces.observation import *
+from env.simulators.gridgame import GridGame
+from env.obs_interfaces.observation import *
 
 
 class GoBang(GridGame, GridObservation):
@@ -24,6 +24,11 @@ class GoBang(GridGame, GridObservation):
         for i in range(0, self.board_height):
             for j in range(0, self.board_width):
                 self.all_grids.append((i, j))
+
+        self.input_dimension = self.board_width * self.board_height
+        self.action_dim = self.get_action_dim()
+        self.is_obs_continuous = True if int(conf['is_obs_continuous']) == 1 else False
+        self.is_act_continuous = True if int(conf['is_act_continuous']) == 1 else False
 
     def reset(self):
         self.current_state = [[[0] * self.cell_dim for _ in range(self.board_width)] for _ in range(self.board_height)]
@@ -166,6 +171,14 @@ class GoBang(GridGame, GridObservation):
                 print("坐标超出限制，请重新输入!")
             else:
                 return self.encode(x, y)
+
+    def get_action_dim(self):
+        action_dim = 1
+        for i in range(len(self.joint_action_space[0])):
+            action_dim *= self.joint_action_space[0][i]
+
+        return action_dim
+
 
 
 

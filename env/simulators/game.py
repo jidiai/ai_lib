@@ -1,4 +1,9 @@
 # -*- coding:utf-8  -*-
+# 作者：zruizhi   
+# 创建时间： 2020/7/10 10:24 上午   
+# 描述：
+
+
 class Game(object):
     def __init__(self, n_player):
         self.n_player = n_player

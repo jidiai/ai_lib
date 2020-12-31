@@ -1,7 +1,7 @@
 # -*- coding:utf-8  -*-
-from simulators.gridgame import GridGame
+from env.simulators.gridgame import GridGame
 import random
-from obs_interfaces.observation import *
+from env.obs_interfaces.observation import *
 
 levels = {
     1: [
@@ -46,6 +46,10 @@ class Sokoban(GridGame, GridObservation):
         self.current_state = self.init_state()
         self.won = {'total boxes': len(self.boxes)}
         self.success_box_each_step = 0
+        self.input_dimension = self.board_width * self.board_height
+        self.action_dim = self.get_action_dim()
+        self.is_obs_continuous = True if int(conf['is_obs_continuous']) == 1 else False
+        self.is_act_continuous = True if int(conf['is_act_continuous']) == 1 else False
 
     def reset(self):
         self.step_cnt = 1
@@ -87,7 +91,6 @@ class Sokoban(GridGame, GridObservation):
                         if self.map[i][j] == p:
                             player = GameObject(p, i, j, 0)
                             self.players.append(player)
-        # self.players.sort(key=lambda pl: pl.object_id)
         current_state = [[[0] * self.cell_dim for _ in range(self.board_width)] for _ in range(self.board_height)]
         for i in range(len(self.map)):
             for j in range(len(self.map[0])):
@@ -249,6 +252,13 @@ class Sokoban(GridGame, GridObservation):
         cur = input()
         actions = cur.split(" ")
         return self.encode(actions)
+
+    def get_action_dim(self):
+        action_dim = 1
+        for i in range(len(self.joint_action_space[0])):
+            action_dim *= self.joint_action_space[0][i]
+
+        return action_dim
 
 
 class GameObject():

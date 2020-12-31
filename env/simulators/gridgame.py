@@ -1,8 +1,12 @@
 # -*- coding:utf-8  -*-
+# 作者：zruizhi   
+# 创建时间： 2020/7/10 10:24 上午   
+# 描述：
+
 from PIL import Image, ImageDraw
 from itertools import count
 import numpy as np
-from simulators.game import Game
+from env.simulators.game import Game
 
 UNIT = 40
 FIX = 8
@@ -16,10 +20,10 @@ class GridGame(Game):
         self.max_step = int(conf['max_step'])
         self.board_width = int(conf['board_width'])
         self.board_height = int(conf['board_height'])
-        self.cell_range = conf['cell_range'] if isinstance(conf['cell_range'], tuple) else (int(conf['cell_range']),)
+        self.agent_nums = conf['agent_nums']
+        self.cell_range = conf['cell_range'] if isinstance(eval(str(conf['cell_range'])), tuple) else (int(conf['cell_range']),)
         self.cell_dim = len(self.cell_range)
         self.cell_size = np.prod(self.cell_range)
-        self.agent_nums = conf['agent_nums']
 
         # grid observation conf
         self.ob_board_width = conf['ob_board_width'] if not conf.get('ob_board_width') is None else [self.board_width for _ in range(self.n_player)]
