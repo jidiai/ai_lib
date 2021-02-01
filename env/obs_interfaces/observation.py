@@ -1,7 +1,4 @@
 # -*- coding:utf-8  -*-
-# 作者：zruizhi   
-# 创建时间： 2020/11/13 3:51 下午   
-# 描述：observation的各种接口类
 obs_type = ["grid", "vector"]
 
 

@@ -1,7 +1,11 @@
 # -*- coding:utf-8  -*-
+# 作者：zruizhi   
+# 创建时间： 2020/7/21 10:24 上午
+# 描述：
 from env.simulators.gridgame import GridGame
 import random
 from env.obs_interfaces.observation import *
+from utils.discrete import Discrete
 
 
 class Reversi(GridGame, GridObservation):
@@ -42,6 +46,7 @@ class Reversi(GridGame, GridObservation):
         self.action_dim = self.get_action_dim()
         self.is_obs_continuous = True if int(conf['is_obs_continuous']) == 1 else False
         self.is_act_continuous = True if int(conf['is_act_continuous']) == 1 else False
+        self.obs_type = [str(i) for i in str(conf["obs_type"]).split(',')]
 
     def reset(self):
         self.current_state = [[[0] * self.cell_dim for _ in range(self.board_width)] for _ in range(self.board_height)]
@@ -117,16 +122,19 @@ class Reversi(GridGame, GridObservation):
 
                 self.step_cnt += 1
 
+            # return next_state, str(info_after)
             return next_state, info_after
 
     def step_before_info(self, info=''):
         info = "当前棋手:%d" % self.chess_player
         self.legal_position = self.legal_positions()
+        # info += "\n可落子位置，及落子后反色的位置集合: %s" % str(self.legal_position)
 
         return info
 
     def set_action_space(self):
-        action_space = [[self.board_height, self.board_width] for _ in range(self.n_player)]
+        action_space = [[Discrete(self.board_height), Discrete(self.board_width)] for _ in range(self.n_player)]
+        # action_space = [[self.board_height, self.board_width] for _ in range(self.n_player)]
         return action_space
 
     def is_not_valid_action(self, joint_action):
@@ -188,6 +196,17 @@ class Reversi(GridGame, GridObservation):
     def check_at(self, x, y):
         p = (x, y)
         if p not in self.legal_position.keys():
+            # 如果玩家未下在正确位置，则游戏结束
+            """
+            print("当前位置不合法!")
+            self.done = 1
+
+            if self.chess_player == 1:
+                print("游戏结束，获胜方：白棋")
+            else:
+                print("游戏结束，获胜方：黑棋")
+            raise Exception("Invalid position!", p)
+            """
             # 如果玩家未下在正确位置，则随机生成一个合法的位置
             p = random.choice(list(self.legal_position))
             # print("当前位置不合法，随机生成一个合法位置：%s" % str(p))
@@ -266,9 +285,10 @@ class Reversi(GridGame, GridObservation):
     def get_action_dim(self):
         action_dim = 1
         for i in range(len(self.joint_action_space[0])):
-            action_dim *= self.joint_action_space[0][i]
+            action_dim *= self.joint_action_space[0][i].n
 
         return action_dim
+
 
 
 

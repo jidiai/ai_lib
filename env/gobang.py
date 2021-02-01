@@ -1,7 +1,11 @@
 # -*- coding:utf-8  -*-
+# 作者：zruizhi   
+# 创建时间： 2020/7/10 10:24 上午   
+# 描述：
 from random import randrange
 from env.simulators.gridgame import GridGame
 from env.obs_interfaces.observation import *
+from utils.discrete import Discrete
 
 
 class GoBang(GridGame, GridObservation):
@@ -29,6 +33,7 @@ class GoBang(GridGame, GridObservation):
         self.action_dim = self.get_action_dim()
         self.is_obs_continuous = True if int(conf['is_obs_continuous']) == 1 else False
         self.is_act_continuous = True if int(conf['is_act_continuous']) == 1 else False
+        self.obs_type = [str(i) for i in str(conf["obs_type"]).split(',')]
 
     def reset(self):
         self.current_state = [[[0] * self.cell_dim for _ in range(self.board_width)] for _ in range(self.board_height)]
@@ -43,17 +48,27 @@ class GoBang(GridGame, GridObservation):
         return self.current_state
 
     def set_action_space(self):
-        action_space = [[self.board_height, self.board_width] for _ in range(self.n_player)]
+        action_space = [[Discrete(self.board_height), Discrete(self.board_width)] for _ in range(self.n_player)]
+        # action_space = [[self.board_height, self.board_width] for _ in range(self.n_player)]
         return action_space
 
     def get_next_state(self, joint_action):
-        info_after = ''
+        info_after = {}
         not_valid = self.is_not_valid_action(joint_action)
         if not not_valid:
             next_state = self.current_state
             cur_action = joint_action[self.chess_player-1]
 
             x, y = self.decode(cur_action)
+            # if self.check_at(x, y):
+            #     next_state[x][y][0] = self.chess_player
+            #     if self.chess_player == 1:
+            #         self.chess_player = 2
+            #     else:
+            #         self.chess_player = 1
+            #     self.step_cnt += 1
+            # else:
+            #     info_after = "当前位置已经有其他棋子"
             if self.check_at(x, y):
                 next_state[x][y][0] = self.chess_player
                 if self.chess_player == 1:
@@ -76,6 +91,7 @@ class GoBang(GridGame, GridObservation):
                     self.all_grids.remove((x, y))
                 else:
                     info_after = "棋盘已满"
+            info_after["action"] = (x, y)
 
             return next_state, info_after
 
@@ -175,10 +191,9 @@ class GoBang(GridGame, GridObservation):
     def get_action_dim(self):
         action_dim = 1
         for i in range(len(self.joint_action_space[0])):
-            action_dim *= self.joint_action_space[0][i]
+            action_dim *= self.joint_action_space[0][i].n
 
         return action_dim
-
 
 
 

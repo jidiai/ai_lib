@@ -20,7 +20,7 @@ class GridGame(Game):
         self.max_step = int(conf['max_step'])
         self.board_width = int(conf['board_width'])
         self.board_height = int(conf['board_height'])
-        self.agent_nums = conf['agent_nums']
+        self.agent_nums = [int(i) for i in str(conf['agent_nums']).split(',')]
         self.cell_range = conf['cell_range'] if isinstance(eval(str(conf['cell_range'])), tuple) else (int(conf['cell_range']),)
         self.cell_dim = len(self.cell_range)
         self.cell_size = np.prod(self.cell_range)
