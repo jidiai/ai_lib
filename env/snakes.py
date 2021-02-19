@@ -11,12 +11,12 @@ from env.obs_interfaces.observation import *
 from utils.discrete import Discrete
 
 
-class SnakeEatBeans(GridGame, GridObservation, VectorObservation):
+class SnakeEatBeans(GridGame, GridObservation, DictObservation):
     def __init__(self, conf):
         # 给状态0和1加上预设的颜色值可能会更好一点
         colors = conf.get('colors', [(255, 255, 255), (255, 140, 0)])
         super(SnakeEatBeans, self).__init__(conf, colors)
-        # 0: 没有 1：食物 2-n_player+2:各玩家蛇身
+        # 0: 没有 1：食物 2-n_player+1:各玩家蛇身
         self.n_cell_type = self.n_player + 2
         self.step_cnt = 1
         self.n_beans = int(conf['n_beans'])
@@ -45,6 +45,16 @@ class SnakeEatBeans(GridGame, GridObservation, VectorObservation):
 
     def get_grid_observation(self, current_state, player_id):
         return current_state
+
+    def get_dict_observation(self, current_state, player_id):
+        key_info = {}
+        for i in range(self.n_player):
+            snake = self.players[i]
+            key_info[snake.player_id] = snake.segments
+
+        key_info[1] = self.beans_position
+
+        return key_info
 
     def set_action_space(self):
         action_space = [[Discrete(4)] for _ in range(self.n_player)]

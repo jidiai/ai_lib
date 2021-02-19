@@ -49,6 +49,8 @@ def get_joint_action_eval(game, player_ids, policy_list, actions_spaces):
             obs_list = game.get_grid_many_observation(game.current_state, players_id_list)
         elif game.obs_type[policy_i] == "vector":
             obs_list = game.get_vector_many_observation(game.current_state, players_id_list)
+        elif game.obs_type[policy_i] == "dict":
+            obs_list = game.get_dict_many_observation(game.current_state, players_id_list)
 
         action_space_list = actions_spaces[policy_i]
         function_name = 'm%d' % policy_i
@@ -136,7 +138,7 @@ if __name__ == "__main__":
 
     # 针对"classic_"环境，使用gym core 进行render;
     # 非"classic_"环境，使用replay工具包的replay.html，通过上传.json进行网页回放
-    render_mode = True
+    render_mode = False
 
     print("可选policy 名称类型:", get_valid_agents())
     policy_list = ["random"] * len(game.agent_nums)
