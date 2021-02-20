@@ -29,12 +29,10 @@ import argparse
 class Network(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super().__init__()
-        # print('input_size, hidden_size, output_size',input_size, hidden_size, output_size)
         self.linear1 = nn.Linear(input_size, hidden_size)
         self.linear2 = nn.Linear(hidden_size, output_size)
 
     def forward(self, x):
-        # print('x', x.shape)
         x = F.relu(self.linear1(x))
         x = self.linear2(x)
         return x
@@ -44,8 +42,7 @@ class DQN(object):
         self.state_dim = state_dim
         self.action_dim = action_dim
 
-        # hyper paras #TODO
-        self.hidden_dim = 64
+        self.hidden_dim = 32
         self.lr = 0.001
         self.capacity = 1280
         self.batch_size = 64
@@ -122,19 +119,17 @@ class DQN(object):
         reward = torch.tensor(reward, dtype=torch.float).view(self.batch_size, -1)
         obs_ = torch.tensor(obs_, dtype=torch.float)
 
-        # print('obs_', obs_.shape)
         q_pred = reward + self.gamma * torch.max(self.critic(obs_).detach(), dim=1)[0].view(self.batch_size, -1)
         q_current = self.critic(obs).gather(1, action)
 
         loss_fn = nn.MSELoss()
         loss = loss_fn(q_pred, q_current)
-        self.writer.add_scalar(self.game_name + '/loss', loss, self.learn_times)
+        self.writer.add_scalar('sokoban/loss', loss, self.learn_times)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
 
     def save(self):
-        print(self.para_dir)
         torch.save(self.critic.state_dict(),  './' + str(self.para_dir) + '/critic_net.pth')
         # torch.save(self.optimizer.state_dict(), 'model_checkpoint.optimizer')
 
@@ -150,48 +145,32 @@ def RL_train(times, env):
         steps = 0
         reward_tot = 0
         for step in range(env.max_step):
-            # env._render()
+            env._render()
             obs_ = state_wrapper(obs)
-            # TODO hard code 200
-            # joint action eg :
-            # [[[0, 0, 0, 1]], [[1, 0, 0, 0]], [[0, 0, 0, 1]], [[0, 0, 1, 0]], [[0, 0, 0, 1]], [[0, 0, 1, 0]]]
-            # print('obs_ length', len(obs_))
-            for n in range(game.agent_nums[0]):
-                # print('obs_[0:200] ', obs_[0:200] )
-                # print('obs_[(200+n):(200+n+2)]', obs_[(200+n):(200+n+2)])
-                # print('obs_[0:200] + obs_[(200+n):(200+n+2)]', len(obs_[0:200] + obs_[(200+n):(200+n+2)]))
-                joint_action.append(agent.select_action(obs_[0:200] + obs_[(200+n):(200+n+2)]))
-
-            for n in range(game.agent_nums[1]):
-                joint_action.append(np.random.randint(action_dim))
-            # print('joint_action', joint_action)
+            for n in range(game.n_player):
+                joint_action.append(agent.select_action(obs_[0:64] + obs_[64+n]))
             joint_action_ = action_wrapper(joint_action)
             #TODO reward
             obs_next, reward, done, info_before, info_after = env.step(joint_action_)
-            # print('reward', reward)
             obs_next_ = state_wrapper(obs_next)
-            # print('obs_next_ length', len(obs_next_))
-
-            for n in range(game.agent_nums[0]):
-                # print('joint_action[n]',joint_action[n])
-                # print(obs_next_[(200 + n):(200 + n + 2)])
-                agent.store_transition( obs_[0:200] + obs_[(200+n):(200+n+2)],
-                                        joint_action[n],
-                                        reward[n],
-                                        obs_next_[0:200] + obs_next_[(200+n):(200+n+2)])
+            for n in range(env.n_player):
+                agent.store_transition(obs_[0:64]+obs_[64+n],
+                                       joint_action[n],
+                                       reward[n],
+                                       obs_next_[0:64]+obs_next_[64+n])
                 agent.learn()
             obs = obs_next
 
             joint_action = []
-            reward_tot += np.sum(reward[0:3])
+            reward_tot += reward[0]
             steps += 1
 
             if env.is_terminal():
                 break
-        agent.writer.add_scalar( game_name  + '/return', reward_tot, i)
-        agent.writer.add_scalar( game_name  + '/steps', steps, i)
+        agent.writer.add_scalar('sokoban/return', reward_tot, i)
+        agent.writer.add_scalar('sokoban/steps', steps, i)
         score.append(reward_tot)
-        print('train time: ', i, 'reward_tot: ', reward_tot, '  average score %.2f' % np.mean(score[-100:]),'steps: ', steps)
+        print('train time: ', i, 'reward_tot: ', reward_tot, 'steps: ', steps)
     agent.save()
     # plot(score)
 
@@ -203,7 +182,8 @@ def RL_evaluate(times, env):
         steps = 0
         reward_tot = 0
         for step in range(env.max_step):
-            # env._render()
+            env._render()
+            time.sleep(2)
             obs_ = state_wrapper(obs)
             for n in range(game.n_player):
                 joint_action.append(agent.select_action(obs_[0:64] + obs_[64+n]))
@@ -216,24 +196,11 @@ def RL_evaluate(times, env):
             reward_tot += reward[0]
             steps += 1
 
-            if env.is_terminal():
-                break
+            # if env.is_terminal():
+            #     break
         score.append(reward_tot)
         print('train time: ', i, 'reward_tot: ', reward_tot, 'steps: ', steps)
     print('average score: ', np.mean(np.array(score)))
-
-
-def get_random_1_person(action_space):
-    joint_action = []
-    for i in range(len(action_space)):
-        player = []
-        for j in range(len(action_space[i])):
-            each = [0] * action_space[i][j]
-            idx = np.random.randint(action_space[i][j])
-            each[idx] = 1
-            player.append(each)
-        joint_action.append(player)
-    return joint_action
 
 def state_wrapper(obs):
     '''
@@ -244,25 +211,9 @@ def state_wrapper(obs):
     for i in range(game.board_height):
         for j in range(game.board_width):
             obs_.append(obs[i][j][0])
-    # TODO hard code
-    for n in game.snakes_position:
-        obs_.append(game.snakes_position[n][0][0])
-        obs_.append(game.snakes_position[n][0][1])
+    for n in range(game.n_player):
+        obs_.append([n+4])
     return obs_
-'''
-def action_wrapper(joint_action):
-    joint_action_ = [[0] * 15 for c in range(2)]
-    joint_action_fillin = [joint_action_ for m in range(2)]
-    for n in range(len(joint_action)):
-        cnt = 0
-        for i in range(15):
-            for j in range(15):
-                if cnt == joint_action[n]:
-                    joint_action_fillin[n][0][i] = 1
-                    joint_action_fillin[n][1][j] = 1
-                    return joint_action_fillin
-                else: cnt += 1
-'''
 
 def action_wrapper(joint_action):
     '''
@@ -292,15 +243,14 @@ def plot(score):
 
 if __name__ == '__main__':
 
-    game_name = "snakes_3v3"
+    game_name = "sokoban_2p"
     game = make(game_name)
     action_dim = game.action_dim
     state_dim = game.input_dimension
-    # TODO 2
-    state_dim_wrapped = state_dim + 2
-    print('game.action space',  game.joint_action_space)
+    # TODO
+    state_dim_wrapped = state_dim + 1
+    print('game.n_player', game.n_player)
     print('game.agent_nums', game.agent_nums)
-    print('env board', game.board_width, game.board_height)
     print('action_dim', action_dim, 'input_dim', state_dim, 'input_dim_wrapped', state_dim_wrapped)
     agent = DQN(state_dim_wrapped, action_dim)
 
@@ -311,15 +261,58 @@ if __name__ == '__main__':
     #                          "model/training contents", default="./model")
 
     # TODO hyper: param
-    times = 2000
-    agent.train = True
+    times = 10
+    agent.train = False
 
     if agent.train:
         RL_train(times, game)
     else:
         # TODO load
-        agent.load('./models/sokoban_2p/run6/params/critic_net.pth')
+        agent.load('./models/sokoban_2p/run2/params/critic_net.pth')
         RL_evaluate(times, game)
 
+    '''
+    env = gym.make('CartPole-v0')
+    params = {
+        'gamma': 0.8,
+        'epsi_high': 0.9,
+        'epsi_low': 0.05,
+        'decay': 200,
+        'lr': 0.001,
+        'capacity': 10000,
+        'batch_size': 64,
+        'state_space_dim': env.observation_space.shape[0],
+        'action_space_dim': env.action_space.n
+    }
+    agent = sokoban_2p_DQN(params['state_space_dim'], params['action_space_dim'])
 
+    score = []
+    mean = []
+
+    for episode in range(500):
+        s0 = env.reset()
+        total_reward = 1
+        while True:
+            # env.render()
+            a0 = agent.select_action(s0)
+
+            s1, r1, done, _ = env.step(a0)
+
+            if done:
+                r1 = -1
+
+            agent.store_transition(s0, a0, r1, s1)
+
+            if done:
+                break
+
+            total_reward += r1
+            s0 = s1
+            agent.learn()
+        print('total_reward', total_reward)
+        score.append(total_reward)
+        mean.append(sum(score[-100:]) / 100)
+
+    # plot(score, mean)
+    '''
 
