@@ -1,5 +1,5 @@
 ## 平台地址
-[jidi_ai](http://39.102.68.22/)
+[jidi_ai](http://www.jidiai.cn/)
 
 ## 项目依赖
 
