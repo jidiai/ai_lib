@@ -6,6 +6,7 @@ import torch.optim as optim
 import random
 from env.chooseenv import make
 
+
 class Network(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super().__init__()
@@ -107,6 +108,7 @@ def action_wrapper(joint_action):
         joint_action_.append([action_one_hot[0][0]])
     return joint_action_
 
+
 def get_observations(key_info, index):
     '''
     observation space: env.input_dimension + 6 * 2 (snake head) + 1 (index) = 213
@@ -126,6 +128,7 @@ def get_observations(key_info, index):
     obs_.append([index])
     return obs_
 
+
 action_dim = 4
 state_dim = 213
 env_type = "snakes_3v3"
@@ -134,6 +137,7 @@ agent = DQN(state_dim, action_dim)
 model_path = os.path.dirname(os.path.abspath(__file__)) + '/model.pth'
 agent.load(model_path)
 players_id_list = range(0,3)
+
 
 def my_controller(obs_list, action_space_list, obs_space_list):
     obs = []

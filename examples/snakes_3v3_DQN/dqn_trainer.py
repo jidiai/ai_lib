@@ -5,7 +5,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
 from pathlib import Path
 import sys
 base_dir = Path(__file__).resolve().parent.parent.parent
@@ -14,6 +13,7 @@ sys.path.append(str(base_dir))
 from env.chooseenv import make
 from tensorboardX import SummaryWriter
 import argparse
+
 
 class Network(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
@@ -25,6 +25,7 @@ class Network(nn.Module):
         x = F.relu(self.linear1(x))
         x = self.linear2(x)
         return x
+
 
 class DQN(object):
     def __init__(self, state_dim, action_dim, args):
@@ -105,6 +106,7 @@ class DQN(object):
     def load(self, file):
         self.critic.load_state_dict(torch.load(file))
 
+
 def RL_evaluate(args):
     game_name = "snakes_3v3"
     global env
@@ -115,8 +117,6 @@ def RL_evaluate(args):
     players_id_list = range(0,3)
 
     agent = DQN(state_dim_wrapped, action_dim, args)
-
-    score = []
 
     obs = env.reset()
     obs_list = env.get_dict_many_observation(obs, players_id_list)
@@ -152,7 +152,7 @@ def RL_evaluate(args):
         joint_action = []
         reward_tot += np.sum(reward[0:3])
         steps += 1
-    writer.add_scalar(game_name + 'train/return', reward_tot, epi)
+    # writer.add_scalar(game_name + 'train/return', reward_tot, epi)
 
 def get_random_1_person(action_space):
     joint_action = []
@@ -165,6 +165,7 @@ def get_random_1_person(action_space):
             player.append(each)
         joint_action.append(player)
     return joint_action
+
 
 def action_wrapper(joint_action):
     '''
@@ -179,6 +180,7 @@ def action_wrapper(joint_action):
         action_one_hot = [[each]]
         joint_action_.append([action_one_hot[0][0]])
     return joint_action_
+
 
 def get_observations(key_info, index):
     '''
@@ -198,6 +200,7 @@ def get_observations(key_info, index):
             obs_.append([key_info[0][key][0][1]])
     obs_.append([index])
     return obs_
+
 
 def main(args):
     game_name = "snakes_3v3"
@@ -232,7 +235,7 @@ def main(args):
         writer = SummaryWriter(str(log_dir))
 
     for epi in range(args.max_episode):
-        obs = env.reset()
+        env.reset()
         obs_list = env.get_dict_many_observation(env.current_state, players_id_list)
         obs = []
         obs_next_ = []
@@ -259,7 +262,7 @@ def main(args):
 
             for n in range(env.agent_nums[0]):
                 agent.store_transition(obs[n], joint_action[n], reward[n], obs_next_[n])
-            loss = agent.learn()
+            agent.learn()
             obs = obs_next_
 
             joint_action = []
@@ -274,6 +277,7 @@ def main(args):
         writer.add_scalar(game_name + 'train/return', reward_tot, epi)
 
     agent.save(run_dir / 'model.pth')
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
