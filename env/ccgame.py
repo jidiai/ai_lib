@@ -115,9 +115,11 @@ class CCGame(Game, VectorObservation):
         self.step_cnt = 0
         self.done = False
         # self.current_state = observation
-        obs_list = observation.tolist()
+        if not isinstance(observation, np.ndarray):
+            observation = np.array(observation)
+        obs_list = observation.reshape(-1).tolist()
         self.current_state = [obs_list] * self.n_player
-        return self.current_state
+        return obs_list
 
     def get_action_dim(self):
         action_dim = 1
