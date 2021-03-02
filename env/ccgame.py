@@ -67,8 +67,8 @@ class CCGame(Game, VectorObservation):
             next_state = np.array(next_state)
         next_state = next_state.reshape(-1).tolist()
         self.current_state = [next_state] * self.n_player
-        done = self.is_terminal()
         self.step_cnt += 1
+        done = self.is_terminal()
         return next_state, reward, done, info_before, info_after
 
     def decode(self, joint_action):
@@ -95,7 +95,7 @@ class CCGame(Game, VectorObservation):
         return info
 
     def is_terminal(self):
-        if self.step_cnt > self.max_step:
+        if self.step_cnt >= self.max_step:
             self.done = True
 
         return self.done
