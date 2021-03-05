@@ -1,7 +1,4 @@
 # -*- coding:utf-8  -*-
-# 作者：zruizhi   
-# 创建时间： 2020/7/10 10:24 上午   
-# 描述：
 from random import randrange
 from env.simulators.gridgame import GridGame
 from env.obs_interfaces.observation import *
@@ -49,7 +46,6 @@ class GoBang(GridGame, GridObservation):
 
     def set_action_space(self):
         action_space = [[Discrete(self.board_height), Discrete(self.board_width)] for _ in range(self.n_player)]
-        # action_space = [[self.board_height, self.board_width] for _ in range(self.n_player)]
         return action_space
 
     def get_next_state(self, joint_action):
@@ -60,15 +56,6 @@ class GoBang(GridGame, GridObservation):
             cur_action = joint_action[self.chess_player-1]
 
             x, y = self.decode(cur_action)
-            # if self.check_at(x, y):
-            #     next_state[x][y][0] = self.chess_player
-            #     if self.chess_player == 1:
-            #         self.chess_player = 2
-            #     else:
-            #         self.chess_player = 1
-            #     self.step_cnt += 1
-            # else:
-            #     info_after = "当前位置已经有其他棋子"
             if self.check_at(x, y):
                 next_state[x][y][0] = self.chess_player
                 if self.chess_player == 1:
@@ -172,7 +159,7 @@ class GoBang(GridGame, GridObservation):
         else:
             return True
 
-    def get_grid_observation(self, current_state, player_id):
+    def get_grid_observation(self, current_state, player_id, info_before):
         return current_state
 
     def get_terminal_actions(self):

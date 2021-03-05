@@ -1,7 +1,4 @@
 # -*- coding:utf-8  -*-
-# 作者：zruizhi   
-# 创建时间： 2020/7/21 10:24 上午
-# 描述：
 from env.simulators.gridgame import GridGame
 import random
 from env.obs_interfaces.observation import *
@@ -72,7 +69,7 @@ class Reversi(GridGame, GridObservation):
 
         return self.current_state
 
-    def get_grid_observation(self, current_state, player_id):
+    def get_grid_observation(self, current_state, player_id, info_before):
         return current_state
 
     def get_next_state(self, joint_action):
@@ -80,7 +77,6 @@ class Reversi(GridGame, GridObservation):
         info_after = {}
         if not not_valid:
             cur_action = joint_action[self.chess_player - 1]
-            # print("current_state", self.current_state)
             next_state = self.current_state
             if not self.legal_position.keys():
                 if self.last == 0:
@@ -102,7 +98,6 @@ class Reversi(GridGame, GridObservation):
             x, y = self.decode(cur_action)
             p, reverse = self.check_at(x, y)
             if reverse:
-                # info_after = {}
                 info_after["action"] = p
                 info_after["reverse_positions"] = reverse
 
@@ -122,19 +117,16 @@ class Reversi(GridGame, GridObservation):
 
                 self.step_cnt += 1
 
-            # return next_state, str(info_after)
             return next_state, info_after
 
     def step_before_info(self, info=''):
         info = "当前棋手:%d" % self.chess_player
         self.legal_position = self.legal_positions()
-        # info += "\n可落子位置，及落子后反色的位置集合: %s" % str(self.legal_position)
 
         return info
 
     def set_action_space(self):
         action_space = [[Discrete(self.board_height), Discrete(self.board_width)] for _ in range(self.n_player)]
-        # action_space = [[self.board_height, self.board_width] for _ in range(self.n_player)]
         return action_space
 
     def is_not_valid_action(self, joint_action):
@@ -196,17 +188,6 @@ class Reversi(GridGame, GridObservation):
     def check_at(self, x, y):
         p = (x, y)
         if p not in self.legal_position.keys():
-            # 如果玩家未下在正确位置，则游戏结束
-            """
-            print("当前位置不合法!")
-            self.done = 1
-
-            if self.chess_player == 1:
-                print("游戏结束，获胜方：白棋")
-            else:
-                print("游戏结束，获胜方：黑棋")
-            raise Exception("Invalid position!", p)
-            """
             # 如果玩家未下在正确位置，则随机生成一个合法的位置
             p = random.choice(list(self.legal_position))
             # print("当前位置不合法，随机生成一个合法位置：%s" % str(p))

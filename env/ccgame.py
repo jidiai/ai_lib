@@ -1,6 +1,4 @@
 # -*- coding:utf-8  -*-
-# Time  : 2020/12/28 16:33
-# Author: Yahui Cui
 from env.simulators.game import Game
 from env.obs_interfaces.observation import *
 import numpy as np
@@ -67,8 +65,8 @@ class CCGame(Game, VectorObservation):
             next_state = np.array(next_state)
         next_state = next_state.reshape(-1).tolist()
         self.current_state = [next_state] * self.n_player
-        done = self.is_terminal()
         self.step_cnt += 1
+        done = self.is_terminal()
         return next_state, reward, done, info_before, info_after
 
     def decode(self, joint_action):
@@ -95,7 +93,7 @@ class CCGame(Game, VectorObservation):
         return info
 
     def is_terminal(self):
-        if self.step_cnt > self.max_step:
+        if self.step_cnt >= self.max_step:
             self.done = True
 
         return self.done
@@ -115,9 +113,11 @@ class CCGame(Game, VectorObservation):
         self.step_cnt = 0
         self.done = False
         # self.current_state = observation
-        obs_list = observation.tolist()
+        if not isinstance(observation, np.ndarray):
+            observation = np.array(observation)
+        obs_list = observation.reshape(-1).tolist()
         self.current_state = [obs_list] * self.n_player
-        return self.current_state
+        return obs_list
 
     def get_action_dim(self):
         action_dim = 1
@@ -144,5 +144,5 @@ class CCGame(Game, VectorObservation):
             all_obs_space[i] = (m)
         return all_obs_space
 
-    def get_vector_observation(self, current_state, player_id):
+    def get_vector_observation(self, current_state, player_id, info_before):
         return self.current_state[player_id]
