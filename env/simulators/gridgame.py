@@ -1,8 +1,3 @@
-# -*- coding:utf-8  -*-
-# 作者：zruizhi   
-# 创建时间： 2020/7/10 10:24 上午   
-# 描述：
-
 from PIL import Image, ImageDraw
 from itertools import count
 import numpy as np
@@ -21,18 +16,27 @@ class GridGame(Game):
         self.board_width = int(conf['board_width'])
         self.board_height = int(conf['board_height'])
         self.agent_nums = [int(i) for i in str(conf['agent_nums']).split(',')]
-        self.cell_range = conf['cell_range'] if isinstance(eval(str(conf['cell_range'])), tuple) else (int(conf['cell_range']),)
+        self.cell_range = conf['cell_range'] if isinstance(eval(str(conf['cell_range'])), tuple) else (
+        int(conf['cell_range']),)
         self.cell_dim = len(self.cell_range)
         self.cell_size = np.prod(self.cell_range)
 
         # grid observation conf
-        self.ob_board_width = conf['ob_board_width'] if not conf.get('ob_board_width') is None else [self.board_width for _ in range(self.n_player)]
-        self.ob_board_height = conf['ob_board_height'] if not conf.get('ob_board_height') is None else [self.board_height for _ in range(self.n_player)]
-        self.ob_cell_range = conf['ob_cell_range'] if not conf.get('ob_cell_range') is None else [self.cell_range for _ in range(self.n_player)]
+        self.ob_board_width = conf['ob_board_width'] if not conf.get('ob_board_width') is None else [self.board_width
+                                                                                                     for _ in range(
+                self.n_player)]
+        self.ob_board_height = conf['ob_board_height'] if not conf.get('ob_board_height') is None else [
+            self.board_height for _ in range(self.n_player)]
+        self.ob_cell_range = conf['ob_cell_range'] if not conf.get('ob_cell_range') is None else [self.cell_range for _
+                                                                                                  in
+                                                                                                  range(self.n_player)]
 
         # vector observation conf
-        self.ob_vector_shape = conf['ob_vector_shape'] if not conf.get('ob_vector_shape') is None else [self.board_width*self.board_height*self.cell_dim for _ in range(self.n_player)]
-        self.ob_vector_range = conf['ob_vector_range'] if not conf.get('ob_vector_range') is None else [self.cell_range for _ in range(self.n_player)]
+        self.ob_vector_shape = conf['ob_vector_shape'] if not conf.get('ob_vector_shape') is None else [
+            self.board_width * self.board_height * self.cell_dim for _ in range(self.n_player)]
+        self.ob_vector_range = conf['ob_vector_range'] if not conf.get('ob_vector_range') is None else [self.cell_range
+                                                                                                        for _ in range(
+                self.n_player)]
 
         # 每个玩家的 action space list, 可以根据player_id获取对应的single_action_space
         self.joint_action_space = self.set_action_space()
@@ -49,10 +53,11 @@ class GridGame(Game):
         self.grid = GridGame.init_board(self.board_width, self.board_height, unit_size)
         self.grid_unit_fix = fix
         self.game_tape = []
-        self.colors = colors + generate_color(self.cell_size - len(colors) + 1) if not colors is None else generate_color(
+        self.colors = colors + generate_color(
+            self.cell_size - len(colors) + 1) if not colors is None else generate_color(
             self.cell_size)
         self.init_info = None
-    
+
     def get_grid_obs_config(self, player_id):
         return self.ob_board_width[player_id], self.ob_board_height[player_id], self.ob_cell_range[player_id]
 
@@ -81,7 +86,7 @@ class GridGame(Game):
 
     def check_win(self):
         raise NotImplementedError
-    
+
     def get_render_data(self, current_state):
         grid_map = [[0] * self.board_width for _ in range(self.board_height)]
         for i in range(self.board_height):
@@ -142,7 +147,7 @@ class GridGame(Game):
         for i in range(len(self.joint_action_space)):
             player = []
             for j in range(len(self.joint_action_space[i])):
-                each = [0] * self.joint_action_space[i][j]
+                each = [0] * self.joint_action_space[i][j].n
                 player.append(each)
             joint_action.append(player)
         return joint_action
@@ -156,7 +161,8 @@ class GridGame(Game):
 
     def render_board(self):
         im_data = np.array(
-            GridGame._render_board(self.get_render_data(self.current_state), self.grid, self.colors, self.grid_unit, self.grid_unit_fix))
+            GridGame._render_board(self.get_render_data(self.current_state), self.grid, self.colors, self.grid_unit,
+                                   self.grid_unit_fix))
         self.game_tape.append(im_data)
         return im_data
 
@@ -192,7 +198,7 @@ class GridGame(Game):
 
 def build_rectangle(x, y, unit_size=UNIT, fix=FIX):
     return x * unit_size + unit_size // fix, y * unit_size + unit_size // fix, (x + 1) * unit_size - unit_size // fix, (
-                y + 1) * unit_size - unit_size // fix
+            y + 1) * unit_size - unit_size // fix
 
 
 def generate_color(n):
