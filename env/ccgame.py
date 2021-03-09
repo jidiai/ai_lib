@@ -17,7 +17,9 @@ class CCGame(Game, VectorObservation):
         self.game_name = conf["game_name"]
         self.load_action_space(conf)
         observation = self.env_core.reset()
-        obs_list = observation.tolist()
+        if not isinstance(observation, np.ndarray):
+            observation = np.array(observation)
+        obs_list = observation.reshape(-1).tolist()
 
         self.done = False
         self.step_cnt = 0
