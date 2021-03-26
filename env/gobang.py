@@ -28,9 +28,6 @@ class GoBang(GridGame, GridObservation):
 
         self.input_dimension = self.board_width * self.board_height
         self.action_dim = self.get_action_dim()
-        self.is_obs_continuous = True if int(conf['is_obs_continuous']) == 1 else False
-        self.is_act_continuous = True if int(conf['is_act_continuous']) == 1 else False
-        self.obs_type = [str(i) for i in str(conf["obs_type"]).split(',')]
 
     def reset(self):
         self.current_state = [[[0] * self.cell_dim for _ in range(self.board_width)] for _ in range(self.board_height)]

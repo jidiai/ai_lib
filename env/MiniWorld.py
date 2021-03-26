@@ -6,34 +6,36 @@ import json
 from utils.discrete import Discrete
 from utils.box import Box
 import gym
+import gym_miniworld
 
 
-class CCGame(Game, VectorObservation):
+class MiniWorld(Game, VectorObservation):
     def __init__(self, conf):
         super().__init__(conf['n_player'], conf['is_obs_continuous'], conf['is_act_continuous'],
                          conf['game_name'], conf['agent_nums'], conf['obs_type'])
+        self.done = False
+        self.step_cnt = 0
+        self.max_step = int(conf["max_step"])
         self.env_core = gym.make(self.game_name)
-
         self.load_action_space(conf)
+
         observation = self.env_core.reset()
         if not isinstance(observation, np.ndarray):
             observation = np.array(observation)
         obs_list = observation.reshape(-1).tolist()
 
-        self.done = False
-        self.step_cnt = 0
-        self.max_step = int(conf["max_step"])
         self.won = {}
-        # self.env_core.action_space = gym.spaces.Box(-4.0, 4.0, (1,), np.float32)
-        self.joint_action_space = self.set_action_space()
         self.current_state = [obs_list] * self.n_player
         self.n_return = [0] * self.n_player
+        self.joint_action_space = self.set_action_space()
 
-        self.action_dim = self.get_action_dim()
+        self.action_dim = self.get_action_dim()#??
         self.input_dimension = self.env_core.observation_space
-        self.ob_space = [self.env_core.observation_space for _ in range(self.n_player)]
+
+        self.ob_space = [self.env_core.observation_space for _ in range(self.n_player)]#60* 80 *3
         self.ob_vector_shape = [self.env_core.observation_space.shape] * self.n_player
-        self.ob_vector_range = [self.env_core.observation_space.low, self.env_core.observation_space.high] * self.n_player
+        self.ob_vector_range = [self.env_core.observation_space.low,
+                                self.env_core.observation_space.high] * self.n_player#???
         self.init_info = None
 
     def load_action_space(self, conf):
@@ -51,6 +53,18 @@ class CCGame(Game, VectorObservation):
                 discrete_n = int(input_action["discrete_n"])
                 self.env_core.action_space = Discrete(discrete_n)
 
+    def get_next_state(self, action):#action=0/1/2
+        observation, reward, done, info = self.env_core.step(action)
+
+        return observation, reward, done, info
+
+    def set_action_space(self):
+        if self.is_act_continuous:
+            action_space = [[self.env_core.action_space] for _ in range(self.n_player)]
+        else:
+            action_space = [[self.env_core.action_space] for _ in range(self.n_player)]#discrete(3)
+        return action_space
+
     def step(self, joint_action):
         action = self.decode(joint_action)
         info_before = self.step_before_info()
@@ -64,21 +78,9 @@ class CCGame(Game, VectorObservation):
             next_state = np.array(next_state)
         next_state = next_state.reshape(-1).tolist()
         self.current_state = [next_state] * self.n_player
-        self.step_cnt += 1
         done = self.is_terminal()
+        self.step_cnt += 1
         return next_state, reward, done, info_before, info_after
-
-    def decode(self, joint_action):
-
-        if not self.is_act_continuous:
-            return joint_action[0][0].index(1)
-        else:
-            return joint_action[0]
-
-    def get_next_state(self, action):
-        observation, reward, done, info = self.env_core.step(action)
-        obs_list = observation.tolist()
-        return obs_list, reward, done, info
 
     def get_reward(self, reward):
         r = [0] * self.n_player
@@ -88,33 +90,35 @@ class CCGame(Game, VectorObservation):
             self.n_return[i] += r[i]
         return r
 
+    def decode(self, joint_action):
+
+        if not self.is_act_continuous:
+            return joint_action[0][0].index(1)
+        else:
+            return joint_action[0]
+
     def step_before_info(self, info=''):
         return info
 
     def is_terminal(self):
-        if self.step_cnt >= self.max_step:
+        if self.step_cnt > self.max_step:
             self.done = True
 
         return self.done
 
-    def set_action_space(self):
-        if self.is_act_continuous:
-            action_space = [[self.env_core.action_space] for _ in range(self.n_player)]
-        else:
-            action_space = [[self.env_core.action_space] for _ in range(self.n_player)]
-        return action_space
-
     def check_win(self):
-        return '0'
+        if self.env_core.near(self.env_core.box):
+            return 1
+        else:
+            return -1
 
     def reset(self):
         observation = self.env_core.reset()
-        self.step_cnt = 0
-        self.done = False
-        # self.current_state = observation
         if not isinstance(observation, np.ndarray):
             observation = np.array(observation)
         obs_list = observation.reshape(-1).tolist()
+        self.step_cnt = 0
+        self.done = False
         self.current_state = [obs_list] * self.n_player
         return obs_list
 
@@ -140,8 +144,11 @@ class CCGame(Game, VectorObservation):
         all_obs_space = {}
         for i in player_id_list:
             m = self.ob_vector_shape[i]
-            all_obs_space[i] = (m)
+            all_obs_space[i] = m
         return all_obs_space
 
     def get_vector_observation(self, current_state, player_id, info_before):
         return self.current_state[player_id]
+
+    def get_render_data(self, current_state):
+        return []

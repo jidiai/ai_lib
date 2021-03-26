@@ -52,9 +52,6 @@ class Sokoban(GridGame, GridObservation):
         self.success_box_each_step = 0
         self.input_dimension = self.board_width * self.board_height
         self.action_dim = self.get_action_dim()
-        self.is_obs_continuous = True if int(conf['is_obs_continuous']) == 1 else False
-        self.is_act_continuous = True if int(conf['is_act_continuous']) == 1 else False
-        self.obs_type = [str(i) for i in str(conf["obs_type"]).split(',')]
 
     def reset(self):
         self.step_cnt = 1

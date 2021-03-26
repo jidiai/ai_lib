@@ -9,13 +9,13 @@ FIX = 8
 
 class GridGame(Game):
     def __init__(self, conf, colors=None, unit_size=UNIT, fix=FIX):
-        super().__init__(int(conf['n_player']))
+        super().__init__(conf['n_player'], conf['is_obs_continuous'], conf['is_act_continuous'],
+                         conf['game_name'], conf['agent_nums'], conf['obs_type'])
         # grid game conf
         self.game_name = conf['game_name']
         self.max_step = int(conf['max_step'])
         self.board_width = int(conf['board_width'])
         self.board_height = int(conf['board_height'])
-        self.agent_nums = [int(i) for i in str(conf['agent_nums']).split(',')]
         self.cell_range = conf['cell_range'] if isinstance(eval(str(conf['cell_range'])), tuple) else (
         int(conf['cell_range']),)
         self.cell_dim = len(self.cell_range)

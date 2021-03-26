@@ -1,7 +1,12 @@
 class Game(object):
-    def __init__(self, n_player):
+    def __init__(self, n_player, is_obs_continuous, is_act_continuous, game_name, agent_nums, obs_type):
         self.n_player = n_player
         self.current_state = None
+        self.is_obs_continuous = is_obs_continuous
+        self.is_act_continuous = is_act_continuous
+        self.game_name = game_name
+        self.agent_nums = agent_nums
+        self.obs_type = obs_type
 
     def get_config(self, player_id):
         raise NotImplementedError

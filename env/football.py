@@ -1,45 +1,46 @@
 # -*- coding:utf-8  -*-
 from env.simulators.game import Game
 from env.obs_interfaces.observation import *
+import gfootball.env as football_env
 import numpy as np
 import json
 from utils.discrete import Discrete
 from utils.box import Box
-import gym
 
 
-class CCGame(Game, VectorObservation):
+class Football(Game, DictObservation):
     def __init__(self, conf):
         super().__init__(conf['n_player'], conf['is_obs_continuous'], conf['is_act_continuous'],
                          conf['game_name'], conf['agent_nums'], conf['obs_type'])
-        self.env_core = gym.make(self.game_name)
-
-        self.load_action_space(conf)
-        observation = self.env_core.reset()
-        if not isinstance(observation, np.ndarray):
-            observation = np.array(observation)
-        obs_list = observation.reshape(-1).tolist()
 
         self.done = False
         self.step_cnt = 0
         self.max_step = int(conf["max_step"])
+
+        self.env_core = football_env.create_environment(
+            env_name=conf["game_name"], stacked=False,
+            representation='raw',
+            logdir='/tmp/rllib_test',
+            write_goal_dumps=False, write_full_episode_dumps=False, render=False,
+            dump_frequency=0,
+            number_of_left_players_agent_controls=self.agent_nums[0],
+            number_of_right_players_agent_controls=self.agent_nums[1])
+
+        self.load_action_space(conf)
+        obs_list = self.env_core.reset()
         self.won = {}
-        # self.env_core.action_space = gym.spaces.Box(-4.0, 4.0, (1,), np.float32)
         self.joint_action_space = self.set_action_space()
-        self.current_state = [obs_list] * self.n_player
+        self.current_state = obs_list
         self.n_return = [0] * self.n_player
 
         self.action_dim = self.get_action_dim()
         self.input_dimension = self.env_core.observation_space
         self.ob_space = [self.env_core.observation_space for _ in range(self.n_player)]
-        self.ob_vector_shape = [self.env_core.observation_space.shape] * self.n_player
-        self.ob_vector_range = [self.env_core.observation_space.low, self.env_core.observation_space.high] * self.n_player
         self.init_info = None
 
     def load_action_space(self, conf):
         if "act_box" in conf:
             input_action = json.loads(conf["act_box"]) if isinstance(conf["act_box"], str) else conf["act_box"]
-            # print(input_action)
             if self.is_act_continuous:
                 if ("high" not in input_action) or ("low" not in input_action) or ("shape" not in input_action):
                     raise Exception("act_box in continuous case must have fields low, high, shape")
@@ -54,37 +55,31 @@ class CCGame(Game, VectorObservation):
     def step(self, joint_action):
         action = self.decode(joint_action)
         info_before = self.step_before_info()
-        # print("action in step ", action)
         next_state, reward, self.done, info_after = self.get_next_state(action)
-        # self.current_state = next_state
+        self.current_state = next_state
         if isinstance(reward, np.ndarray):
-            reward = reward.tolist()[0]
+            reward = reward.tolist()
         reward = self.get_reward(reward)
-        if not isinstance(next_state, np.ndarray):
-            next_state = np.array(next_state)
-        next_state = next_state.reshape(-1).tolist()
-        self.current_state = [next_state] * self.n_player
         self.step_cnt += 1
         done = self.is_terminal()
         return next_state, reward, done, info_before, info_after
 
     def decode(self, joint_action):
-
-        if not self.is_act_continuous:
-            return joint_action[0][0].index(1)
-        else:
-            return joint_action[0]
+        if isinstance(joint_action, np.ndarray):
+            joint_action = joint_action.tolist()
+        joint_action_decode = []
+        for action in joint_action:
+            joint_action_decode.append(action[0].index(1))
+        return joint_action_decode
 
     def get_next_state(self, action):
         observation, reward, done, info = self.env_core.step(action)
-        obs_list = observation.tolist()
-        return obs_list, reward, done, info
+        return observation, reward, done, info
 
     def get_reward(self, reward):
         r = [0] * self.n_player
-        # print("reward is ", reward)
         for i in range(self.n_player):
-            r[i] = reward
+            r[i] = reward[i]
             self.n_return[i] += r[i]
         return r
 
@@ -98,50 +93,43 @@ class CCGame(Game, VectorObservation):
         return self.done
 
     def set_action_space(self):
-        if self.is_act_continuous:
-            action_space = [[self.env_core.action_space] for _ in range(self.n_player)]
-        else:
-            action_space = [[self.env_core.action_space] for _ in range(self.n_player)]
+        action_space = [[self.env_core.action_space] for _ in range(self.n_player)]
         return action_space
 
     def check_win(self):
-        return '0'
+        left_sum = sum(self.n_return[:11])
+        right_sum = sum(self.n_return[11:])
+        if left_sum > right_sum:
+            return '0'
+        elif left_sum < right_sum:
+            return '1'
+        else:
+            return '-1'
 
     def reset(self):
-        observation = self.env_core.reset()
+        obs_list = self.env_core.reset().tolist()
         self.step_cnt = 0
         self.done = False
-        # self.current_state = observation
-        if not isinstance(observation, np.ndarray):
-            observation = np.array(observation)
-        obs_list = observation.reshape(-1).tolist()
-        self.current_state = [obs_list] * self.n_player
-        return obs_list
+        self.current_state = obs_list
+        return self.current_state
 
     def get_action_dim(self):
         action_dim = 1
-        print("joint action space is ", self.joint_action_space[0][0])
         if self.is_act_continuous:
-            # if isinstance(self.joint_action_space[0][0], gym.spaces.Box):
             return self.joint_action_space[0][0]
 
-        for i in range(len(self.joint_action_space[0])):
-            action_dim *= self.joint_action_space[0][i].n
+        for i in range(len(self.joint_action_space)):
+            action_dim *= self.joint_action_space[i][0].n
 
         return action_dim
 
     def get_single_action_space(self, player_id):
         return self.joint_action_space[player_id]
 
-    def get_vector_obs_config(self, player_id):
-        return self.ob_vector_shape[player_id], self.ob_vector_range[player_id]
+    def get_render_data(self, current_state):
+        return []
 
-    def get_vector_many_obs_space(self, player_id_list):
-        all_obs_space = {}
-        for i in player_id_list:
-            m = self.ob_vector_shape[i]
-            all_obs_space[i] = (m)
-        return all_obs_space
-
-    def get_vector_observation(self, current_state, player_id, info_before):
-        return self.current_state[player_id]
+    def get_dict_observation(self, current_state, player_id, info_before):
+        ob = current_state[player_id]
+        ob['controlled_idx'] = player_id
+        return ob

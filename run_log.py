@@ -134,15 +134,15 @@ if __name__ == "__main__":
     # "gobang_1v1", "reversi_1v1", "snakes_1v1", "sokoban_2p", "snakes_3v3", "snakes_5p", "sokoban_1p"
     # "classic_CartPole-v0", "classic_CartPole-v1", "classic_MountainCar-v0", "classic_MountainCarContinuous-v0",
     # "classic_Pendulum-v0", "classic_Acrobot-v1"
-    env_type = "snakes_3v3"
-    game = make(env_type, conf=None)
+    env_type = "classic_MountainCarContinuous-v0"
+    game = make(env_type)
 
     # 针对"classic_"环境，使用gym core 进行render;
     # 非"classic_"环境，使用replay工具包的replay.html，通过上传.json进行网页回放
     render_mode = False
 
     # print("可选policy 名称类型:", get_valid_agents())
-    policy_list = ["random", "snakes_3v3_DQN"]
+    policy_list = ["random"] * len(game.agent_nums)
 
     player_id, actions_space = get_players_and_action_space_list(game)
     run_game(game, env_type, player_id, actions_space, policy_list)

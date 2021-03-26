@@ -4,7 +4,9 @@
 ## 项目依赖
 
 - `Python 3.6`
-- `gym`
+- `gym` https://github.com/openai/gym
+- `gfootball` https://github.com/google-research/football
+- `miniworld` https://github.com/maximecb/gym-miniworld#installation
 - `Torch 1.7.0` 可选
   - 支持提交Torch训练后的模型.pth附属文件
 
