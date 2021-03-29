@@ -79,6 +79,7 @@ class MiniWorld(Game, VectorObservation):
         next_state = next_state.reshape(-1).tolist()
         self.current_state = [next_state] * self.n_player
         done = self.is_terminal()
+        info_after = self.parse_info(info_after)
         self.step_cnt += 1
         return next_state, reward, done, info_before, info_after
 
@@ -99,6 +100,15 @@ class MiniWorld(Game, VectorObservation):
 
     def step_before_info(self, info=''):
         return info
+
+    def parse_info(self, info):
+        new_info = {}
+        for key, val in info.items():
+            if isinstance(val, np.ndarray):
+                new_info[key] = val.tolist()
+            else:
+                new_info[key] = val
+        return new_info
 
     def is_terminal(self):
         if self.step_cnt > self.max_step:
