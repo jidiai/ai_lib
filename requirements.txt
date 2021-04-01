@@ -3,3 +3,5 @@ matplotlib
 gym
 torch
 tensorboardX
+pillow
+numpy
