@@ -49,7 +49,7 @@ class DQN(object):
 
         self.eps_start = args.epsilon
         self.eps_end = 0.05
-        self.eps_delay = 0.8 / args.max_episode
+        self.eps_delay = 0.8 / args.max_episode * 100
         self.learn_step_counter = 0
         self.target_replace_iter = args.target_replace
 
@@ -283,8 +283,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # set agent hyper parameter
     parser.add_argument("--hidden_dim", default=64, type=int)
-    parser.add_argument("--lr", default=0.001, type=float)
-    parser.add_argument("--buffer_size", default=1280, type=int)
+    parser.add_argument("--lr", default=0.0001, type=float)
+    parser.add_argument("--buffer_size", default=6000, type=int)
     parser.add_argument("--batch_size", default=64, type=int)
     parser.add_argument("--gamma", default=0.8, type=float)
     parser.add_argument("--target_replace", default=100, type=int)
@@ -293,7 +293,7 @@ if __name__ == '__main__':
 
     parser.add_argument("--game_name", default= "snakes_3v3")
     parser.add_argument("--evaluate_rate", default=100, type=int)
-    parser.add_argument("--max_episode", default=100, type=int)
+    parser.add_argument("--max_episode", default=5000, type=int)
     parser.add_argument("--tensorboard", default=True, type=bool)
     parser.add_argument("--mode", default="train", type=str, help="train/eval")
     parser.add_argument("--algo", default="DQN")
