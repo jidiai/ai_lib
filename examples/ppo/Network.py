@@ -1,11 +1,12 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class Actor(nn.Module):
-    def __init__(self, state_space, action_space):
+    def __init__(self, state_space, action_space, hidden_size):
         super(Actor, self).__init__()
-        self.fc1 = nn.Linear(state_space, 100)
-        self.action_head = nn.Linear(100, action_space)
+        self.fc1 = nn.Linear(state_space, hidden_size)
+        self.action_head = nn.Linear(hidden_size, action_space)
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
@@ -14,10 +15,10 @@ class Actor(nn.Module):
 
 
 class Critic(nn.Module):
-    def __init__(self, state_space):
+    def __init__(self, state_space, output_size, hidden_size):
         super(Critic, self).__init__()
-        self.fc1 = nn.Linear(state_space, 100)
-        self.state_value = nn.Linear(100, 1)
+        self.fc1 = nn.Linear(state_space, hidden_size)
+        self.state_value = nn.Linear(hidden_size, output_size)
 
     def forward(self, x):
         x = F.relu(self.fc1(x))

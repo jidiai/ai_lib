@@ -15,6 +15,7 @@ class classic_CartPole_v0_wrapper(object):
         return self.env.input_dimension.shape[0]
 
     def action(self, a):
+        print('a', a)
         a = [a]
         joint_action_ = []
         for n in range(self.env.n_player):
@@ -28,51 +29,7 @@ class classic_CartPole_v0_wrapper(object):
     def reward(self, r):
         return np.array(r)
 
-    def observation(self, o, t):
+    def observation(self, o):
         # todo: classical env reset产生的observation和env.step的不同
-        if t == 0:
-            state = np.array(o[0])
-        else:
-            state = np.array(o)
+        state = np.array(o)
         return state
-
-# class gobang_1v1_wrapper():
-#
-#     def action(self, a):
-#
-#     def reward(self, r):
-#
-#     def observation(self, o):
-#
-# class reversi_1v1_wrapper():
-#
-#     def action(self, a):
-#
-#     def reward(self, r):
-#
-#     def observation(self, o):
-#
-# class sokoban_1p_wrapper():
-#
-#     def action(self, a):
-#
-#     def reward(self, r):
-#
-#     def observation(self, o):
-#
-# class sokoban_2p_wrapper():
-#
-#     def action(self, a):
-#
-#     def reward(self, r):
-#
-#     def observation(self, o):
-#
-# class snake_5p_wrapper():
-#     def action(self, a):
-#
-#     def reward(self, r):
-#
-#     def observation(self, o):
-
-

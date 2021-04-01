@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 
 def make_logpath(game_name):
-    base_dir = Path(__file__).resolve().parent
+    base_dir = Path(__file__).resolve().parent.parent
     model_dir = base_dir / Path('./models') / game_name
 
     if not model_dir.exists():
