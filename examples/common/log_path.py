@@ -5,9 +5,9 @@
 from pathlib import Path
 import sys
 
-def make_logpath(game_name):
+def make_logpath(game_name, algo):
     base_dir = Path(__file__).resolve().parent.parent
-    model_dir = base_dir / Path('./models') / game_name
+    model_dir = base_dir / Path('./models') / game_name / algo
 
     if not model_dir.exists():
         curr_run = 'run1'

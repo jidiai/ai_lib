@@ -1,7 +1,6 @@
 # -*- coding:utf-8  -*-
 # Time  : 2021/02/26 16:18
 # Author: Yutong Wu
-import os
 import torch
 import argparse
 
@@ -11,9 +10,7 @@ from itertools import count
 from pathlib import Path
 import sys
 
-from ppo.ppo import PPO
-from helper.log_path import make_logpath
-from helper.wrappers import *
+from game_user.examples.common.log_path import make_logpath
 
 base_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(base_dir))
@@ -67,14 +64,6 @@ def main(args):
             action_ = W.action(action)
             obs_, reward, done, info, _ = env.step(action_)
             reward = W.reward(reward)
-
-            # debug: 检查buffer存的东西
-            # print('------------- debug -------------')
-            # print('observation', obs.shape, type(obs))
-            # print('action', action, type(action))
-            # print('reward', reward, type(reward))
-            # print('next_state', obs_, type(obs_))
-            # print('next_state[0]', obs_[0], type(obs_[0]))
 
             trans = Transition(obs, action_, action_prob, reward, obs_)
             agent.store_transition(trans)
