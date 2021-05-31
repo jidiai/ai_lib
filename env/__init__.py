@@ -5,3 +5,5 @@ from .sokoban import *
 from .ccgame import *
 from .football import *
 from .MiniWorld import *
+from .minigrid import *
+from .particleenv import *
