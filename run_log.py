@@ -74,11 +74,11 @@ def run_game(g, env_name, player_ids, actions_spaces, policy_list):
         if policy_list[i] not in get_valid_agents():
             raise Exception("agent {} not valid!".format(policy_list[i]))
 
-        file_path = os.path.dirname(os.path.abspath(__file__)) + "/examples/" + policy_list[i] + "/demo.py"
+        file_path = os.path.dirname(os.path.abspath(__file__)) + "/examples/algo/" + policy_list[i] + "/submission.py"
         if not os.path.exists(file_path):
             raise Exception("file {} not exist!".format(file_path))
 
-        import_path = '.'.join(file_path.split('/')[-3:])[:-3]
+        import_path = '.'.join(file_path.split('/')[-4:])[:-3]
         function_name = 'm%d' % i
         import_name = "my_controller"
         import_s = "from %s import %s as %s" % (import_path, import_name, function_name)
@@ -87,8 +87,10 @@ def run_game(g, env_name, player_ids, actions_spaces, policy_list):
 
     if not g.is_obs_continuous:
         st = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-        game_info = {"game_name": env_name, "n_player": g.n_player, "board_height": g.board_height,
-                     "board_width": g.board_width, "init_info": g.init_info,
+        game_info = {"game_name": env_name, "n_player": g.n_player,
+                     "board_height": g.board_height if hasattr(g, "board_height") else None,
+                     "board_width": g.board_width if hasattr(g, "board_width") else None,
+                     "init_info": g.init_info,
                      "start_time": st,
                      "mode": "terminal"}
 
@@ -126,15 +128,21 @@ def run_game(g, env_name, player_ids, actions_spaces, policy_list):
 
 
 def get_valid_agents():
-    dir_path = os.path.join(os.path.dirname(__file__), 'examples')
+    dir_path = os.path.join(os.path.dirname(__file__), 'examples', 'algo')
     return [f for f in os.listdir(dir_path) if f != "__pycache__"]
 
 
 if __name__ == "__main__":
     # "gobang_1v1", "reversi_1v1", "snakes_1v1", "sokoban_2p", "snakes_3v3", "snakes_5p", "sokoban_1p"
     # "classic_CartPole-v0", "classic_CartPole-v1", "classic_MountainCar-v0", "classic_MountainCarContinuous-v0",
-    # "classic_Pendulum-v0", "classic_Acrobot-v1"
-    env_type = "classic_MountainCarContinuous-v0"
+    # "classic_Pendulum-v0", "classic_Acrobot-v1", "football_11v11_kaggle", "MiniWorld-Hallway-v0",
+    # "MiniWorld-OneRoom-v0", "MiniWorld-OneRoomS6-v0", "MiniWorld-OneRoomS6Fast-v0",
+    # "MiniWorld-TMaze-v0", "MiniWorld-TMazeLeft-v0", "MiniWorld-TMazeRight-v0", "MiniGrid-DoorKey-16x16-v0",
+    # "MiniGrid-MultiRoom-N6-v0", "MiniGrid-Dynamic-Obstacles-16x16-v0", "ParticleEnv-simple",
+    # "ParticleEnv-simple_adversary", "ParticleEnv-simple_crypto", "ParticleEnv-simple_push",
+    # "ParticleEnv-simple_reference", "ParticleEnv-simple_speaker_listener", "ParticleEnv-simple_spread",
+    # "ParticleEnv-simple_tag", "ParticleEnv-simple_world_comm"
+    env_type = "ParticleEnv-simple_tag"
     game = make(env_type)
 
     # 针对"classic_"环境，使用gym core 进行render;

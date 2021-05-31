@@ -182,5 +182,203 @@
     "agent_nums": [1],
     "obs_type": ["vector"],
     "act_box": {"discrete_n": 3}
+  },
+  "MiniWorld-OneRoom-v0": {
+    "class_literal": "MiniWorld",
+    "n_player": 1,
+    "max_step": 50,
+    "game_name": "MiniWorld-OneRoom-v0",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1],
+    "obs_type": ["vector"],
+    "act_box": {"discrete_n": 3}
+  },
+  "MiniWorld-OneRoomS6-v0": {
+    "class_literal": "MiniWorld",
+    "n_player": 1,
+    "max_step": 50,
+    "game_name": "MiniWorld-OneRoomS6-v0",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1],
+    "obs_type": ["vector"],
+    "act_box": {"discrete_n": 3}
+},
+  "MiniWorld-OneRoomS6Fast-v0": {
+    "class_literal": "MiniWorld",
+    "n_player": 1,
+    "max_step": 50,
+    "game_name": "MiniWorld-OneRoomS6Fast-v0",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1],
+    "obs_type": ["vector"],
+    "act_box": {"discrete_n": 3}
+  },
+  "MiniWorld-TMaze-v0": {
+    "class_literal": "MiniWorld",
+    "n_player": 1,
+    "max_step": 50,
+    "game_name": "MiniWorld-TMaze-v0",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1],
+    "obs_type": ["vector"],
+    "act_box": {"discrete_n": 3}
+  },
+  "MiniWorld-TMazeLeft-v0": {
+    "class_literal": "MiniWorld",
+    "n_player": 1,
+    "max_step": 50,
+    "game_name": "MiniWorld-TMazeLeft-v0",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1],
+    "obs_type": ["vector"],
+    "act_box": {"discrete_n": 3}
+  },
+  "MiniWorld-TMazeRight-v0": {
+    "class_literal": "MiniWorld",
+    "n_player": 1,
+    "max_step": 50,
+    "game_name": "MiniWorld-TMazeRight-v0",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1],
+    "obs_type": ["vector"],
+    "act_box": {"discrete_n": 3}
+  },
+  "MiniGrid-DoorKey-16x16-v0": {
+    "class_literal": "MiniGrid",
+    "n_player": 1,
+    "board_width": 16,
+    "board_height": 16,
+    "cell_range": 3,
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "act_box": {"discrete_n": 7},
+    "game_name": "MiniGrid-DoorKey-16x16-v0",
+    "agent_nums": [1],
+    "max_step": 50,
+    "obs_type": ["grid"]
+  },
+  "MiniGrid-MultiRoom-N6-v0": {
+    "class_literal": "MiniGrid",
+    "n_player": 1,
+    "board_width": 25,
+    "board_height": 25,
+    "cell_range": 3,
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "act_box": {"discrete_n": 7},
+    "game_name": "MiniGrid-MultiRoom-N6-v0",
+    "agent_nums": [1],
+    "max_step": 100,
+    "obs_type": ["grid"]
+  },
+   "MiniGrid-Dynamic-Obstacles-16x16-v0": {
+    "class_literal": "MiniGrid",
+    "n_player": 1,
+    "board_width": 16,
+    "board_height": 16,
+    "cell_range": 3,
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "act_box": {"discrete_n": 7},
+    "game_name": "MiniGrid-Dynamic-Obstacles-16x16-v0",
+    "agent_nums": [1],
+    "max_step": 50,
+    "obs_type": ["grid"]
+  },
+  "ParticleEnv-simple": {
+    "class_literal": "ParticleEnv",
+    "n_player": 1,
+    "max_step": 500,
+    "game_name": "ParticleEnv-simple",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1],
+    "obs_type": ["vector"]
+  },
+  "ParticleEnv-simple_adversary": {
+    "class_literal": "ParticleEnv",
+    "n_player": 3,
+    "max_step": 500,
+    "game_name": "ParticleEnv-simple_adversary",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1,2],
+    "obs_type": ["vector","vector"]
+  },
+  "ParticleEnv-simple_crypto": {
+    "class_literal": "ParticleEnv",
+    "n_player": 3,
+    "max_step": 500,
+    "game_name": "ParticleEnv-simple_crypto",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [2,1],
+    "obs_type": ["vector", "vector"]
+  },
+  "ParticleEnv-simple_push": {
+    "class_literal": "ParticleEnv",
+    "n_player": 2,
+    "max_step": 500,
+    "game_name": "ParticleEnv-simple_push",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1,1],
+    "obs_type": ["vector","vector"]
+  },
+  "ParticleEnv-simple_reference": {
+    "class_literal": "ParticleEnv",
+    "n_player": 2,
+    "max_step": 500,
+    "game_name": "ParticleEnv-simple_reference",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [2],
+    "obs_type": ["vector"]
+  },
+  "ParticleEnv-simple_speaker_listener": {
+    "class_literal": "ParticleEnv",
+    "n_player": 2,
+    "max_step": 500,
+    "game_name": "ParticleEnv-simple_speaker_listener",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [2],
+    "obs_type": ["vector"]
+  },
+  "ParticleEnv-simple_spread": {
+    "class_literal": "ParticleEnv",
+    "n_player": 3,
+    "max_step": 500,
+    "game_name": "ParticleEnv-simple_spread",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [3],
+    "obs_type": ["vector"]
+  },
+  "ParticleEnv-simple_tag": {
+    "class_literal": "ParticleEnv",
+    "n_player": 4,
+    "max_step": 500,
+    "game_name": "ParticleEnv-simple_tag",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [3,1],
+    "obs_type": ["vector","vector"]
+  },
+  "ParticleEnv-simple_world_comm": {
+    "class_literal": "ParticleEnv",
+    "n_player": 6,
+    "max_step": 500,
+    "game_name": "ParticleEnv-simple_world_comm",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [4,2],
+    "obs_type": ["vector","vector"]
   }
 }

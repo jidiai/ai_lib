@@ -7,6 +7,8 @@
 - `gym` https://github.com/openai/gym
 - `gfootball` https://github.com/google-research/football
 - `miniworld` https://github.com/maximecb/gym-miniworld#installation
+- `minigrid` https://github.com/maximecb/gym-minigrid
+- `Multi-Agent Particle Environment` https://github.com/openai/multiagent-particle-envs
 - `Torch 1.7.0` 可选
   - 支持提交Torch训练后的模型.pth附属文件
 
