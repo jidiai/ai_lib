@@ -380,5 +380,71 @@
     "is_act_continuous": false,
     "agent_nums": [4,2],
     "obs_type": ["vector","vector"]
+  },
+  "football_11_vs_11_stochastic": {
+    "class_literal": "Football",
+    "n_player": 22,
+    "max_step": 3000,
+    "game_name": "11_vs_11_stochastic",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [11,11],
+    "obs_type": ["dict", "dict"],
+    "act_box": {"discrete_n": 19}
+  },
+  "overcookedai-cramped_room": {
+    "class_literal": "OvercookedAI",
+    "n_player": 2,
+    "max_step": 400,
+    "game_name": "overcookedai-cramped_room",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [1,1],
+    "obs_type": ["dict", "dict"],
+    "act_box": {"discrete_n": 6}
+  },
+  "overcookedai-asymmetric_advantages": {
+    "class_literal": "OvercookedAI",
+    "n_player": 2,
+    "max_step": 400,
+    "game_name": "overcookedai-asymmetric_advantages",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [1,1],
+    "obs_type": ["dict", "dict"],
+    "act_box": {"discrete_n": 6}
+  },
+  "overcookedai-coordination_ring": {
+    "class_literal": "OvercookedAI",
+    "n_player": 2,
+    "max_step": 400,
+    "game_name": "overcookedai-coordination_ring",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [1,1],
+    "obs_type": ["dict", "dict"],
+    "act_box": {"discrete_n": 6}
+  },
+  "overcookedai-forced_coordination": {
+    "class_literal": "OvercookedAI",
+    "n_player": 2,
+    "max_step": 400,
+    "game_name": "overcookedai-forced_coordination",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [1,1],
+    "obs_type": ["dict", "dict"],
+    "act_box": {"discrete_n": 6}
+  },
+  "overcookedai-counter_circuit": {
+    "class_literal": "OvercookedAI",
+    "n_player": 2,
+    "max_step": 400,
+    "game_name": "overcookedai-counter_circuit",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [1,1],
+    "obs_type": ["dict", "dict"],
+    "act_box": {"discrete_n": 6}
   }
 }
