@@ -9,7 +9,6 @@ def get_args():
 
     # trainer
     parser.add_argument('--buffer_capacity', default=int(10240), type=int)
-    parser.add_argument('--seed', default=777, type=int)
     parser.add_argument('--a_lr', default=0.005, type=float)
     parser.add_argument('--c_lr', default=0.005, type=float)
     parser.add_argument('--batch_size', default=32, type=int)

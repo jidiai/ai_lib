@@ -2,6 +2,13 @@
 # Time  : 2021/5/31 下午4:14
 # Author: Yahui Cui
 
+"""
+# =================================== Important =========================================
+Notes:
+1. this agent is random agent , which can fit any env in Jidi platform.
+2. if you want to load .pth file, please follow the instruction here:
+https://github.com/jidiai/ai_lib/blob/master/examples/demo
+"""
 
 def my_controller(observation_list, action_space_list, is_act_continuous=False):
     joint_action = []
