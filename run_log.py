@@ -141,8 +141,10 @@ if __name__ == "__main__":
     # "MiniGrid-MultiRoom-N6-v0", "MiniGrid-Dynamic-Obstacles-16x16-v0", "ParticleEnv-simple",
     # "ParticleEnv-simple_adversary", "ParticleEnv-simple_crypto", "ParticleEnv-simple_push",
     # "ParticleEnv-simple_reference", "ParticleEnv-simple_speaker_listener", "ParticleEnv-simple_spread",
-    # "ParticleEnv-simple_tag", "ParticleEnv-simple_world_comm"
-    env_type = "ParticleEnv-simple_tag"
+    # "ParticleEnv-simple_tag", "ParticleEnv-simple_world_comm", "football_11_vs_11_stochastic",
+    # "overcookedai-cramped_room", "overcookedai-asymmetric_advantages", "overcookedai-coordination_ring",
+    # "overcookedai-forced_coordination", "overcookedai-counter_circuit"
+    env_type = "overcookedai-counter_circuit"
     game = make(env_type)
 
     # 针对"classic_"环境，使用gym core 进行render;

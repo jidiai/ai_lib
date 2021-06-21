@@ -7,3 +7,4 @@ from .football import *
 from .MiniWorld import *
 from .minigrid import *
 from .particleenv import *
+from .overcookedai import *
