@@ -10,8 +10,8 @@ from pathlib import Path
 import sys
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
-print(sys.path)
-from algo.dqn.network import Critic
+print("!!!", sys.path)
+from algo.dqn.Network import Critic
 from common.buffer import Replay_buffer as buffer
 
 class DQN(object):
@@ -93,6 +93,7 @@ class DQN(object):
     def load(self, file):
         self.critic_eval.load_state_dict(torch.load(file))
 
+'''
 def main(args):
     base_dir = Path(__file__).resolve().parent.parent.parent
     sys.path.append(str(base_dir))
@@ -188,4 +189,4 @@ if __name__ == '__main__':
 
     main(args)
     print("end")
-
+'''

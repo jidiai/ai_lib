@@ -18,7 +18,6 @@ ppo_update_time: 10
 reload_config: false
 run_redo: null
 scenario: classic_CartPole-v0
-seed: 777
 seed_nn: 1
 seed_np: 1
 seed_random: 1

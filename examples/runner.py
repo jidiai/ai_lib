@@ -16,7 +16,13 @@ import os
 
 class Runner:
     def __init__(self, args, env):
+
         self.args = args
+
+        # torch.manual_seed(self.args.seed_nn)
+        # np.random.seed(self.args.seed_np)
+        # random.seed(self.args.seed_random)
+
         self.env = env
         self.agent = ini_agents(args)
 
@@ -33,9 +39,9 @@ class Runner:
     def set_up(self):
 
         # 设置seed, 以便复现
-        torch.manual_seed(self.args.seed_nn)
-        np.random.seed(self.args.seed_np)
-        random.seed(self.args.seed_random)
+        # torch.manual_seed(self.args.seed_nn)
+        # np.random.seed(self.args.seed_np)
+        # random.seed(self.args.seed_random)
 
         # 定义保存路径
         run_dir, log_dir = make_logpath(self.args.scenario, self.args.algo)
