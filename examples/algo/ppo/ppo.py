@@ -31,10 +31,8 @@ torch.manual_seed(seed)
 env.seed(seed)
 Transition = namedtuple('Transition', ['state', 'action', 'a_log_prob', 'reward', 'next_state'])
 
-
-class PPO():
-    def __init__(self, state_dim, action_dim, args):
-
+class PPO:
+    def __init__(self, args):
         self.clip_param = args.clip_param
         self.max_grad_norm = args.max_grad_norm
         self.ppo_update_time = args.ppo_update_time
@@ -45,21 +43,17 @@ class PPO():
         self.gamma = args.gamma
         self.hidden_size = args.hidden_size
 
-        self.actor_net = Actor(state_dim, action_dim, self.hidden_size)
-        self.critic_net = Critic(state_dim, 1, self.hidden_size)
+        self.obs_space = args.obs_space
+        self.action_space = args.action_space
+
+        self.actor_net = Actor(self.obs_space, self.action_space, self.hidden_size)
+        self.critic_net = Critic(self.obs_space, 1, self.hidden_size)
         self.actor_optimizer = optim.Adam(self.actor_net.parameters(), lr=self.a_lr)
         self.critic_net_optimizer = optim.Adam(self.critic_net.parameters(), lr=self.c_lr)
 
         self.buffer = []
         self.counter = 0
         self.training_step = 0
-
-        # self.writer = SummaryWriter('../exp')
-        # self.actor_optimizer = optim.Adam(self.actor_net.parameters(), 1e-3)
-        # self.critic_net_optimizer = optim.Adam(self.critic_net.parameters(), 3e-3)
-        # if not os.path.exists('../param'):
-        #     os.makedirs('../param/net_param')
-        #     os.makedirs('../param/img')
 
     def choose_action(self, state):
         state = torch.from_numpy(state).float().unsqueeze(0)
@@ -84,22 +78,30 @@ class PPO():
         self.buffer.append(transition)
         self.counter += 1
 
-    def update(self, i_ep):
-        state = torch.tensor([t.state for t in self.buffer], dtype=torch.float)
-        action = torch.tensor([t.action for t in self.buffer], dtype=torch.long).view(-1, 1)
-        reward = [t.reward for t in self.buffer]
-        old_action_log_prob = torch.tensor([t.a_log_prob for t in self.buffer], dtype=torch.float).view(-1, 1)
+    def learn(self):
+
+        obs, action, a_log_prob, reward, obs_ = zip(*self.buffer)
+
+        state = torch.tensor(obs, dtype=torch.float).squeeze()
+        action = torch.tensor(action, dtype=torch.long).view(-1, 1)
+        reward = [ reward for i in self.buffer]
+        old_action_log_prob = torch.tensor(a_log_prob, dtype=torch.float).view(-1, 1)
+
+        # state = torch.tensor([t.state for t in self.buffer], dtype=torch.float)
+        # action = torch.tensor([t.action for t in self.buffer], dtype=torch.long).view(-1, 1)
+        # reward = [t.reward for t in self.buffer]
+        # old_action_log_prob = torch.tensor([t.a_log_prob for t in self.buffer], dtype=torch.float).view(-1, 1)
+
         # 计算reward-to-go
         R = 0
         Gt = []
+        print(reward[::-1])
         for r in reward[::-1]: # 反过来
-            R = r + self.gamma * R
+            R = r[0] + self.gamma * R
             Gt.insert(0, R)
         Gt = torch.tensor(Gt, dtype=torch.float)
         for i in range(self.ppo_update_time):
             for index in BatchSampler(SubsetRandomSampler(range(len(self.buffer))), self.batch_size, False):
-                if self.training_step % 1000 == 0:
-                    print('I_ep {} ，train {} times'.format(i_ep, self.training_step))
                 # with torch.no_grad():
                 # print('index', len(index)) # 长度不定
                 Gt_index = Gt[index].view(-1, 1)
@@ -131,32 +133,34 @@ class PPO():
 
         del self.buffer[:]  # clear experience
 
+    # def save(self):
+
     def load(self, actor_net, critic_net):
         self.actor_net.load_state_dict(torch.load(actor_net))
         self.critic_net.load_state_dict(torch.load(critic_net))
 
-def main(args):
-    # gym下的cartpole训练
-    agent = PPO(state_dim, action_dim,args)
-    for i_epoch in range(1000):
-        state = env.reset()
-        if render: env.render()
-        Gt = 0
-        for t in count():
-            action, action_prob = agent.choose_action(state)
-            next_state, reward, done, _ = env.step(action)
-            trans = Transition(state, action, action_prob, reward, next_state)
-            if render: env.render()
-            agent.store_transition(trans)
-            state = next_state
-            Gt += reward
-            if done :
-                if len(agent.buffer) >= agent.batch_size:
-                    agent.update(i_epoch)
-                    print('i_epoch', i_epoch, 'Gt', Gt)
-                # agent.writer.add_scalar('liveTime/livestep', t, global_step=i_epoch)
-                # agent.writer.add_scalar('liveTime/return', Gt, global_step=i_epoch)
-                break
+# def main(args):
+#     # gym下的cartpole训练
+#     agent = PPO(state_dim, action_dim,args)
+#     for i_epoch in range(1000):
+#         state = env.reset()
+#         if render: env.render()
+#         Gt = 0
+#         for t in count():
+#             action, action_prob = agent.choose_action(state)
+#             next_state, reward, done, _ = env.step(action)
+#             trans = Transition(state, action, action_prob, reward, next_state)
+#             if render: env.render()
+#             agent.store_transition(trans)
+#             state = next_state
+#             Gt += reward
+#             if done :
+#                 if len(agent.buffer) >= agent.batch_size:
+#                     agent.update(i_epoch)
+#                     print('i_epoch', i_epoch, 'Gt', Gt)
+#                 # agent.writer.add_scalar('liveTime/livestep', t, global_step=i_epoch)
+#                 # agent.writer.add_scalar('liveTime/return', Gt, global_step=i_epoch)
+#                 break
 
 '''
 def main(args):
@@ -207,6 +211,7 @@ def action_wrapper(joint_action):
         joint_action_.append([action_one_hot[0][0]])
     return joint_action_
 '''
+'''
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--scenario', default="classic_CartPole-v0", type=str)
@@ -227,3 +232,4 @@ if __name__ == '__main__':
 
     main(args)
     print("end")
+'''

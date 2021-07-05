@@ -1,12 +1,9 @@
 import numpy as np
-
 from EnvWrapper.BaseWrapper import BaseWrapper
-
 from pathlib import Path
 import sys
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
-print('+', base_dir)
 from env.chooseenv import make
 env = make("classic_CartPole-v0")
 
@@ -16,34 +13,21 @@ class Cartpole_v0(BaseWrapper):
         super().__init__(self.env)
 
     def get_actionspace(self):
-        print('##', self.env.action_dim)
         return self.env.action_dim
 
     def get_observationspace(self):
-        print('##', self.env.input_dimension.shape[0])
         return self.env.input_dimension.shape[0]
 
     def step(self, action, train=True):
         '''
         return: next_state, reward, done, _, _
         '''
-
         action = action_wrapper([action])
         next_state, reward, done, _, _ = self.env.step(action)
 
-        if train:
-            # reward shapping
-            reward = np.array(reward)
-
-            # wrap state
-            next_state = np.array(next_state)
-
-            return next_state, reward, done, _, _
-
-        else:
-            reward = np.array(reward)
-            next_state = np.array(next_state)
-            return next_state, reward, done, _, _
+        reward = np.array(reward)
+        next_state = np.array(next_state)
+        return next_state, reward, done, _, _
 
     def reset(self):
         state = self.env.reset()
@@ -59,7 +43,7 @@ def action_wrapper(joint_action):
     '''
     joint_action_ = []
     for a in range(env.n_player):
-        action_a = joint_action[a]
+        action_a = joint_action[a]["action"]
         each = [0] * env.action_dim
         each[action_a] = 1
         action_one_hot = [[each]]
