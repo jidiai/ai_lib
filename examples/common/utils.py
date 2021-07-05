@@ -7,6 +7,7 @@ import os
 import yaml
 from types import SimpleNamespace as SN
 
+
 def make_env(args):
     env = make(args.scenario)
     base_dir = Path(__file__).resolve().parent.parent.parent
@@ -19,6 +20,7 @@ def make_env(args):
     args.action_space = action_space
     return env, args
 
+
 def action_wrapper(action):
     joint_action_ = []
     action_a = action[0]
@@ -28,6 +30,7 @@ def action_wrapper(action):
     joint_action_.append([action_one_hot[0][0]])
     return joint_action_
 
+
 def save_config(args, save_path, file_name):
     print("##################")
     print(file_name)
@@ -35,6 +38,7 @@ def save_config(args, save_path, file_name):
     file = open(os.path.join(str(save_path), str(file_name) + '.yaml'), mode='w', encoding='utf-8')
     yaml.dump(vars(args), file)
     file.close()
+
 
 def load_config(args, log_path, file_name):
     file = open(os.path.join(str(log_path), str(file_name) + '.yaml'), "r")

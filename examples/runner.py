@@ -47,6 +47,13 @@ class Runner:
         run_dir, log_dir = make_logpath(self.args.scenario, self.args.algo)
         self.writer = SummaryWriter(str(log_dir))
 
+    def add_experience(self, states, state_next, reward, done):
+        agent_id = 0
+        self.agent.memory.insert("states", agent_id, states)
+        self.agent.memory.insert("states_next", agent_id, state_next)
+        self.agent.memory.insert("rewards", agent_id, reward)
+        self.agent.memory.insert("dones", agent_id, np.array(done, dtype=bool))
+
     def run(self):
 
         self.set_up()
@@ -56,11 +63,11 @@ class Runner:
             Gt = 0
             for t in count():
 
-                action = self.agent.choose_action(state)
+                action = self.agent.choose_action(state, train=True)
 
                 next_state, reward, done, _, _ = self.env.step(action)
 
-                self.agent.memory.push((state, next_state, action, reward, np.float32(done)))
+                self.add_experience(state, next_state, reward, np.float32(done))
 
                 self.agent.learn()
 
