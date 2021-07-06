@@ -1,6 +1,6 @@
 from algo.ppo.ppo import PPO
 from algo.dqn.dqn import DQN
-# from algo.pg.pg import PG
+from algo.pg.pg import PG
 # todo: random
 
 def ini_agents(args):
@@ -11,8 +11,8 @@ def ini_agents(args):
         agent = DQN(args)
     # elif args.algo == "ppo":
     #     agent = PPO(args)
-    # elif args.algo == "pg":
-    #     agent = PG(args)
+    elif args.algo == "pg":
+        agent = PG(args)
     return agent
 
 class BaseAgent:

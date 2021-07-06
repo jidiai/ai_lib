@@ -4,11 +4,11 @@ def get_args():
     parser = argparse.ArgumentParser()
     # set env and algo
     parser.add_argument('--scenario', default="classic_CartPole-v0", type=str)
-    parser.add_argument('--max_episodes', default=10000, type=int)
+    parser.add_argument('--max_episodes', default=5000, type=int)
     parser.add_argument('--algo', default="dqn", type=str, help="dqn/ppo/a2c")
 
     # trainer
-    parser.add_argument('--buffer_capacity', default=int(10240), type=int)
+    parser.add_argument('--buffer_capacity', default=int(100), type=int)
     parser.add_argument('--a_lr', default=0.005, type=float)
     parser.add_argument('--c_lr', default=0.005, type=float)
     parser.add_argument('--batch_size', default=32, type=int)
@@ -19,6 +19,7 @@ def get_args():
     parser.add_argument('--hidden_size', default=100)
     parser.add_argument('--max_episode', default=1000, type=int)
     parser.add_argument('--target_replace', default=100)
+    parser.add_argument('--train_frequency', default=100)
 
     parser.add_argument('--reload_config', default=False, type=bool)
     parser.add_argument('--run_redo', default=None, type=int)

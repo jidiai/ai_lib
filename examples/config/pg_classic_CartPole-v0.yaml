@@ -2,7 +2,7 @@ a_lr: 0.005
 action_space: 2
 algo: pg
 batch_size: 32
-buffer_capacity: 10240
+buffer_capacity: 100
 c_lr: 0.005
 clip_param: 0.2
 epsilon: 0.2
@@ -11,7 +11,7 @@ evaluate_rate: 50
 gamma: 0.99
 hidden_size: 100
 max_episode: 1000
-max_episodes: 200
+max_episodes: 500
 max_grad_norm: 0.5
 obs_space: 4
 ppo_update_time: 10
@@ -22,3 +22,4 @@ seed_nn: 1
 seed_np: 1
 seed_random: 1
 target_replace: 100
+train_frequency: 100
