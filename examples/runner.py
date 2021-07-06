@@ -37,15 +37,14 @@ class Runner:
             save_config(self.args, config_dir, file_name=file_name)
 
     def set_up(self):
-
-        # 设置seed, 以便复现
-        # torch.manual_seed(self.args.seed_nn)
-        # np.random.seed(self.args.seed_np)
-        # random.seed(self.args.seed_random)
-
         # 定义保存路径
         run_dir, log_dir = make_logpath(self.args.scenario, self.args.algo)
         self.writer = SummaryWriter(str(log_dir))
+
+    def set_seed(self):
+        # 设置seed, 以便复现
+        self.env.set_seed(seed=self.args.seed_random)
+        torch.manual_seed(self.args.seed_nn)
 
     def add_experience(self, states, state_next, reward, done):
         agent_id = 0
@@ -57,6 +56,7 @@ class Runner:
     def run(self):
 
         self.set_up()
+        self.set_seed()
 
         for i_epoch in range(self.args.max_episodes):
             state = self.env.reset()

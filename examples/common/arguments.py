@@ -4,8 +4,8 @@ def get_args():
     parser = argparse.ArgumentParser()
     # set env and algo
     parser.add_argument('--scenario', default="classic_CartPole-v0", type=str)
-    parser.add_argument('--max_episodes', default=10000, type=int)
-    parser.add_argument('--algo', default="pg", type=str, help="dqn/ppo/a2c")
+    parser.add_argument('--max_episodes', default=5000, type=int)
+    parser.add_argument('--algo', default="dqn", type=str, help="dqn/ppo/a2c")
 
     # trainer
     parser.add_argument('--buffer_capacity', default=int(100), type=int)

@@ -36,6 +36,9 @@ class Cartpole_v0(BaseWrapper):
     def close(self):
         pass
 
+    def set_seed(self, seed):
+        self.env.set_seed(seed)
+
 def action_wrapper(joint_action):
     '''
     :param joint_action:
