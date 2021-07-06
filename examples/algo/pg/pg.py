@@ -5,6 +5,18 @@ from torch.distributions import Categorical
 import torch.nn as nn
 import torch.nn.functional as F
 
+from pathlib import Path
+import sys
+base_dir = Path(__file__).resolve().parent.parent.parent
+sys.path.append(str(base_dir))
+from common.buffer import Replay_buffer as buffer
+
+eps = np.finfo(np.float32).eps.item()
+
+
+def get_trajectory_property():
+    return ["action"]
+
 
 class Policy(nn.Module):
     def __init__(self, input_size, output_size):
@@ -35,7 +47,23 @@ class PG(object):
         self.saved_log_probs = []
         self.rewards = []
 
+        self.buffer_size = args.buffer_capacity
+        trajectory_property = get_trajectory_property()
+        self.memory = buffer(self.buffer_size, trajectory_property)
+        self.memory.init_item_buffers()
+
     def choose_action(self, observation, train=True):
+        inference_output = self.inference(observation, train)
+        if train:
+            self.add_experience(inference_output)
+        return inference_output
+
+    def add_experience(self, output):
+        agent_id = 0
+        for k, v in output.items():
+            self.memory.insert(k, agent_id, v)
+
+    def inference(self, observation, train=True):
         if train:
             state = torch.from_numpy(observation).float().unsqueeze(0)
             probs = self.policy(state)
@@ -46,12 +74,12 @@ class PG(object):
             state = torch.from_numpy(observation).float().unsqueeze(0)
             probs = self.policy(state)
             action = torch.argmax(probs)
-        return action.item()
-
-    # def get_buffer_data(self):
-
+        return {"action": action.item()}
 
     def learn(self):
+        self.rewards = self.memory.item_buffers["rewards"].data
+        # print("======== debug: ", len(self.memory.item_buffers["rewards"].data))
+        # print("self.reward: ", self.rewards)
         R = 0
         policy_loss = []
         rewards = []

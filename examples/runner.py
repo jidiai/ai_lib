@@ -69,14 +69,14 @@ class Runner:
 
                 self.add_experience(state, next_state, reward, np.float32(done))
 
-                self.agent.learn()
-
                 state = next_state
 
                 Gt += reward
 
                 if done:
-                    print('i_epoch: ', i_epoch, 'Gt: ', '%.2f' % Gt, 'epi: ', '%.2f' % self.agent.eps)
+                    self.agent.learn()
+                    # print('i_epoch: ', i_epoch, 'Gt: ', '%.2f' % Gt, 'epi: ', '%.2f' % self.agent.eps)
+                    print('i_epoch: ', i_epoch, 'Gt: ', '%.2f' % Gt)
                     reward_tag = 'reward'
                     self.writer.add_scalars(reward_tag, global_step=i_epoch,
                                        tag_scalar_dict={'return': Gt})
