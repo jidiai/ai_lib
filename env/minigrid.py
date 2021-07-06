@@ -68,6 +68,9 @@ class MiniGrid(GridGame, GridObservation):
     def check_win(self):
         return True
 
+    def set_seed(self, seed=None):
+        self.env_core.seed(seed)
+
 
 
 class Renderer:

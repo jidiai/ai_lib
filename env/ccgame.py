@@ -145,3 +145,6 @@ class CCGame(Game, VectorObservation):
 
     def get_vector_observation(self, current_state, player_id, info_before):
         return self.current_state[player_id]
+
+    def set_seed(self, seed=None):
+        self.env_core.seed(seed)

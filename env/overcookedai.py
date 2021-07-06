@@ -128,3 +128,6 @@ class OvercookedAI(Game, DictObservation):
     def set_n_return(self, reward):
         for i in range(self.n_player):
             self.n_return[i] += reward
+
+    def set_seed(self, seed=0):
+        np.random.seed(seed)

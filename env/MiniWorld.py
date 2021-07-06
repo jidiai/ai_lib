@@ -162,3 +162,6 @@ class MiniWorld(Game, VectorObservation):
 
     def get_render_data(self, current_state):
         return []
+
+    def set_seed(self, seed=None):
+        self.env_core.seed(seed)
