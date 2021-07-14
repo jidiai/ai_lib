@@ -19,10 +19,6 @@ class Runner:
 
         self.args = args
 
-        # torch.manual_seed(self.args.seed_nn)
-        # np.random.seed(self.args.seed_np)
-        # random.seed(self.args.seed_random)
-
         self.env = env
         self.agent = ini_agents(args)
 
@@ -45,6 +41,7 @@ class Runner:
         # 设置seed, 以便复现
         self.env.set_seed(seed=self.args.seed_random)
         torch.manual_seed(self.args.seed_nn)
+        np.random.seed(self.args.seed_np)
 
     def add_experience(self, states, state_next, reward, done):
         agent_id = 0
@@ -62,7 +59,6 @@ class Runner:
             state = self.env.reset()
             Gt = 0
             for t in count():
-
                 action = self.agent.choose_action(state, train=True)
 
                 next_state, reward, done, _, _ = self.env.step(action)
