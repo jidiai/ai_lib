@@ -32,9 +32,6 @@ def action_wrapper(action):
 
 
 def save_config(args, save_path, file_name):
-    print("##################")
-    print(file_name)
-    print('!!!', os.path.join(str(save_path), str(file_name) + '.yaml'))
     file = open(os.path.join(str(save_path), str(file_name) + '.yaml'), mode='w', encoding='utf-8')
     yaml.dump(vars(args), file)
     file.close()

@@ -17,31 +17,36 @@ import os
 class Runner:
     def __init__(self, args, env):
 
+        # 定义保存路径
         self.args = args
 
+        # 设置seed
+        # self.set_seed()
+
         self.env = env
-        self.agent = ini_agents(args)
+
+        self.run_dir, self.log_dir = make_logpath(self.args.scenario, self.args.algo)
+        self.writer = SummaryWriter(str(self.log_dir))
 
         # 保存训练参数 以便复现
         if self.args.reload_config:
             file_name = self.args.algo + "_" + self.args.scenario
             self.args = config_dir = os.path.join(os.getcwd(), "config")
             self.args = load_config(self.args, config_dir, file_name)
-        else: # todo: 重复处理
+            save_config(self.args, self.log_dir, file_name=file_name)
+        else:
+            print("self.log_dir: ", self.log_dir)
             file_name = self.args.algo + "_" + self.args.scenario
-            config_dir = os.path.join(os.getcwd(), "config")
-            save_config(self.args, config_dir, file_name=file_name)
+            save_config(self.args, self.log_dir, file_name=file_name)
 
-    def set_up(self):
-        # 定义保存路径
-        run_dir, log_dir = make_logpath(self.args.scenario, self.args.algo)
-        self.writer = SummaryWriter(str(log_dir))
+        print("================= self.args: ", self.args)
+        self.agent = ini_agents(self.args)
 
-    def set_seed(self):
-        # 设置seed, 以便复现
-        self.env.set_seed(seed=self.args.seed_random)
-        torch.manual_seed(self.args.seed_nn)
-        np.random.seed(self.args.seed_np)
+    # def set_seed(self):
+    #     # make -> seed -> reset
+    #     torch.manual_seed(self.args.seed_nn)
+    #     np.random.seed(self.args.seed_np)
+    #     random.seed(self.args.seed_random)
 
     def add_experience(self, states, state_next, reward, done):
         agent_id = 0
@@ -52,10 +57,8 @@ class Runner:
 
     def run(self):
 
-        self.set_up()
-        self.set_seed()
-
         for i_epoch in range(self.args.max_episodes):
+            self.env.set_seed(random.randint(0,sys.maxsize))
             state = self.env.reset()
             Gt = 0
             for t in count():
@@ -71,7 +74,6 @@ class Runner:
 
                 if done:
                     self.agent.learn()
-                    # print('i_epoch: ', i_epoch, 'Gt: ', '%.2f' % Gt, 'epi: ', '%.2f' % self.agent.eps)
                     print('i_epoch: ', i_epoch, 'Gt: ', '%.2f' % Gt)
                     reward_tag = 'reward'
                     self.writer.add_scalars(reward_tag, global_step=i_epoch,
@@ -85,6 +87,7 @@ class Runner:
     def evaluate(self, i_epoch):
         record = []
         for _ in range(10):
+            self.env.set_seed(random.randint(0, sys.maxsize))
             state = self.env.reset()
             Gt_real = 0
             for t in count():

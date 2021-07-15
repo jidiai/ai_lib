@@ -1,6 +1,6 @@
 **JIdiAlgo Framework**
 
-Now JidiAlgo includes 7 single RL algorithms. For each one, we use classic cartpole as test environment. 
+Now JidiAlgo includes 8 single RL algorithms. For each one, we use classic cartpole as test environment. 
 
 <table>
     <tr>
@@ -38,6 +38,9 @@ Now JidiAlgo includes 7 single RL algorithms. For each one, we use classic cartp
    </tr>
      <tr>
         <td>DDPG</td>
+   </tr>
+    <tr>
+        <td>DDQN</td>
    </tr>
 
 </table>

@@ -17,7 +17,6 @@ def get_args():
     parser.add_argument('--ppo_update_time', default=10, type=int)
     parser.add_argument('--gamma', default=0.99)
     parser.add_argument('--hidden_size', default=100)
-    parser.add_argument('--max_episode', default=1000, type=int)
     parser.add_argument('--target_replace', default=100)
     parser.add_argument('--train_frequency', default=100)
     parser.add_argument('--tau', default=0.02)
