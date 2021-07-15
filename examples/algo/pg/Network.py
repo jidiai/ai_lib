@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class Policy(nn.Module):
     def __init__(self, input_size, output_size):
         super().__init__()

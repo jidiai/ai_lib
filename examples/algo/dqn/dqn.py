@@ -5,6 +5,8 @@ import torch.nn.functional as F
 import torch.optim as optimizer
 import numpy as np
 
+from algo.dqn.Network import Critic
+
 from pathlib import Path
 import sys
 base_dir = Path(__file__).resolve().parent.parent.parent
@@ -14,20 +16,6 @@ from common.buffer import Replay_buffer as buffer
 
 def get_trajectory_property():
     return ["action"]
-
-
-class Critic(nn.Module):
-    def __init__(self, input_size, output_size, hidden_size):
-        super().__init__()
-        self.input_size = input_size
-        self.output_size = output_size
-        self.linear1 = nn.Linear(input_size, hidden_size)
-        self.linear2 = nn.Linear(hidden_size, output_size)
-
-    def forward(self, x):
-        x = F.relu(self.linear1(x))
-        x = self.linear2(x)
-        return x
 
 
 class DQN(object):
