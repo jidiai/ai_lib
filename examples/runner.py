@@ -14,10 +14,15 @@ import numpy as np
 import random
 import os
 
+
 class Runner:
     def __init__(self, args, env):
 
         self.args = args
+
+        # torch.manual_seed(self.args.seed_nn)
+        # np.random.seed(self.args.seed_np)
+        # random.seed(self.args.seed_random)
 
         self.env = env
         self.agent = ini_agents(args)
@@ -41,7 +46,6 @@ class Runner:
         # 设置seed, 以便复现
         self.env.set_seed(seed=self.args.seed_random)
         torch.manual_seed(self.args.seed_nn)
-        np.random.seed(self.args.seed_np)
 
     def add_experience(self, states, state_next, reward, done):
         agent_id = 0
@@ -55,13 +59,23 @@ class Runner:
         self.set_up()
         self.set_seed()
 
+        x_threshold = 2.4
+        theta_threshold_radians = 0.20943951023931953
         for i_epoch in range(self.args.max_episodes):
             state = self.env.reset()
             Gt = 0
             for t in count():
+
                 action = self.agent.choose_action(state, train=True)
 
                 next_state, reward, done, _, _ = self.env.step(action)
+
+
+                x, x_dot, theta, theta_dot = next_state
+                r1 = (x_threshold - abs(x)) / x_threshold
+                r2 = (theta_threshold_radians - abs(theta)) /theta_threshold_radians
+                reward = r1 + r2
+
 
                 self.add_experience(state, next_state, reward, np.float32(done))
 

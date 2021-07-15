@@ -1,8 +1,9 @@
 import numpy as np
 import torch
 import torch.optim as optim
-
-from algo.pg.Network import Policy
+from torch.distributions import Categorical
+import torch.nn as nn
+import torch.nn.functional as F
 
 from pathlib import Path
 import sys
@@ -15,6 +16,20 @@ eps = np.finfo(np.float32).eps.item()
 
 def get_trajectory_property():
     return ["action"]
+
+
+class Policy(nn.Module):
+    def __init__(self, input_size, output_size):
+        super().__init__()
+        self.input_size = input_size
+        self.output_size = output_size
+        self.affine1 = nn.Linear(self.input_size, 128)
+        self.affine2 = nn.Linear(128, self.output_size)
+
+    def forward(self, x):
+        x = F.relu(self.affine1(x))
+        action_scores = self.affine2(x)
+        return F.softmax(action_scores, dim=1)
 
 
 class PG(object):
@@ -52,7 +67,7 @@ class PG(object):
         if train:
             state = torch.from_numpy(observation).float().unsqueeze(0)
             probs = self.policy(state)
-            m = (probs)
+            m = Categorical(probs)
             action = m.sample()
             self.saved_log_probs.append(m.log_prob(action))
         else:
@@ -63,6 +78,8 @@ class PG(object):
 
     def learn(self):
         self.rewards = self.memory.item_buffers["rewards"].data
+        # print("======== debug: ", len(self.memory.item_buffers["rewards"].data))
+        # print("self.reward: ", self.rewards)
         R = 0
         policy_loss = []
         rewards = []
@@ -85,3 +102,77 @@ class PG(object):
 
     def load(self, file):
         self.policy.load_state_dict(torch.load(file))
+
+
+# policy = Policy()
+# optimizer = optim.Adam(policy.parameters(), lr=1e-2)
+
+"""
+def main(args):
+    base_dir = Path(__file__).resolve().parent.parent.parent
+    sys.path.append(str(base_dir))
+    global env
+    from EnvWrapper.classic_CartPole_v0 import Cartpole_v0
+    env = Cartpole_v0()
+
+    action_space = env.get_actionspace()
+    observation_space = env.get_observationspace()
+
+    global agent
+    agent = pg(observation_space, action_space, args)
+
+    for i_epoch in range(10000):
+        state = env.reset()
+        Gt = 0
+        train_end = False
+        for t in range(10000):  # Don't infinite loop while learning
+            action = agent.choose_action(np.array(state))
+
+            state, reward, done, _, _ = env.step(action)
+
+            agent.rewards.append(reward)
+
+            Gt += reward
+
+            if done:
+                print('i_epoch: ', i_epoch, 'Gt: ', '%.2f' % Gt)
+                agent.learn()
+                if i_epoch % args.evaluate_rate == 0 and i_epoch > 1:
+                    Gt_real = evaluate(i_epoch)
+                    if Gt_real > 199:
+                        train_end = True
+                break
+
+        if train_end:
+            print('1 save')
+            agent.save()
+            break
+
+def evaluate(i_epoch):
+    record = []
+    for _ in range(100):
+        state = env.reset()
+        Gt_real = 0
+        for t in count():
+            action = agent.choose_action(state, train=False)
+            next_state, reward, done, _, _ = env.step(action, train=False)
+            state = next_state
+            Gt_real += reward
+            if done:
+                record.append(Gt_real)
+                break
+    print('===============', 'i_epoch: ', i_epoch, 'Gt_real: ', '%.2f' % np.mean(record), record)
+    return np.mean(record)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--lr", default = 0.001)
+    parser.add_argument('--gamma', type=float, default=0.99,
+                        help='discount factor (default: 0.99)')
+    # evaluation
+    parser.add_argument('--evaluate_rate', default=50)
+
+    args = parser.parse_args()
+    main(args)
+    
+"""

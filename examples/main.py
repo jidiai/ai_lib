@@ -16,6 +16,7 @@ base_dir = Path(__file__).resolve().parent.parent
 sys.path.append(str(base_dir))
 from env.chooseenv import make
 
+
 def main(args):
     print('============ start ============')
 
@@ -83,7 +84,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--scenario', default="classic_CartPole-v0", type=str)
     parser.add_argument('--max_episode', default=500, type=int)
-    parser.add_argument('--algo', default="PPO", type=str, help="dqn/PPO/a2c")
+    parser.add_argument('--algo', default="PPO", type=str, help="dqn/PPO/a2c/ddqn")
 
     parser.add_argument('--buffer_capacity', default=int(1e5), type=int)
     parser.add_argument('--seed', default=777, type=int)

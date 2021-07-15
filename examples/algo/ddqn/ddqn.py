@@ -4,9 +4,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optimizer
 import numpy as np
-
 from pathlib import Path
 import sys
+
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
 from common.buffer import Replay_buffer as buffer
@@ -30,9 +30,8 @@ class Critic(nn.Module):
         return x
 
 
-class DQN(object):
+class DDQN(object):
     def __init__(self, args):
-
         self.state_dim = args.obs_space
         self.action_dim = args.action_space
 
@@ -42,7 +41,7 @@ class DQN(object):
         self.batch_size = args.batch_size
         self.gamma = args.gamma
 
-        self.critic_eval = Critic(self.state_dim,  self.action_dim, self.hidden_size)
+        self.critic_eval = Critic(self.state_dim, self.action_dim, self.hidden_size)
         self.critic_target = Critic(self.state_dim, self.action_dim, self.hidden_size)
         self.optimizer = optimizer.Adam(self.critic_eval.parameters(), lr=self.lr)
 
@@ -100,12 +99,15 @@ class DQN(object):
         obs = torch.tensor(transitions["o_0"], dtype=torch.float)
         obs_ = torch.tensor(transitions["o_next_0"], dtype=torch.float)
         action = torch.tensor(transitions["u_0"], dtype=torch.long).view(self.batch_size, -1)
-        reward = torch.tensor(transitions["r_0"], dtype=torch.float).squeeze()
-        done = torch.tensor(transitions["d_0"], dtype=torch.float).squeeze()
+        reward = torch.tensor(transitions["r_0"], dtype=torch.float)
+        done = torch.tensor(transitions["d_0"], dtype=torch.float)
 
         q_eval = self.critic_eval(obs).gather(1, action)
-        q_next = self.critic_target(obs_).detach()
-        q_target = (reward + self.gamma * q_next.max(1)[0] * (1 - done)).view(self.batch_size, 1)
+        q_eval_next = self.critic_eval(obs_)
+        max_action = torch.argmax(q_eval_next, dim=1).unsqueeze(1)
+        q_next = self.critic_target(obs_).gather(1, max_action).detach()
+        q_target = reward + self.gamma * q_next * (1 - done)
+
         loss_fn = nn.MSELoss()
         loss = loss_fn(q_eval, q_target)
 
@@ -124,3 +126,5 @@ class DQN(object):
 
     def load(self, file):
         self.critic_eval.load_state_dict(torch.load(file))
+
+

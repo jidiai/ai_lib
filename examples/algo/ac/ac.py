@@ -1,107 +1,125 @@
+import gym, os
 import numpy as np
+import matplotlib.pyplot as plt
+from itertools import count
+from collections import namedtuple
+
 import torch
-import torch.optim as optim
-from torch.distributions import Categorical
 import torch.nn as nn
+import torch.optim as optim
 import torch.nn.functional as F
+from torch.distributions import Categorical
 
-from algo.ac.Network import ActorCritic
-
-from pathlib import Path
 import sys
-base_dir = Path(__file__).resolve().parent.parent.parent
+from pathlib import Path
+base_dir = Path(__file__).resolve().parent.parent.parent.parent
 sys.path.append(str(base_dir))
-from common.buffer import Replay_buffer as buffer
+print(base_dir)
+from env.chooseenv import make
 
+#Parameters
+env = make('classic_CartPole-v0')
+action_space = env.action_dim
+observation_space = env.input_dimension.shape[0]
+print(action_space, observation_space)
+
+#Hyperparameters
+learning_rate = 0.01
+gamma = 0.99
+episodes = 20000
+render = False
 eps = np.finfo(np.float32).eps.item()
+SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
 
-def get_trajectory_property():
-    return ["action", 'log_prob', 'value']
+class Policy(nn.Module):
+    def __init__(self):
+        super(Policy, self).__init__()
+        self.fc1 = nn.Linear(observation_space, 32)
 
-
-class AC(object):
-    def __init__(self, args):
-
-        self.state_dim = args.obs_space
-        self.action_dim = args.action_space
-        self.hidden_size = args.hidden_size
-
-        self.lr = args.c_lr
-        self.gamma = args.gamma
-
-        self.policy = ActorCritic(self.state_dim, self.action_dim, self.hidden_size)
-        self.optimizer = optim.Adam(self.policy.parameters(), lr=self.lr)
+        self.action_head = nn.Linear(32, action_space)
+        self.value_head = nn.Linear(32, 1) # Scalar Value
 
         self.save_actions = []
-        self.save_value = []
         self.rewards = []
 
-        self.buffer_size = args.buffer_capacity
-        trajectory_property = get_trajectory_property()
-        self.memory = buffer(self.buffer_size, trajectory_property)
-        self.memory.init_item_buffers()
+    def forward(self, x):
+        x = F.relu(self.fc1(x))
+        action_score = self.action_head(x)
+        state_value = self.value_head(x)
 
-    def choose_action(self, observation, train=True):
-        inference_output = self.inference(observation, train)
-        if train:
-            self.add_experience(inference_output)
-        return inference_output
+        return F.softmax(action_score, dim=-1), state_value
 
-    def add_experience(self, output):
-        agent_id = 0
-        for k, v in output.items():
-            self.memory.insert(k, agent_id, v)
+model = Policy()
+optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
-    def inference(self, observation, train=True):
-        # if train:
-        state = torch.from_numpy(observation).float().unsqueeze(0)
-        probs, value = self.policy(state)
-        m = Categorical(probs)
-        action = m.sample()
-        # else:
-        #     state = torch.from_numpy(observation).float().unsqueeze(0)
-        #     probs = self.policy(state)
-        #     action = torch.argmax(probs)
-        return {
-            "action": action.item(),
-            "log_prob": m.log_prob(action),
-            "value": value
-        }
+def select_action(state):
+    state = torch.from_numpy(state).float()
+    probs, state_value = model(state)
+    m = Categorical(probs)
+    action = m.sample()
+    model.save_actions.append(SavedAction(m.log_prob(action), state_value))
+    return action.item()
 
-    def learn(self):
-        self.rewards = self.memory.item_buffers["rewards"].data
-        self.save_actions = self.memory.item_buffers["log_prob"].data
-        self.save_value = self.memory.item_buffers["value"].data
 
-        R = 0
-        policy_loss = []
-        value_loss = []
-        rewards = []
+def action_wrapper(joint_action):
+    '''
+    :param joint_action:
+    :return: wrapped joint action: one-hot
+    '''
+    joint_action_ = []
+    action_a = joint_action
+    each = [0] * env.action_dim
+    each[action_a] = 1
+    action_one_hot = [[each]]
+    joint_action_.append([action_one_hot[0][0]])
+    return joint_action_
 
-        for r in self.rewards[::-1]:
-            R = r[0] + self.gamma * R
-            rewards.insert(0, R)
+def finish_episode():
+    R = 0
+    save_actions = model.save_actions
+    policy_loss = []
+    value_loss = []
+    rewards = []
 
-        rewards = torch.tensor(rewards, dtype=torch.float)
-        rewards = (rewards - rewards.mean()) / (rewards.std() + eps)
+    for r in model.rewards[::-1]:
+        R = r[0] + gamma * R
+        rewards.insert(0, R)
 
-        for (log_prob, value, r) in zip(self.save_actions, self.save_value, rewards):
-            reward = r - value.item()
+    rewards = torch.tensor(rewards)
+    rewards = (rewards - rewards.mean()) / (rewards.std() + eps)
 
-            policy_loss.append(-log_prob * reward)
-            value_loss.append(F.smooth_l1_loss(value, torch.tensor([r])))
+    for (log_prob , value), r in zip(save_actions, rewards):
+        reward = r - value.item()
+        policy_loss.append(-log_prob * reward)
+        value_loss.append(F.smooth_l1_loss(value, torch.tensor([r])))
 
-        self.optimizer.zero_grad()
-        loss = torch.stack(policy_loss).sum() + torch.stack(value_loss).sum()
-        loss.backward()
-        self.optimizer.step()
+    optimizer.zero_grad()
+    loss = torch.stack(policy_loss).sum() + torch.stack(value_loss).sum()
+    loss.backward()
+    optimizer.step()
 
-        del self.rewards[:]
-        del self.save_actions[:]
-        del self.save_value[:]
+    del model.rewards[:]
+    del model.save_actions[:]
 
-    def save(self):
-        torch.save(self.policy.state_dict(), 'policy_net.pth')
+def main():
+    running_reward = 10
+    for i_episode in count(1):
+        state = env.reset()
+        for t in range(10000):  # Don't infinite loop while learning
+            action = select_action(np.array(state))
+            action = action_wrapper(action)
+            state, reward, done, _, _ = env.step(action)
+            model.rewards.append(reward)
+            if done:
+                break
 
-    def load(self, file):
-        self.policy.load_state_dict(torch.load(file))
+        running_reward = running_reward * 0.99 + t * 0.01
+        finish_episode()
+        if i_episode % 10 == 0:
+            print('Episode {}\tLast length: {:5d}\tAverage length: {:.2f}'.format(
+                i_episode, t, running_reward))
+        torch.save(model.state_dict(), 'policy_net.pth')
+
+
+if __name__ == '__main__':
+    main()
