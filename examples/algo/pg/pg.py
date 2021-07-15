@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import torch.optim as optim
-
+from torch.distributions import Categorical
 from algo.pg.Network import Policy
 
 from pathlib import Path
@@ -52,7 +52,7 @@ class PG(object):
         if train:
             state = torch.from_numpy(observation).float().unsqueeze(0)
             probs = self.policy(state)
-            m = (probs)
+            m = Categorical(probs)
             action = m.sample()
             self.saved_log_probs.append(m.log_prob(action))
         else:

@@ -37,7 +37,7 @@ class DQN(object):
         # exploration
         self.eps = args.epsilon
         self.eps_end = args.epsilon_end
-        self.eps_delay = 1 / (args.max_episode * 100)
+        self.eps_delay = 1 / (args.max_episodes * 100)
 
         # 更新target网
         self.learn_step_counter = 0
