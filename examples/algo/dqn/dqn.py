@@ -75,6 +75,10 @@ class DQN(object):
 
     def learn(self):
 
+        data_length = len(self.memory.item_buffers["rewards"].data)
+        if data_length < self.buffer_size:
+            return
+
         data = self.memory.sample(self.batch_size)
 
         transitions = {
