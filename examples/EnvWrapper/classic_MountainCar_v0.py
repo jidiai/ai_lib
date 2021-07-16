@@ -51,6 +51,9 @@ class MountainCar_v0(BaseWrapper):
     def close(self):
         pass
 
+    def set_seed(self, seed):
+        self.env.set_seed(seed)
+
 def action_wrapper(joint_action):
     '''
     :param joint_action:
@@ -58,7 +61,7 @@ def action_wrapper(joint_action):
     '''
     joint_action_ = []
     for a in range(env.n_player):
-        action_a = joint_action[a]
+        action_a = joint_action[a]["action"]
         each = [0] * env.action_dim
         each[action_a] = 1
         action_one_hot = [[each]]

@@ -3,7 +3,7 @@ from algo.dqn.dqn import DQN
 from algo.pg.pg import PG
 from algo.ddpg.ddpg import DDPG
 from algo.ac.ac import AC
-from slgo.ddqn.ddqn import DDQN
+from algo.ddqn.ddqn import DDQN
 
 
 def ini_agents(args):
