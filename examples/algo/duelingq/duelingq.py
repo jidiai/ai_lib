@@ -41,7 +41,7 @@ class Critic(nn.Module):
 
 
 # 定义Dueling DQN类（定义两个网络）
-class DuelingDQN(object):
+class DUELINGQ(object):
     # 定义Dueling DQN的一系列属性
     def __init__(self, args):
 

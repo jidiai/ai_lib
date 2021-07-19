@@ -5,7 +5,7 @@ def get_args():
     # set env and algo
     parser.add_argument('--scenario', default="classic_CartPole-v0", type=str)
     parser.add_argument('--max_episodes', default=1000, type=int)
-    parser.add_argument('--algo', default="dqn", type=str, help="dqn/ppo/a2c/ddpg/ac/ddqn/DuelingDQN")
+    parser.add_argument('--algo', default="dqn", type=str, help="dqn/ppo/a2c/ddpg/ac/ddqn/duelingq")
 
     # trainer
     parser.add_argument('--buffer_capacity', default=int(256), type=int)
