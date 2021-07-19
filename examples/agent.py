@@ -1,10 +1,3 @@
-from algo.ppo.ppo import PPO
-from algo.dqn.dqn import DQN
-from algo.pg.pg import PG
-from algo.ddpg.ddpg import DDPG
-from algo.ac.ac import AC
-from algo.ddqn.ddqn import DDQN
-
 import os
 
 def ini_agents(args):
