@@ -5,7 +5,7 @@ def get_args():
     # set env and algo
     parser.add_argument('--scenario', default="classic_MountainCar-v0", type=str)
     parser.add_argument('--max_episodes', default=1000, type=int)
-    parser.add_argument('--algo', default="dqn", type=str, help="dqn/ppo/a2c/ddpg/ac/ddqn/duelingq")
+    parser.add_argument('--algo', default="dqn", type=str, help="dqn/ppo/a2c/ddpg/ac/ddqn/duelingq/sac")
 
     # trainer
     parser.add_argument('--buffer_capacity', default=int(256), type=int)
@@ -27,6 +27,12 @@ def get_args():
 
     parser.add_argument('--reload_config', action='store_true') # 加是true；不加为false
     parser.add_argument('--run_redo', default=None, type=int)
+
+    #added for sac
+    parser.add_argument('--alpha_lr', default = 0.0001,type = float)
+    parser.add_argument('--alpha', default = 0.2, type = float)
+    parser.add_argument('--tune_entropy', default = False, type = bool)
+    parser.add_argument('--target_entropy_ratio', default = 0.9, type = float)
 
     # exploration
     parser.add_argument('--epsilon', default=0.5)  # cartpole 0.2 # mountaincar 1
