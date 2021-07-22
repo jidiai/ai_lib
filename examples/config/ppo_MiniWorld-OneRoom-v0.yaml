@@ -1,6 +1,6 @@
 a_lr: 0.0001
 action_space: 3
-algo: ppo
+algo: ppo_cnn
 batch_size: 32
 buffer_capacity: 10000
 c_lr: 0.0001
