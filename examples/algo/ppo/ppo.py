@@ -34,10 +34,9 @@ class PPO(object):
         self.c_lr = args.c_lr
         self.gamma = args.gamma
         self.hidden_size = args.hidden_size
-        self.is_matrix = args.is_matrix
 
-        self.actor = Actor(self.state_dim, self.action_dim, self.hidden_size, self.is_matrix)
-        self.critic = Critic(self.state_dim, 1, self.hidden_size, self.is_matrix)
+        self.actor = Actor(self.state_dim, self.action_dim, self.hidden_size)
+        self.critic = Critic(self.state_dim, 1, self.hidden_size)
         self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=self.a_lr)
         self.critic_net_optimizer = optim.Adam(self.critic.parameters(), lr=self.c_lr)
 
