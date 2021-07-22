@@ -6,6 +6,12 @@ Follow the instructions and then you can reply the same performance as below.
 
 **classic_CartPole-v0**
 
->python main.py --scenario classic_CartPole-v0 --algo ppo --reload_config
+>python main.py --scenario classic_CartPole-v0 --algo ppo_cnn --reload_config
 
 ![image](https://github.com/jidiai/ai_lib/raw/master/examples/assets/ppo_cartpole.png)
+
+**MiniWorld-OneRoom-v0**
+
+>python main.py --scenario classic_CartPole-v0 --algo ppo_cnn --reload_config
+
+![image](https://github.com/eigebi/ai_lib/blob/master/examples/assets/ppo_MiniWorld_OneRoon_v0.png)
