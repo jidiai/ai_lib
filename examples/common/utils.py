@@ -1,3 +1,4 @@
+import importlib
 from pathlib import Path
 import sys
 base_dir = Path(__file__).resolve().parent.parent.parent
@@ -9,22 +10,12 @@ from types import SimpleNamespace as SN
 
 
 def make_env(args):
-    env = make(args.scenario)
-    if args.scenario == "classic_CartPole-v0":
-        base_dir = Path(__file__).resolve().parent.parent.parent
-        sys.path.append(str(base_dir))
-        from EnvWrapper.classic_CartPole_v0 import Cartpole_v0
-        env = Cartpole_v0()
-    if args.scenario == "classic_MountainCar-v0":
-        base_dir = Path(__file__).resolve().parent.parent.parent
-        sys.path.append(str(base_dir))
-        from EnvWrapper.classic_MountainCar_v0 import MountainCar_v0
-        env = MountainCar_v0()
-    if args.scenario == "MiniWorld-OneRoom-v0":
-        base_dir = Path(__file__).resolve().parent.parent.parent
-        sys.path.append(str(base_dir))
-        from EnvWrapper.MiniWorld_OneRoom_v0 import MiniWorld_OneRoom_v0
-        env = MiniWorld_OneRoom_v0()
+    base_dir = Path(__file__).resolve().parent.parent.parent
+    sys.path.append(str(base_dir))
+    env_wrapper_file_name = str("EnvWrapper." + str(args.scenario.replace('-', '_')))
+    env_wrapper_file_import = importlib.import_module(env_wrapper_file_name)
+    env = getattr(env_wrapper_file_import, str(args.scenario.replace('-', '_')))()
+    print("=========== env: ", env)
     action_space = env.get_actionspace()
     obs_space = env.get_observationspace()
     args.obs_space = obs_space

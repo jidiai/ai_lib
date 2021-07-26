@@ -7,7 +7,7 @@ sys.path.append(str(base_dir))
 from env.chooseenv import make
 env = make("classic_CartPole-v0")
 
-class Cartpole_v0(BaseWrapper):
+class classic_CartPole_v0(BaseWrapper):
     def __init__(self):
         self.env = env
         super().__init__(self.env)
