@@ -20,6 +20,11 @@ def make_env(args):
         sys.path.append(str(base_dir))
         from EnvWrapper.classic_MountainCar_v0 import MountainCar_v0
         env = MountainCar_v0()
+    if args.scenario == "MiniWorld-OneRoom-v0":
+        base_dir = Path(__file__).resolve().parent.parent.parent
+        sys.path.append(str(base_dir))
+        from EnvWrapper.MiniWorld_OneRoom_v0 import MiniWorld_OneRoom_v0
+        env = MiniWorld_OneRoom_v0()
     action_space = env.get_actionspace()
     obs_space = env.get_observationspace()
     args.obs_space = obs_space

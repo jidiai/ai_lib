@@ -12,10 +12,10 @@ def get_args():
     parser.add_argument('--a_lr', default=0.0001, type=float)
     parser.add_argument('--c_lr', default=0.005, type=float)
     parser.add_argument('--batch_size', default=64, type=int)
-    parser.add_argument('--clip_param', default=0.2, type=int)
-    parser.add_argument('--max_grad_norm', default=0.5, type=int)
+    parser.add_argument('--clip_param', default=0.2, type=float)
+    parser.add_argument('--max_grad_norm', default=0.5, type=float)
     parser.add_argument('--ppo_update_time', default=10, type=int)
-    parser.add_argument('--gamma', default=0.99)
+    parser.add_argument('--gamma', default=0.99, type=float)
     parser.add_argument('--hidden_size', default=100)
     parser.add_argument('--target_replace', default=100)
     parser.add_argument('--train_frequency', default=100)
@@ -28,6 +28,8 @@ def get_args():
     parser.add_argument('--reload_config', action='store_true') # 加是true；不加为false
     parser.add_argument('--run_redo', default=None, type=int)
 
+    parser.add_argument('--is_matrix', action='store_true') # 加是true；不加是false
+    
     #added for sac
     parser.add_argument('--alpha_lr', default = 0.0001,type = float)
     parser.add_argument('--alpha', default = 0.2, type = float)

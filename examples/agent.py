@@ -1,4 +1,5 @@
 from algo.ppo.ppo import PPO
+from algo.ppo_cnn.ppo_cnn import PPO_CNN
 from algo.dqn.dqn import DQN
 from algo.pg.pg import PG
 from algo.ddpg.ddpg import DDPG
@@ -19,6 +20,8 @@ def ini_agents(args):
         agent = AC(args)
     elif args.algo == "ppo":
         agent = PPO(args)
+    elif args.algo == "ppo_cnn":
+        agent = PPO_CNN(args)
     elif args.algo == "ddqn":
         agent = DDQN(args)
     elif args.algo == "duelingq":
