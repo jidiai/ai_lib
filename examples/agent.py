@@ -1,32 +1,12 @@
-from algo.ppo.ppo import PPO
-from algo.ppo_cnn.ppo_cnn import PPO_CNN
-from algo.dqn.dqn import DQN
-from algo.pg.pg import PG
-from algo.ddpg.ddpg import DDPG
-from algo.ac.ac import AC
-from algo.ddqn.ddqn import DDQN
-from algo.duelingq.duelingq import DUELINGQ
-from algo.sac.sac import SAC
+import importlib
+
 
 def ini_agents(args):
-    agent = None
-    if args.algo == "dqn":
-        agent = DQN(args)
-    elif args.algo == "pg":
-        agent = PG(args)
-    elif args.algo == "ddpg":
-        agent = DDPG(args)
-    elif args.algo == "ac":
-        agent = AC(args)
-    elif args.algo == "ppo":
-        agent = PPO(args)
-    elif args.algo == "ppo_cnn":
-        agent = PPO_CNN(args)
-    elif args.algo == "ddqn":
-        agent = DDQN(args)
-    elif args.algo == "duelingq":
-        agent = DUELINGQ(args)
-    elif args.algo == 'sac':
-        agent = SAC(args)
+    agent_file_name = str("algo." + str(args.algo) + "." + str(args.algo))
+    agent_file_import = importlib.import_module(agent_file_name)
+    agent_class_name = args.algo.upper()
+    # 实例化agent
+    agent = getattr(agent_file_import, agent_class_name)(args)
+    print("=========== agent: ",  agent)
     return agent
 
