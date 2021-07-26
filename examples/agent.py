@@ -5,7 +5,8 @@ from algo.pg.pg import PG
 from algo.ddpg.ddpg import DDPG
 from algo.ac.ac import AC
 from algo.ddqn.ddqn import DDQN
-
+from algo.duelingq.duelingq import DUELINGQ
+from algo.sac.sac import SAC
 
 def ini_agents(args):
     agent = None
@@ -23,5 +24,9 @@ def ini_agents(args):
         agent = PPO_CNN(args)
     elif args.algo == "ddqn":
         agent = DDQN(args)
+    elif args.algo == "duelingq":
+        agent = DUELINGQ(args)
+    elif args.algo == 'sac':
+        agent = SAC(args)
     return agent
 
