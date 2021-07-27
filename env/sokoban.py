@@ -47,7 +47,8 @@ class Sokoban(GridGame, GridObservation):
         self.boxes = []
         self.targets = []
         self.players = []
-        self.current_state = self.init_state()
+        self.current_state = self.init_state
+        self.all_observes = self.get_all_observes()
         self.won = {'total boxes': len(self.boxes)}
         self.success_box_each_step = 0
         self.input_dimension = self.board_width * self.board_height
@@ -59,9 +60,10 @@ class Sokoban(GridGame, GridObservation):
         self.boxes = []
         self.targets = []
         self.players = []
-        self.current_state = self.init_state()
+        self.current_state = self.init_state
+        self.all_observes = self.get_all_observes()
 
-        return self.current_state
+        return self.all_observes
 
     def check_win(self):
         cnt = 0
@@ -74,8 +76,10 @@ class Sokoban(GridGame, GridObservation):
 
     def set_action_space(self):
         action_space = [[Discrete(4)] for _ in range(self.n_player)]
+        # action_space = [[4] for _ in range(self.n_player)]
         return action_space
 
+    @property
     def init_state(self):
         b_cnt = 0
         for i in range(len(self.map)):
@@ -93,15 +97,14 @@ class Sokoban(GridGame, GridObservation):
                         if self.map[i][j] == p:
                             player = GameObject(p, i, j, 0)
                             self.players.append(player)
+        # self.players.sort(key=lambda pl: pl.object_id)
         current_state = [[[0] * self.cell_dim for _ in range(self.board_width)] for _ in range(self.board_height)]
         for i in range(len(self.map)):
             for j in range(len(self.map[0])):
                 current_state[i][j][0] = self.map[i][j]
-        self.init_info = {}
-        self.init_info["walls"] = self.walls
-        self.init_info["targets"] = self.targets
-        self.init_info["players_position"] = [[p.row, p.col] for p in self.players]
-        self.init_info["boxes_position"] = [[b.row, b.col] for b in self.boxes]
+        self.init_info = {"walls": self.walls, "targets": self.targets,
+                          "players_position": [[p.row, p.col] for p in self.players],
+                          "boxes_position": [[b.row, b.col] for b in self.boxes]}
         return current_state
 
     def update_state(self):
@@ -134,7 +137,9 @@ class Sokoban(GridGame, GridObservation):
         self.success_box_each_step = 0
         if not not_valid:
             origin_box = self.check_win()
+            # print("current_state", self.current_state)
             random.shuffle(self.players)
+            # print("after shuffle", [i.object_id for i in self.players])
             unprocessed_players = self.players
             occupied_pos = []
             # 存在死锁情况
@@ -146,6 +151,7 @@ class Sokoban(GridGame, GridObservation):
                     p = unprocessed_players[i]
                     act_idx = p.object_id-4
                     p.direction = joint_action[act_idx][0].index(1)
+                    # print("%d direction" % p.object_id, self.actions_name[p.direction])
 
                     p1 = p.get_next_pos(p.row, p.col)
                     if self.out_of_board(p1[0], p1[1]):
@@ -187,24 +193,38 @@ class Sokoban(GridGame, GridObservation):
             self.current_state = next_state
             self.step_cnt += 1
 
-            info_after = {}
             players = sorted(self.players, key=lambda pl: pl.object_id)
-            info_after["players_position"] = [[p.row, p.col] for p in players]
-            info_after["boxes_position"] = [[b.row, b.col] for b in self.boxes]
+            info_after = {"players_position": [[p.row, p.col] for p in players],
+                          "boxes_position": [[b.row, b.col] for b in self.boxes]}
+            self.all_observes = self.get_all_observes()
 
-            return next_state, info_after
+            return self.all_observes, info_after
 
     def get_grid_observation(self, current_state, player_id, info_before):
         return current_state
 
-    def is_not_valid_action(self, joint_action):
-        not_valid = 0
-        if len(joint_action) != self.n_player:
-            raise Exception("joint action 维度不正确！", len(joint_action))
+    def get_dict_observation(self, player_id):
+        key_info = {"state_map": self.current_state, "player_idx": player_id, 'board_width': self.board_width,
+                    'board_height': self.board_height}
 
-        for i in range(len(joint_action)):
-            if len(joint_action[i][0]) != 4:
-                raise Exception("玩家%d joint action维度不正确！" % i, joint_action[i])
+        return key_info
+
+    def get_all_observes(self):
+        self.all_observes = []
+        for i in range(self.n_player):
+            each_obs = self.get_dict_observation(i + 4)
+            self.all_observes.append(each_obs)
+
+        return self.all_observes
+
+    def is_not_valid_action(self, all_action):
+        not_valid = 0
+        if len(all_action) != self.n_player:
+            raise Exception("joint action 维度不正确！", len(all_action))
+
+        for i in range(self.n_player):
+            if len(all_action[i][0]) != 4:
+                raise Exception("玩家%d joint action维度不正确！" % i, all_action[i])
         return not_valid
 
     def is_valid_pos(self, p1, p2):
@@ -232,6 +252,8 @@ class Sokoban(GridGame, GridObservation):
             return self.current_state[p1[0]][p1[1]][0]
 
     def get_reward(self, joint_action):
+        # print("success_box_each_step", self.success_box_each_step)
+        # r = [self.success_box_each_step * self.max_step // (self.step_cnt-1)] * self.n_player
         step_reward = self.success_box_each_step - 1
         r = [step_reward] * self.n_player
         self.n_return[0] += step_reward

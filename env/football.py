@@ -1,4 +1,8 @@
 # -*- coding:utf-8  -*-
+# Time  : 2020/12/28 16:33
+# Author: Yahui Cui
+import copy
+
 from env.simulators.game import Game
 from env.obs_interfaces.observation import *
 import gfootball.env as football_env
@@ -30,7 +34,8 @@ class Football(Game, DictObservation):
         obs_list = self.env_core.reset()
         self.won = {}
         self.joint_action_space = self.set_action_space()
-        self.current_state = obs_list
+        self.current_state = self.get_sorted_next_state(obs_list)
+        self.all_observes = self.current_state
         self.n_return = [0] * self.n_player
 
         self.action_dim = self.get_action_dim()
@@ -41,6 +46,7 @@ class Football(Game, DictObservation):
     def load_action_space(self, conf):
         if "act_box" in conf:
             input_action = json.loads(conf["act_box"]) if isinstance(conf["act_box"], str) else conf["act_box"]
+            # print(input_action)
             if self.is_act_continuous:
                 if ("high" not in input_action) or ("low" not in input_action) or ("shape" not in input_action):
                     raise Exception("act_box in continuous case must have fields low, high, shape")
@@ -56,13 +62,15 @@ class Football(Game, DictObservation):
         action = self.decode(joint_action)
         info_before = self.step_before_info()
         next_state, reward, self.done, info_after = self.get_next_state(action)
-        self.current_state = next_state
+        sorted_next_state = self.get_sorted_next_state(next_state)
+        self.current_state = sorted_next_state
+        self.all_observes = self.current_state
         if isinstance(reward, np.ndarray):
             reward = reward.tolist()
         reward = self.get_reward(reward)
         self.step_cnt += 1
         done = self.is_terminal()
-        return next_state, reward, done, info_before, info_after
+        return self.all_observes, reward, done, info_before, info_after
 
     def decode(self, joint_action):
         if isinstance(joint_action, np.ndarray):
@@ -97,8 +105,8 @@ class Football(Game, DictObservation):
         return action_space
 
     def check_win(self):
-        left_sum = sum(self.n_return[:11])
-        right_sum = sum(self.n_return[11:])
+        left_sum = sum(self.n_return[:self.agent_nums[0]])
+        right_sum = sum(self.n_return[self.agent_nums[0]:])
         if left_sum > right_sum:
             return '0'
         elif left_sum < right_sum:
@@ -107,15 +115,17 @@ class Football(Game, DictObservation):
             return '-1'
 
     def reset(self):
-        obs_list = self.env_core.reset().tolist()
+        obs_list = self.get_sorted_next_state(self.env_core.reset())
         self.step_cnt = 0
         self.done = False
         self.current_state = obs_list
-        return self.current_state
+        self.all_observes = self.current_state
+        return self.all_observes
 
     def get_action_dim(self):
         action_dim = 1
         if self.is_act_continuous:
+            # if isinstance(self.joint_action_space[0][0], gym.spaces.Box):
             return self.joint_action_space[0][0]
 
         for i in range(len(self.joint_action_space)):
@@ -133,3 +143,25 @@ class Football(Game, DictObservation):
         ob = current_state[player_id]
         ob['controlled_idx'] = player_id
         return ob
+
+    def get_sorted_next_state(self, next_state):
+        left_team = next_state[:self.agent_nums[0]]
+        right_team = next_state[self.agent_nums[0]:]
+        left_team = sorted(left_team, key=lambda keys: keys['active'])
+        right_team = sorted(right_team, key=lambda keys: keys['active'])
+
+        new_state = []
+        index = 0
+        for item in left_team:
+            each = copy.deepcopy(item)
+            each["controlled_player_index"] = index
+            new_state.append(each)
+            index += 1
+
+        for item in right_team:
+            each = copy.deepcopy(item)
+            each["controlled_player_index"] = index
+            new_state.append(each)
+            index += 1
+
+        return new_state

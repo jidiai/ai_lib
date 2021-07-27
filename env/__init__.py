@@ -8,3 +8,4 @@ from .MiniWorld import *
 from .minigrid import *
 from .particleenv import *
 from .overcookedai import *
+from .magent import *

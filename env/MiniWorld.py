@@ -1,4 +1,7 @@
 # -*- coding:utf-8  -*-
+# Time  : 2021/02/28 16:33
+# Author: Xue Yan
+
 from env.simulators.game import Game
 from env.obs_interfaces.observation import *
 import numpy as np
@@ -26,10 +29,11 @@ class MiniWorld(Game, VectorObservation):
 
         self.won = {}
         self.current_state = [obs_list] * self.n_player
+        self.all_observes = self.get_all_observes()
         self.n_return = [0] * self.n_player
         self.joint_action_space = self.set_action_space()
 
-        self.action_dim = self.get_action_dim()#??
+        self.action_dim = self.get_action_dim()
         self.input_dimension = self.env_core.observation_space
 
         self.ob_space = [self.env_core.observation_space for _ in range(self.n_player)]#60* 80 *3
@@ -78,10 +82,11 @@ class MiniWorld(Game, VectorObservation):
             next_state = np.array(next_state)
         next_state = next_state.reshape(-1).tolist()
         self.current_state = [next_state] * self.n_player
+        self.all_observes = self.get_all_observes()
         done = self.is_terminal()
         info_after = self.parse_info(info_after)
         self.step_cnt += 1
-        return next_state, reward, done, info_before, info_after
+        return self.all_observes, reward, done, info_before, info_after
 
     def get_reward(self, reward):
         r = [0] * self.n_player
@@ -94,7 +99,7 @@ class MiniWorld(Game, VectorObservation):
     def decode(self, joint_action):
 
         if not self.is_act_continuous:
-            return joint_action[0][0].index(1)
+            return joint_action[0][0].index(1)#？？
         else:
             return joint_action[0]
 
@@ -130,7 +135,8 @@ class MiniWorld(Game, VectorObservation):
         self.step_cnt = 0
         self.done = False
         self.current_state = [obs_list] * self.n_player
-        return obs_list
+        self.all_observes = self.get_all_observes()
+        return self.all_observes
 
     def get_action_dim(self):
         action_dim = 1
@@ -165,3 +171,10 @@ class MiniWorld(Game, VectorObservation):
 
     def set_seed(self, seed=None):
         self.env_core.seed(seed)
+
+    def get_all_observes(self):
+        all_observes = []
+        for i in range(self.n_player):
+            each = {"obs": self.current_state[i], "controlled_player_index": i}
+            all_observes.append(each)
+        return all_observes

@@ -9,6 +9,11 @@
 - `miniworld` https://github.com/maximecb/gym-miniworld#installation
 - `minigrid` https://github.com/maximecb/gym-minigrid
 - `Multi-Agent Particle Environment` https://github.com/openai/multiagent-particle-envs
+- `Overcooked-AI` https://github.com/HumanCompatibleAI/overcooked_ai
+- `MAgent` https://www.pettingzoo.ml/magent
+  
+  (Using `pip install 'pettingzoo[magent]'` if you are using zsh; 
+  Using render_from_log.py for MAgent local render)
 - `Torch 1.7.0` 可选
   - 支持提交Torch训练后的模型.pth附属文件
 

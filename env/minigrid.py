@@ -10,6 +10,7 @@ import gym_minigrid
 
 # env = gym.make('MiniGrid-DoorKey-8x8-v0')
 
+
 class MiniGrid(GridGame, GridObservation):
     def __init__(self, conf):
         colors = conf.get('colors', [(255, 255, 255), (0, 0, 0), (245, 245, 245)])
@@ -19,7 +20,7 @@ class MiniGrid(GridGame, GridObservation):
         self.action_dim = self.env_core.action_space.n
         self.input_dimension = self.env_core.observation_space['image'].shape
         # self.obs_type = [str(i) for i in str(conf["obs_type"]).split(',')]
-        self.current_state = self.reset()
+        _ = self.reset()
         self.is_act_continuous = False
         self.is_obs_continuous = True
 
@@ -35,14 +36,16 @@ class MiniGrid(GridGame, GridObservation):
         reward = self.get_reward(reward)
         self.step_cnt += 1
         done = self.is_terminal()
-        return next_state, reward, done, info_before, info_after
+        self.all_observes = self.get_all_observes()
+        return self.all_observes, reward, done, info_before, info_after
 
     def reset(self):
-        obs = self.env_core.reset()['image']
+        obs = self.env_core.reset()
         self.step_cnt = 0
         self.done = False
         self.current_state = obs
-        return self.current_state
+        self.all_observes = self.get_all_observes()
+        return self.all_observes
 
     def get_next_state(self, action):
         action = int(np.array(action[0][0]).argmax())
@@ -70,6 +73,14 @@ class MiniGrid(GridGame, GridObservation):
 
     def set_seed(self, seed=None):
         self.env_core.seed(seed)
+
+    def get_all_observes(self):
+        all_observes = []
+        for i in range(self.n_player):
+            each = {"obs": self.current_state, "controlled_player_index": i}
+            all_observes.append(each)
+
+        return all_observes
 
 
 
