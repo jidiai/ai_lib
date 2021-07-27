@@ -1,0 +1,27 @@
+agent_name: DQN
+env_name: Cartpole
+envparameters:
+  action_continuous: false
+  action_space: 100
+  agent_num: 1
+  obs_continuous: true
+  obs_space: 100
+hyperparameters:
+  batch_size: 64
+  buffer_capacity: 256
+  c_lr: 0.005
+  epsilon: 0.5
+  epsilon_end: 0.05
+  gamma: 0.99
+  hidden_size: 64
+  learning_rate: 0.0003
+  target_replace: 100
+seedparameters:
+  seed_nn: 1
+  seed_np: 1
+  seed_random: 1
+trainingparameters:
+  evaluate_rate: 50
+  learn_freq: 10
+  learn_terminal: false
+  max_episodes: 100000000000000000

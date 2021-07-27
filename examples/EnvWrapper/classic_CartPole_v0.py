@@ -39,6 +39,9 @@ class classic_CartPole_v0(BaseWrapper):
     def set_seed(self, seed):
         self.env.set_seed(seed)
 
+    def make_render(self):
+        self.env.env_core.render()
+
 def action_wrapper(joint_action):
     '''
     :param joint_action:
