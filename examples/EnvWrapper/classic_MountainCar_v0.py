@@ -10,7 +10,7 @@ print('+', base_dir)
 from env.chooseenv import make
 env = make("classic_MountainCar-v0")
 
-class MountainCar_v0(BaseWrapper):
+class classic_MountainCar_v0(BaseWrapper):
     def __init__(self):
         self.env = env
         super().__init__(self.env)

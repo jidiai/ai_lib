@@ -7,7 +7,7 @@ sys.path.append(str(base_dir))
 from env.chooseenv import make
 env = make("classic_CartPole-v0")
 
-class Cartpole_v0(BaseWrapper):
+class classic_CartPole_v0(BaseWrapper):
     def __init__(self):
         self.env = env
         super().__init__(self.env)
@@ -38,6 +38,9 @@ class Cartpole_v0(BaseWrapper):
 
     def set_seed(self, seed):
         self.env.set_seed(seed)
+
+    def make_render(self):
+        self.env.env_core.render()
 
 def action_wrapper(joint_action):
     '''
