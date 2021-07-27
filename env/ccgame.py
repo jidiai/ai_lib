@@ -1,4 +1,6 @@
 # -*- coding:utf-8  -*-
+# Time  : 2020/12/28 16:33
+# Author: Yahui Cui
 from env.simulators.game import Game
 from env.obs_interfaces.observation import *
 import numpy as np
@@ -27,6 +29,7 @@ class CCGame(Game, VectorObservation):
         # self.env_core.action_space = gym.spaces.Box(-4.0, 4.0, (1,), np.float32)
         self.joint_action_space = self.set_action_space()
         self.current_state = [obs_list] * self.n_player
+        self.all_observes = self.get_all_observes()
         self.n_return = [0] * self.n_player
 
         self.action_dim = self.get_action_dim()
@@ -64,9 +67,10 @@ class CCGame(Game, VectorObservation):
             next_state = np.array(next_state)
         next_state = next_state.reshape(-1).tolist()
         self.current_state = [next_state] * self.n_player
+        self.all_observes = self.get_all_observes()
         self.step_cnt += 1
         done = self.is_terminal()
-        return next_state, reward, done, info_before, info_after
+        return self.all_observes, reward, done, info_before, info_after
 
     def decode(self, joint_action):
 
@@ -116,7 +120,8 @@ class CCGame(Game, VectorObservation):
             observation = np.array(observation)
         obs_list = observation.reshape(-1).tolist()
         self.current_state = [obs_list] * self.n_player
-        return obs_list
+        self.all_observes = self.get_all_observes()
+        return self.all_observes
 
     def get_action_dim(self):
         action_dim = 1
@@ -148,3 +153,10 @@ class CCGame(Game, VectorObservation):
 
     def set_seed(self, seed=None):
         self.env_core.seed(seed)
+
+    def get_all_observes(self):
+        all_observes = []
+        for i in range(len(self.current_state)):
+            each = {"obs": self.current_state[i], "controlled_player_index": i}
+            all_observes.append(each)
+        return all_observes

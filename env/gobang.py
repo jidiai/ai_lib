@@ -1,4 +1,7 @@
 # -*- coding:utf-8  -*-
+# 作者：zruizhi   
+# 创建时间： 2020/7/10 10:24 上午   
+# 描述：
 from random import randrange
 from env.simulators.gridgame import GridGame
 from env.obs_interfaces.observation import *
@@ -13,7 +16,7 @@ class GoBang(GridGame, GridObservation):
         if self.board_width != 15 or self.board_height != 15:
             raise Exception("棋盘大小应设置为15,15,当前棋盘大小为：%d,%d" % (self.board_width, self.board_height))
         self.current_state = [[[0] * self.cell_dim for _ in range(self.board_width)] for _ in range(self.board_height)]
-
+        self.all_observes = self.get_all_observes()
         # 1：黑子 2：白子 默认黑子先下
         self.chess_player = 1
         # 存储赢方位置信息
@@ -38,11 +41,13 @@ class GoBang(GridGame, GridObservation):
         for i in range(0, self.board_height):
             for j in range(0, self.board_width):
                 self.all_grids.append((i, j))
+        self.all_observes = self.get_all_observes()
 
-        return self.current_state
+        return self.all_observes
 
     def set_action_space(self):
         action_space = [[Discrete(self.board_height), Discrete(self.board_width)] for _ in range(self.n_player)]
+        # action_space = [[self.board_height, self.board_width] for _ in range(self.n_player)]
         return action_space
 
     def get_next_state(self, joint_action):
@@ -76,21 +81,22 @@ class GoBang(GridGame, GridObservation):
                 else:
                     info_after = "棋盘已满"
             info_after["action"] = (x, y)
+            self.all_observes = self.get_all_observes()
 
-            return next_state, info_after
+            return self.all_observes, info_after
 
     def step_before_info(self, info=''):
         info = "当前棋手:%d" % self.chess_player
         return info
 
-    def is_not_valid_action(self, joint_action):
+    def is_not_valid_action(self, all_action):
         not_valid = 0
-        if len(joint_action) != self.n_player:
-            raise Exception("joint action 维度不正确！", len(joint_action))
+        if len(all_action) != self.n_player:
+            raise Exception("joint action 维度不正确！", len(all_action))
 
-        for i in range(len(joint_action)):
-            if len(joint_action[i]) != 2 or len(joint_action[i][0]) != self.board_width or len(joint_action[i][1]) != self.board_height:
-                raise Exception("玩家%d joint action维度不正确！" % i, joint_action[i])
+        for i in range(self.n_player):
+            if len(all_action[i]) != 2 or len(all_action[i][0]) != self.board_width or len(all_action[i][1]) != self.board_height:
+                raise Exception("玩家%d joint action维度不正确！" % i, all_action[i])
         return not_valid
 
     def get_reward(self, joint_action):
@@ -158,6 +164,20 @@ class GoBang(GridGame, GridObservation):
 
     def get_grid_observation(self, current_state, player_id, info_before):
         return current_state
+
+    def get_dict_observation(self, player_id):
+        key_info = {"state_map": self.current_state, "chess_player_idx": player_id, 'board_width': self.board_width,
+                    'board_height': self.board_height}
+
+        return key_info
+
+    def get_all_observes(self):
+        self.all_observes = []
+        for i in range(self.n_player):
+            each_obs = self.get_dict_observation(i + 1)
+            self.all_observes.append(each_obs)
+
+        return self.all_observes
 
     def get_terminal_actions(self):
         not_input_valid = 1

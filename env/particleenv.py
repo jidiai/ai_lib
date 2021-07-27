@@ -1,6 +1,7 @@
 # -*- coding:utf-8  -*-
 # Time  : 2021/4/7 下午3:46
 # Author: Yahui Cui
+import copy
 
 import make_env
 import multiagent
@@ -27,6 +28,7 @@ class ParticleEnv(Game, VectorObservation):
 
         self.init_info = None
         self.current_state = self.env_core.reset()
+        self.all_observes = self.get_all_observes()
         self.won = {}
         self.n_return = [0] * self.n_player
         self.action_dim = self.get_action_dim()
@@ -37,9 +39,10 @@ class ParticleEnv(Game, VectorObservation):
         self.done = False
         obs_list = self.env_core.reset()
         self.current_state = obs_list
+        self.all_observes = self.get_all_observes()
         self.won = {}
         self.n_return = [0] * self.n_player
-        return self.current_state
+        return self.all_observes
 
     def step(self, joint_action):
         info_before = self.step_before_info()
@@ -47,10 +50,11 @@ class ParticleEnv(Game, VectorObservation):
         next_state, reward, self.dones, info_after = \
             self.env_core.step(joint_action_decode)
         self.current_state = next_state
+        self.all_observes = self.get_all_observes()
         self.set_n_return(reward)
         self.step_cnt += 1
         done = self.is_terminal()
-        return next_state, reward, done, info_before, info_after
+        return self.all_observes, reward, done, info_before, info_after
 
     def step_before_info(self, info=''):
         return info
@@ -123,3 +127,13 @@ class ParticleEnv(Game, VectorObservation):
     def set_n_return(self, reward):
         for i in range(self.n_player):
             self.n_return[i] += reward[i]
+
+    def get_all_observes(self):
+        all_observes = []
+        for i in range(self.n_player):
+            item = copy.deepcopy(self.current_state[i])
+            if isinstance(item, np.ndarray):
+                item = item.tolist()
+            each = {"obs": item, "controlled_player_index": i}
+            all_observes.append(each)
+        return all_observes

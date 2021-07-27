@@ -1,6 +1,7 @@
 # -*- coding:utf-8  -*-
 # Time  : 2021/6/4 上午9:45
 # Author: Yahui Cui
+import copy
 
 from env.simulators.game import Game
 from env.obs_interfaces.observation import *
@@ -25,7 +26,8 @@ class OvercookedAI(Game, DictObservation):
         self.env = OvercookedEnv.from_mdp(self.base_mdp, **DEFAULT_ENV_PARAMS)
         self.action_space = gym.spaces.Discrete(len(Action.ALL_ACTIONS))
         obs_list = self.env.reset()
-        self.current_state = obs_list.to_dict() if obs_list is not None else obs_list
+        self.current_state = [obs_list.to_dict() if obs_list is not None else obs_list for _ in range(self.n_player)]
+        self.all_observes = self.get_all_observes()
 
         self.joint_action_space = self.set_action_space()
 
@@ -40,23 +42,25 @@ class OvercookedAI(Game, DictObservation):
         self.step_cnt = 0
         self.done = False
         obs_list = self.env.reset()
-        self.current_state = obs_list.to_dict() if obs_list is not None else obs_list
+        self.current_state = [obs_list.to_dict() if obs_list is not None else obs_list for _ in range(self.n_player)]
+        self.all_observes = self.get_all_observes()
         self.init_info = None
         self.won = {}
         self.n_return = [0] * self.n_player
-        return self.current_state
+        return self.all_observes
 
     def step(self, joint_action):
         info_before = self.step_before_info()
         joint_action_decode = self.decode(joint_action)
         next_state, reward, self.done, info_after = self.env.step(joint_action_decode)
         next_state = next_state.to_dict()
-        self.current_state = next_state
+        self.current_state = [next_state for _ in range(self.n_player)]
+        self.all_observes = self.get_all_observes()
         self.set_n_return(reward)
         self.step_cnt += 1
         done = self.is_terminal()
         info_after = self.parse_info_after(info_after)
-        return next_state, reward, done, info_before, info_after
+        return self.all_observes, reward, done, info_before, info_after
 
     def step_before_info(self, info=''):
         return info
@@ -131,3 +135,12 @@ class OvercookedAI(Game, DictObservation):
 
     def set_seed(self, seed=0):
         np.random.seed(seed)
+
+    def get_all_observes(self):
+        all_observes = []
+        for i in range(self.n_player):
+            each = copy.deepcopy(self.current_state[i])
+            if each:
+                each["controlled_player_index"] = i
+            all_observes.append(each)
+        return all_observes

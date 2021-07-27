@@ -1,4 +1,7 @@
 # -*- coding:utf-8  -*-
+# 作者：zruizhi   
+# 创建时间： 2020/7/21 10:24 上午
+# 描述：
 from env.simulators.gridgame import GridGame
 import random
 from env.obs_interfaces.observation import *
@@ -29,6 +32,7 @@ class Reversi(GridGame, GridObservation):
         self.current_state[int(self.n / 2 - 1)][int(self.n / 2)][0] = 1
         self.current_state[int(self.n / 2)][int(self.n / 2 - 1)][0] = 1
         self.current_state[int(self.n / 2)][int(self.n / 2)][0] = 2
+        self.all_observes = self.get_all_observes()
 
         # 上一个玩家是否无子可落
         self.last = 0
@@ -63,18 +67,35 @@ class Reversi(GridGame, GridObservation):
 
         # 1：黑子 2：白子 默认黑子先下
         self.chess_player = 1
+        self.all_observes = self.get_all_observes()
 
-        return self.current_state
+        return self.all_observes
 
     def get_grid_observation(self, current_state, player_id, info_before):
         return current_state
+
+    def get_dict_observation(self, player_id):
+        key_info = {1: self.black, 2: self.white, "chess_player_idx": player_id, 'board_width': self.board_width,
+                    'board_height': self.board_height}
+
+        return key_info
+
+    def get_all_observes(self):
+        self.all_observes = []
+        for i in range(self.n_player):
+            each_obs = self.get_dict_observation(i + 1)
+            self.all_observes.append(each_obs)
+
+        return self.all_observes
 
     def get_next_state(self, joint_action):
         not_valid = self.is_not_valid_action(joint_action)
         info_after = {}
         if not not_valid:
             cur_action = joint_action[self.chess_player - 1]
+            # print("current_state", self.current_state)
             next_state = self.current_state
+            self.all_observes = self.get_all_observes()
             if not self.legal_position.keys():
                 if self.last == 0:
                     # print("当前棋手没有可选位置")
@@ -95,6 +116,7 @@ class Reversi(GridGame, GridObservation):
             x, y = self.decode(cur_action)
             p, reverse = self.check_at(x, y)
             if reverse:
+                # info_after = {}
                 info_after["action"] = p
                 info_after["reverse_positions"] = reverse
 
@@ -114,27 +136,31 @@ class Reversi(GridGame, GridObservation):
 
                 self.step_cnt += 1
 
-            return next_state, info_after
+            # return next_state, str(info_after)
+            self.all_observes = self.get_all_observes()
+            return self.all_observes, info_after
 
     def step_before_info(self, info=''):
         info = "当前棋手:%d" % self.chess_player
         self.legal_position = self.legal_positions()
+        # info += "\n可落子位置，及落子后反色的位置集合: %s" % str(self.legal_position)
 
         return info
 
     def set_action_space(self):
         action_space = [[Discrete(self.board_height), Discrete(self.board_width)] for _ in range(self.n_player)]
+        # action_space = [[self.board_height, self.board_width] for _ in range(self.n_player)]
         return action_space
 
-    def is_not_valid_action(self, joint_action):
+    def is_not_valid_action(self, all_action):
         not_valid = 0
-        if len(joint_action) != self.n_player:
-            raise Exception("joint action 维度不正确！", len(joint_action))
+        if len(all_action) != self.n_player:
+            raise Exception("joint action 维度不正确！", len(all_action))
 
-        for i in range(len(joint_action)):
-            if len(joint_action[i]) != 2 or len(joint_action[i][0]) != self.board_width or len(
-                    joint_action[i][1]) != self.board_height:
-                raise Exception("玩家%d joint action维度不正确！" % i, joint_action[i])
+        for i in range(self.n_player):
+            if len(all_action[i]) != 2 or len(all_action[i][0]) != self.board_width or len(
+                    all_action[i][1]) != self.board_height:
+                raise Exception("玩家%d joint action维度不正确！" % i, all_action[i])
         return not_valid
 
     def get_reward(self, joint_action):
@@ -185,6 +211,17 @@ class Reversi(GridGame, GridObservation):
     def check_at(self, x, y):
         p = (x, y)
         if p not in self.legal_position.keys():
+            # 如果玩家未下在正确位置，则游戏结束
+            """
+            print("当前位置不合法!")
+            self.done = 1
+
+            if self.chess_player == 1:
+                print("游戏结束，获胜方：白棋")
+            else:
+                print("游戏结束，获胜方：黑棋")
+            raise Exception("Invalid position!", p)
+            """
             # 如果玩家未下在正确位置，则随机生成一个合法的位置
             p = random.choice(list(self.legal_position))
             # print("当前位置不合法，随机生成一个合法位置：%s" % str(p))
@@ -266,8 +303,3 @@ class Reversi(GridGame, GridObservation):
             action_dim *= self.joint_action_space[0][i].n
 
         return action_dim
-
-
-
-
-

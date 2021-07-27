@@ -48,7 +48,7 @@
     "n_player": 1,
     "is_obs_continuous": true,
     "is_act_continuous": true,
-    "act_box": {"low": -4.0, "high":4.0, "shape":[1]},
+    "act_box": {"low": -1.0, "high":1.0, "shape":[1]},
     "game_name": "MountainCarContinuous-v0",
     "agent_nums": [1],
     "max_step": 999,
@@ -59,7 +59,7 @@
     "n_player": 1,
     "is_obs_continuous": true,
     "is_act_continuous": true,
-    "act_box": {"low": -4.0, "high":4.0, "shape":[1]},
+    "act_box": {"low": -2.0, "high":2.0, "shape":[1]},
     "game_name": "Pendulum-v0",
     "agent_nums": [1],
     "max_step": 200,
@@ -182,6 +182,19 @@
     "agent_nums": [1],
     "obs_type": ["vector"],
     "act_box": {"discrete_n": 3}
+  },
+  "seek_2p": {
+    "class_literal": "Seek",
+    "n_player": 2,
+    "board_width": 3,
+    "board_height": 3,
+    "cell_range": 1,
+    "max_step": 50,
+    "game_name": "seek",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [2],
+    "obs_type": ["grid"]
   },
   "MiniWorld-OneRoom-v0": {
     "class_literal": "MiniWorld",
@@ -446,5 +459,27 @@
     "agent_nums": [1,1],
     "obs_type": ["dict", "dict"],
     "act_box": {"discrete_n": 6}
+  },
+  "magent-battle_v3-12v12": {
+    "class_literal": "MAgent",
+    "n_player": 24,
+    "max_step": 1000,
+    "map_size": 20,
+    "game_name": "magent-battle_v3-12v12",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [12,12],
+    "obs_type": ["dict", "dict"]
+  },
+  "magent-battle_v3-20v20": {
+    "class_literal": "MAgent",
+    "n_player": 40,
+    "max_step": 1000,
+    "map_size": 25,
+    "game_name": "magent-battle_v3-20v20",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [20,20],
+    "obs_type": ["dict", "dict"]
   }
 }
