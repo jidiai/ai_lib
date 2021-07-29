@@ -7,6 +7,7 @@ sys.path.append(str(base_dir))
 from env.chooseenv import make
 env = make("classic_CartPole-v0")
 
+
 class classic_CartPole_v0(BaseWrapper):
     def __init__(self):
         self.env = env
@@ -22,16 +23,14 @@ class classic_CartPole_v0(BaseWrapper):
         '''
         return: next_state, reward, done, _, _
         '''
-        action = action_wrapper([action])
-        next_state, reward, done, _, _ = self.env.step(action)
 
+        next_state, reward, done, _, _ = self.env.step(action)
         reward = np.array(reward)
-        next_state = np.array(next_state)
         return next_state, reward, done, _, _
 
     def reset(self):
         state = self.env.reset()
-        return np.array(state)
+        return state
 
     def close(self):
         pass
@@ -42,19 +41,7 @@ class classic_CartPole_v0(BaseWrapper):
     def make_render(self):
         self.env.env_core.render()
 
-def action_wrapper(joint_action):
-    '''
-    :param joint_action:
-    :return: wrapped joint action: one-hot
-    '''
-    joint_action_ = []
-    for a in range(env.n_player):
-        action_a = joint_action[a]["action"]
-        each = [0] * env.action_dim
-        each[action_a] = 1
-        action_one_hot = [[each]]
-        joint_action_.append([action_one_hot[0][0]])
-    return joint_action_
+
 
 
 

@@ -1,12 +1,14 @@
 import random
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optimizer
 import numpy as np
+
+from algo.ddqn.Network import Critic
+
+import os
 from pathlib import Path
 import sys
-
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
 from common.buffer import Replay_buffer as buffer
@@ -14,20 +16,6 @@ from common.buffer import Replay_buffer as buffer
 
 def get_trajectory_property():
     return ["action"]
-
-
-class Critic(nn.Module):
-    def __init__(self, input_size, output_size, hidden_size):
-        super().__init__()
-        self.input_size = input_size
-        self.output_size = output_size
-        self.linear1 = nn.Linear(input_size, hidden_size)
-        self.linear2 = nn.Linear(hidden_size, output_size)
-
-    def forward(self, x):
-        x = F.relu(self.linear1(x))
-        x = self.linear2(x)
-        return x
 
 
 class DDQN(object):
@@ -86,6 +74,10 @@ class DDQN(object):
 
     def learn(self):
 
+        data_length = len(self.memory.item_buffers["rewards"].data)
+        if data_length < self.buffer_size:
+            return
+
         data = self.memory.sample(self.batch_size)
 
         transitions = {
@@ -121,8 +113,13 @@ class DDQN(object):
 
         return loss
 
-    def save(self):
-        torch.save(self.critic_eval.state_dict(), 'critic_net.pth')
+    def save(self, save_path, episode):
+        base_path = os.path.join(save_path, 'trained_model')
+        if not os.path.exists(base_path):
+            os.makedirs(base_path)
+
+        model_critic_path = os.path.join(base_path, "critic_" + str(episode) + ".pth")
+        torch.save(self.critic_eval.state_dict(), model_critic_path)
 
     def load(self, file):
         self.critic_eval.load_state_dict(torch.load(file))

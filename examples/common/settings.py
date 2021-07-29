@@ -16,8 +16,7 @@ from typing import (
 
 @attr.s(auto_attribs=True)
 class HyperparamSettings:
-    learning_rate: float = 3.0e-4
-    hidden_size: int = 64
+    hidden_size: int = 100
 
 
 @attr.s(auto_attribs=True)
@@ -35,6 +34,46 @@ class DQNSettings(HyperparamSettings):
     epsilon: float = 0.5
     epsilon_end: float = 0.05
     target_replace: int = 100
+    network: str="critic"
+
+
+@attr.s(auto_attribs=True)
+class DDQNSettings(HyperparamSettings):
+    c_lr: float = 0.005
+    buffer_capacity: int = 256
+    batch_size: int = 64
+    gamma: float = 0.99
+    epsilon: float = 0.5
+    epsilon_end: float = 0.05
+    target_replace: int = 100
+
+
+@attr.s(auto_attribs=True)
+class PGSettings(HyperparamSettings):
+    c_lr: float = 0.005
+    buffer_capacity: int = 256
+    batch_size: int = 64
+    gamma: float = 0.99
+
+
+@attr.s(auto_attribs=True)
+class ACSettings(HyperparamSettings):
+    c_lr: float = 0.005
+    buffer_capacity: int = 100
+    batch_size: int = 32
+    gamma: float = 0.99
+
+
+@attr.s(auto_attribs=True)
+class PPOSettings(HyperparamSettings):
+    c_lr: float = 0.005
+    a_lr: float = 0.005
+    clip_param: float = 0.2
+    max_grad_norm: float = 0.5
+    update_freq: int = 10
+    buffer_capacity: int = 100
+    batch_size: int = 32
+    gamma: float = 0.99
 
 
 @attr.s(auto_attribs=True)
@@ -44,16 +83,17 @@ class EnvSettingDefault:
     action_space: int = 100
     obs_continuous: bool = True
     action_continuous: bool = False
-    agent_num: int = 1
+    n_player: int = 1
 
 
 @attr.s(auto_attribs=True)
 class TrainingDefault:
     learn_freq: int = 10
-    learn_terminal: bool = False
+    learn_terminal: bool = True
     max_episodes: int = 1000
     evaluate_rate: int = 50
     render: bool = False
+    save_interval: int = 50
 
 
 @attr.s(auto_attribs=True)

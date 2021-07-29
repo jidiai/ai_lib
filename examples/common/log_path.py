@@ -3,13 +3,15 @@
 # Author: Yutong Wu
 
 from pathlib import Path
-import sys
+import os
 
 def make_logpath(game_name, algo):
     base_dir = Path(__file__).resolve().parent.parent
-    model_dir = base_dir / Path('./models') / game_name / algo
+    model_dir = base_dir / Path('./models') / game_name.replace('-', '_') / algo
 
-    log_dir = base_dir / Path('./models')
+    log_dir = base_dir / Path('./models/config_training')
+    if not log_dir.exists():
+        os.mkdir(log_dir)
 
     if not model_dir.exists():
         curr_run = 'run1'

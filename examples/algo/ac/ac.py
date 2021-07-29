@@ -2,11 +2,11 @@ import numpy as np
 import torch
 import torch.optim as optim
 from torch.distributions import Categorical
-import torch.nn as nn
 import torch.nn.functional as F
 
 from algo.ac.Network import ActorCritic
 
+import os
 from pathlib import Path
 import sys
 base_dir = Path(__file__).resolve().parent.parent.parent
@@ -14,6 +14,7 @@ sys.path.append(str(base_dir))
 from common.buffer import Replay_buffer as buffer
 
 eps = np.finfo(np.float32).eps.item()
+
 
 def get_trajectory_property():
     return ["action", 'log_prob', 'value']
@@ -53,15 +54,16 @@ class AC(object):
             self.memory.insert(k, agent_id, v)
 
     def inference(self, observation, train=True):
-        # if train:
-        state = torch.from_numpy(observation).float().unsqueeze(0)
-        probs, value = self.policy(state)
-        m = Categorical(probs)
-        action = m.sample()
-        # else:
-        #     state = torch.from_numpy(observation).float().unsqueeze(0)
-        #     probs = self.policy(state)
-        #     action = torch.argmax(probs)
+        if train:
+            state = torch.from_numpy(observation).float().unsqueeze(0)
+            probs, value = self.policy(state)
+            m = Categorical(probs)
+            action = m.sample()
+        else:
+            state = torch.from_numpy(observation).float().unsqueeze(0)
+            probs, value = self.policy(state)
+            m = Categorical(probs)
+            action = torch.argmax(probs)
         return {
             "action": action.item(),
             "log_prob": m.log_prob(action),
@@ -100,8 +102,13 @@ class AC(object):
         del self.save_actions[:]
         del self.save_value[:]
 
-    def save(self):
-        torch.save(self.policy.state_dict(), 'policy_net.pth')
+    def save(self, save_path, episode):
+        base_path = os.path.join(save_path, 'trained_model')
+        if not os.path.exists(base_path):
+            os.makedirs(base_path)
+
+        model_critic_path = os.path.join(base_path, "policy_" + str(episode) + ".pth")
+        torch.save(self.policy.state_dict(), model_critic_path)
 
     def load(self, file):
         self.policy.load_state_dict(torch.load(file))

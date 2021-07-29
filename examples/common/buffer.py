@@ -25,8 +25,6 @@ class Replay_buffer(object):
             self.item_buffers[p] = ItemBuffer(self.max_size, p)
 
     def insert(self, item_name:str, agent_id:int, data:np.ndarray, step=None):
-        # print("== debug ==")
-        # print(item_name, len(self.item_buffers[item_name].data))
         if item_name == 'dones':
             agent_id = 0
         self.item_buffers[item_name].insert(agent_id, step, data)
