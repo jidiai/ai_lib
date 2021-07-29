@@ -1,0 +1,28 @@
+algo: dqn
+envparameters:
+  action_continuous: false
+  action_space: 3
+  n_player: 1
+  obs_continuous: true
+  obs_space: 2
+  scenario: classic_MountainCar-v0
+hyperparameters:
+  batch_size: 64
+  buffer_capacity: 10240
+  c_lr: 0.005
+  epsilon: 0.5
+  epsilon_end: 0.05
+  gamma: 0.99
+  hidden_size: 100
+  target_replace: 100
+seedparameters:
+  seed_nn: 1
+  seed_np: 1
+  seed_random: 1
+trainingparameters:
+  evaluate_rate: 50
+  learn_freq: 1
+  learn_terminal: False
+  max_episodes: 1000
+  render: false
+  save_interval: 200

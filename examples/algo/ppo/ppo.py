@@ -27,7 +27,7 @@ class PPO(object):
 
         self.clip_param = args.clip_param
         self.max_grad_norm = args.max_grad_norm
-        self.ppo_update_time = args.ppo_update_time
+        self.update_freq = args.update_freq
         self.buffer_size = args.buffer_capacity
         self.batch_size = args.batch_size
         self.a_lr = args.a_lr
@@ -89,7 +89,7 @@ class PPO(object):
             R = r[0] + self.gamma * R
             Gt.insert(0, R)
         Gt = torch.tensor(Gt, dtype=torch.float)
-        for i in range(self.ppo_update_time):
+        for i in range(self.update_freq):
             for index in BatchSampler(SubsetRandomSampler(range(data_length)), self.batch_size, False):
                 Gt_index = Gt[index].view(-1, 1)
                 V = self.critic(obs[index])

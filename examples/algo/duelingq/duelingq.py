@@ -1,12 +1,12 @@
 import random
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optimizer
 import numpy as np
 
 from algo.duelingq.Network import Critic
 
+import os
 from pathlib import Path
 import sys
 base_dir = Path(__file__).resolve().parent.parent.parent
@@ -18,9 +18,7 @@ def get_trajectory_property():
     return ["action"]
 
 
-# 定义Dueling DQN类（定义两个网络）
 class DUELINGQ(object):
-    # 定义Dueling DQN的一系列属性
     def __init__(self, args):
 
         self.state_dim = args.obs_space
@@ -49,7 +47,6 @@ class DUELINGQ(object):
         self.memory = buffer(self.buffer_size, trajectory_property)
         self.memory.init_item_buffers()
 
-    # 定义动作选择函数（x为状态）
     def choose_action(self, observation, train=True):
         inference_output = self.inference(observation, train)
         if train:
@@ -76,8 +73,11 @@ class DUELINGQ(object):
         for k, v in output.items():
             self.memory.insert(k, agent_id, v)
 
-    # 定义学习函数（记忆库已满后便开始学习）
     def learn(self):
+
+        data_length = len(self.memory.item_buffers["rewards"].data)
+        if data_length < self.buffer_size:
+            return
 
         data = self.memory.sample(self.batch_size)
 
@@ -111,8 +111,13 @@ class DUELINGQ(object):
 
         return loss
 
-    def save(self):
-        torch.save(self.critic_eval.state_dict(), 'critic_net.pth')
+    def save(self, save_path, episode):
+        base_path = os.path.join(save_path, 'trained_model')
+        if not os.path.exists(base_path):
+            os.makedirs(base_path)
+
+        model_critic_path = os.path.join(base_path, "critic_" + str(episode) + ".pth")
+        torch.save(self.critic_eval.state_dict(), model_critic_path)
 
     def load(self, file):
         self.critic_eval.load_state_dict(torch.load(file))

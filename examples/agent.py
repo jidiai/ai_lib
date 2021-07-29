@@ -7,6 +7,6 @@ def ini_agents(args):
     agent_class_name = args.algo.upper()
     # 实例化agent
     agent = getattr(agent_file_import, agent_class_name)(args)
-    print("=========== agent: ",  agent)
+    print("=========== agents: ",  agent)
     return agent
 

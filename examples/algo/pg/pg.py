@@ -4,6 +4,7 @@ import torch.optim as optim
 from torch.distributions import Categorical
 from algo.pg.Network import Policy
 
+import os
 from pathlib import Path
 import sys
 base_dir = Path(__file__).resolve().parent.parent.parent
@@ -80,8 +81,13 @@ class PG(object):
         del self.rewards[:]
         del self.saved_log_probs[:]
 
-    def save(self):
-        torch.save(self.policy.state_dict(), 'policy_net.pth')
+    def save(self, save_path, episode):
+        base_path = os.path.join(save_path, 'trained_model')
+        if not os.path.exists(base_path):
+            os.makedirs(base_path)
+
+        model_critic_path = os.path.join(base_path, "policy_" + str(episode) + ".pth")
+        torch.save(self.policy.state_dict(), model_critic_path)
 
     def load(self, file):
         self.policy.load_state_dict(torch.load(file))

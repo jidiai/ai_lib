@@ -1,12 +1,10 @@
 import random
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optimizer
 import numpy as np
 
-from algo.dqn.Network import Critic
-
+import os
 from pathlib import Path
 import sys
 base_dir = Path(__file__).resolve().parent.parent.parent
@@ -19,7 +17,7 @@ def get_trajectory_property():
 
 
 class DQN(object):
-    def __init__(self, args):
+    def __init__(self, args, Critic):
 
         self.state_dim = args.obs_space
         self.action_dim = args.action_space
@@ -74,7 +72,6 @@ class DQN(object):
             self.memory.insert(k, agent_id, v)
 
     def learn(self):
-
         data_length = len(self.memory.item_buffers["rewards"].data)
         if data_length < self.buffer_size:
             return
@@ -111,8 +108,13 @@ class DQN(object):
 
         return loss
 
-    def save(self):
-        torch.save(self.critic_eval.state_dict(), 'critic_net.pth')
+    def save(self, save_path, episode):
+        base_path = os.path.join(save_path, 'trained_model')
+        if not os.path.exists(base_path):
+            os.makedirs(base_path)
+
+        model_critic_path = os.path.join(base_path, "critic_" + str(episode) + ".pth")
+        torch.save(self.critic_eval.state_dict(), model_critic_path)
 
     def load(self, file):
         self.critic_eval.load_state_dict(torch.load(file))
