@@ -11,12 +11,12 @@ https://github.com/jidiai/ai_lib/blob/master/examples/demo
 """
 
 
-def my_controller(observation_list, action_space_list, is_act_continuous=False):
-    joint_action = []
-    for i in range(len(action_space_list)):
-        player = sample_single_dim(action_space_list[i], is_act_continuous)
-        joint_action.append(player)
-    return joint_action
+def my_controller(observation, action_space, is_act_continuous=False):
+    agent_action = []
+    for i in range(len(action_space)):
+        action_ = sample_single_dim(action_space[i], is_act_continuous)
+        agent_action.append(action_)
+    return agent_action
 
 
 def sample_single_dim(action_space_list_each, is_act_continuous):
