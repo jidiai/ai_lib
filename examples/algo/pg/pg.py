@@ -2,7 +2,8 @@ import numpy as np
 import torch
 import torch.optim as optim
 from torch.distributions import Categorical
-from algo.pg.Network import Policy
+
+from networks.actor import Actor
 
 import os
 from pathlib import Path
@@ -27,7 +28,7 @@ class PG(object):
         self.lr = args.c_lr
         self.gamma = args.gamma
 
-        self.policy = Policy(self.state_dim, self.action_dim)
+        self.policy = Actor(self.state_dim, self.action_dim)
         self.optimizer = optim.Adam(self.policy.parameters(), lr=self.lr)
 
         self.saved_log_probs = []
@@ -51,13 +52,13 @@ class PG(object):
 
     def inference(self, observation, train=True):
         if train:
-            state = torch.from_numpy(observation).float().unsqueeze(0)
+            state = torch.tensor(observation, dtype=torch.float).unsqueeze(0)
             probs = self.policy(state)
             m = Categorical(probs)
             action = m.sample()
             self.saved_log_probs.append(m.log_prob(action))
         else:
-            state = torch.from_numpy(observation).float().unsqueeze(0)
+            state = torch.tensor(observation, dtype=torch.float).unsqueeze(0)
             probs = self.policy(state)
             action = torch.argmax(probs)
         return {"action": action.item()}

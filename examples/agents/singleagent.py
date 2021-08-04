@@ -11,13 +11,13 @@ def ini_agents(args):
     agent_file_import = importlib.import_module(agent_file_name)
     agent_class_name = args.algo.upper()
 
-    network_file_name = str("networks" + "." + str(args.network))
-    network_file_import = importlib.import_module(network_file_name)
-    network_class_name = args.network.capitalize()
-    network = getattr(network_file_import, network_class_name)
+    # network_file_name = str("networks" + "." + str(args.network))
+    # network_file_import = importlib.import_module(network_file_name)
+    # network_class_name = ''.join([ item.capitalize() for item in args.network.split("_")][:])
+    # network = getattr(network_file_import, network_class_name)
 
     # 实例化agent
-    agent = getattr(agent_file_import, agent_class_name)(args, network)
+    agent = getattr(agent_file_import, agent_class_name)(args)
     return agent
 
 

@@ -29,6 +29,7 @@ class classic_MountainCar_v0(BaseWrapper):
         if train:
             # reward shapping
             reward = get_reward(next_state[0]["obs"])
+            reward = np.array(reward)
             return next_state, reward, done, _, _
 
         else:
@@ -52,7 +53,7 @@ def get_reward(s_):
         if s_[0] > 0.5:  ###到达目标，给10的奖励
             r = 300
     else:
-        r = -1  ##在谷底不得分
+        r = float(-1)  ##在谷底不得分
     return r
 
 

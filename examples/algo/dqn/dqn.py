@@ -4,6 +4,8 @@ import torch.nn as nn
 import torch.optim as optimizer
 import numpy as np
 
+from networks.critic import Critic
+
 import os
 from pathlib import Path
 import sys
@@ -17,7 +19,7 @@ def get_trajectory_property():
 
 
 class DQN(object):
-    def __init__(self, args, Critic):
+    def __init__(self, args):
 
         self.state_dim = args.obs_space
         self.action_dim = args.action_space

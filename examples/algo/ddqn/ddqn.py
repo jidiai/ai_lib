@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.optim as optimizer
 import numpy as np
 
-from algo.ddqn.Network import Critic
+from networks.critic import Critic
 
 import os
 from pathlib import Path

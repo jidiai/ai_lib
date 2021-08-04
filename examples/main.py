@@ -11,7 +11,7 @@ if __name__ == '__main__':
     # set env and algo
     parser = argparse.ArgumentParser()
     parser.add_argument('--scenario', default="classic_MountainCar-v0", type=str)
-    parser.add_argument('--algo', default="dqn", type=str, help="dqn/ppo/a2c/ddpg/ac/ddqn/duelingq/sac")
+    parser.add_argument('--algo', default="dqn", type=str, help="dqn/ppo/ddpg/ac/ddqn/duelingq/sac/pg")
 
     parser.add_argument('--reload_config', action='store_true')  # 加是true；不加为false
     args = parser.parse_args()

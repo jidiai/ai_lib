@@ -37,7 +37,6 @@ class DDPG(object):
         self.tau = args.tau
 
         self.update_freq = args.update_freq
-        self.epsilon = args.epsilon
 
         self.actor = Actor(self.state_dim, self.action_dim, self.hidden_size)
         self.actor_target = Actor(self.state_dim, self.action_dim, self.hidden_size)
@@ -54,7 +53,8 @@ class DDPG(object):
         self.memory = buffer(self.buffer_size, trajectory_property)
         self.memory.init_item_buffers()
 
-        self.eps = 0.2
+        self.eps = args.epsilon
+        self.epsilon_end = args.epsilon_end
 
     def choose_action(self, observation, train=True):
         inference_output = self.inference(observation, train)
@@ -65,9 +65,9 @@ class DDPG(object):
     def inference(self, observation, train=True):
         # if train:
         self.eps *= 0.99999
-        self.eps = max(self.eps, 0.05)
+        self.eps = max(self.eps, self.epsilon_end)
         if random.random() > self.eps:
-            state = torch.from_numpy(observation).float().unsqueeze(0)
+            state = torch.tensor(observation, dtype=torch.float).unsqueeze(0)
             logits = self.actor(state).detach().numpy()
         else:
             logits = np.random.uniform(low=0, high=1, size=(1,2))

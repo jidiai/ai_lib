@@ -32,14 +32,14 @@ class Runner:
         )
 
         self.run_dir, self.log_dir = make_logpath(args.scenario, args.algo)
-        print("check path: ", self.run_dir, self.log_dir)
         self.writer = SummaryWriter(str(self.run_dir))
 
         config_dir = os.path.join(os.getcwd(), "config")
         file_name = args.algo + "_" + args.scenario
 
         if (not args.reload_config and not os.path.exists(os.path.join(self.log_dir, file_name + '.yaml'))) \
-                or (args.reload_config and not os.path.exists(os.path.join(config_dir, file_name + '.yaml'))):
+                or (args.reload_config and not os.path.exists(os.path.join(config_dir, file_name + '.yaml')) and
+                not os.path.exists(os.path.join(self.log_dir, file_name + '.yaml'))):
             paras = TrainerSettings(
                 algo=args.algo,
                 hyperparameters=globals()[str(args.algo).upper() + "Settings"](),
@@ -48,8 +48,14 @@ class Runner:
                 seedparameters=SeedSetting())
             save_new_paras(paras, self.log_dir, file_name)
             config_dict = load_config(self.log_dir, file_name)
+
         elif not args.reload_config and os.path.exists(os.path.join(self.log_dir, file_name + '.yaml')):
             config_dict = load_config(self.log_dir, file_name)
+
+        elif (args.reload_config and not os.path.exists(os.path.join(config_dir, file_name + '.yaml')) and
+                os.path.exists(os.path.join(self.log_dir, file_name + '.yaml'))):
+            config_dict = load_config(self.log_dir, file_name)
+
         else:
             config_dict = load_config(config_dir, file_name)
 
@@ -63,7 +69,6 @@ class Runner:
         random.seed(self.paras.seed_random)
 
         # todo
-        # self.agents -> List
         self.agent = SingleRLAgent(self.paras)
         self.policy = [paras.algo]
         self.agent_num = 1
@@ -101,11 +106,6 @@ class Runner:
     # ==========================================================================================================
     # ============================ inference ==================================
     def get_joint_action_eval(self, game, multi_part_agent_ids, policy_list, actions_spaces, all_observes):
-        # if len(policy_list) != len(game.agent_nums):
-        #     error = "模型个数%d与玩家个数%d维度不正确！" % (len(policy_list), len(game.agent_nums))
-        #     raise Exception(error)
-
-        # [[[0, 0, 0, 1]], [[0, 1, 0, 0]]]
         joint_action = []
         for policy_i in range(len(policy_list)):
             agents_id_list = multi_part_agent_ids[policy_i]
@@ -115,11 +115,6 @@ class Runner:
                 agent_id = agents_id_list[i]
                 a_obs = all_observes[agent_id]
                 each = self.agent.choose_action_to_env(a_obs, agent_id)
-                # each = self.agents[agent_id].choose_action(a_obs)
-                # each = self.dummy_action_wrapped(each)
-                # if len(each) != game.agent_nums[policy_i]:
-                #     error = "模型%d动作空间维度%d不正确！应该是%d" % (int(t_agents_id[policy_i]), len(each), game.agent_nums[policy_i])
-                #     raise Exception(error)
                 joint_action.append(each)
         return joint_action
 
@@ -133,7 +128,6 @@ class Runner:
             step = 0
             Gt = 0
             while not self.g_core.is_terminal():
-
                 step += 1
                 joint_act = self.get_joint_action_eval(self.env, multi_part_agent_ids, self.policy, actions_space, state)
 
