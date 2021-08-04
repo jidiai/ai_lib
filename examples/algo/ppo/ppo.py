@@ -8,6 +8,7 @@ from torch.utils.data.sampler import BatchSampler, SubsetRandomSampler
 
 from algo.ppo.Network import Actor, Critic
 
+import os
 from pathlib import Path
 import sys
 base_dir = Path(__file__).resolve().parent.parent.parent
@@ -54,7 +55,7 @@ class PPO(object):
         return inference_output
 
     def inference(self, observation, train=True):
-        state = torch.from_numpy(observation).float().unsqueeze(0)
+        state = torch.tensor(observation, dtype=torch.float).unsqueeze(0)
         logits = self.actor(state).detach()
         action = Categorical(torch.Tensor(logits)).sample()
         return {"action": action.item(),
@@ -116,9 +117,15 @@ class PPO(object):
                 self.training_step += 1
         self.memory.item_buffer_clear()
 
-    def save(self, save_path):
-        torch.save(self.actor.state_dict(), str(save_path) + '/actor_net.pth')
-        torch.save(self.critic.state_dict(), str(save_path) + '/critic_net.pth')
+    def save(self, save_path, episode):
+        base_path = os.path.join(save_path, 'trained_model')
+        if not os.path.exists(base_path):
+            os.makedirs(base_path)
+
+        model_actor_path = os.path.join(base_path, "actor_" + str(episode) + ".pth")
+        torch.save(self.actor.state_dict(), model_actor_path)
+        model_critic_path = os.path.join(base_path, "critic_" + str(episode) + ".pth")
+        torch.save(self.critic.state_dict(), model_critic_path)
 
     def load(self, actor_net, critic_net):
         self.actor.load_state_dict(torch.load(actor_net))

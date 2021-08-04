@@ -4,7 +4,7 @@ import torch.optim as optim
 from torch.distributions import Categorical
 import torch.nn.functional as F
 
-from algo.ac.Network import ActorCritic
+from networks.actor_critic import ActorCritic
 
 import os
 from pathlib import Path
@@ -30,7 +30,10 @@ class AC(object):
         self.lr = args.c_lr
         self.gamma = args.gamma
 
-        self.policy = ActorCritic(self.state_dim, self.action_dim, self.hidden_size)
+        if args.given_net:
+            self.policy = args.network(self.state_dim, self.action_dim, self.hidden_size)
+        else:
+            self.policy = ActorCritic(self.state_dim, self.action_dim, self.hidden_size)
         self.optimizer = optim.Adam(self.policy.parameters(), lr=self.lr)
 
         self.save_actions = []
@@ -55,12 +58,12 @@ class AC(object):
 
     def inference(self, observation, train=True):
         if train:
-            state = torch.from_numpy(observation).float().unsqueeze(0)
+            state = torch.tensor(observation, dtype=torch.float).unsqueeze(0)
             probs, value = self.policy(state)
             m = Categorical(probs)
             action = m.sample()
         else:
-            state = torch.from_numpy(observation).float().unsqueeze(0)
+            state = torch.tensor(observation, dtype=torch.float).unsqueeze(0)
             probs, value = self.policy(state)
             m = Categorical(probs)
             action = torch.argmax(probs)
@@ -81,7 +84,7 @@ class AC(object):
         rewards = []
 
         for r in self.rewards[::-1]:
-            R = r[0] + self.gamma * R
+            R = r + self.gamma * R
             rewards.insert(0, R)
 
         rewards = torch.tensor(rewards, dtype=torch.float)

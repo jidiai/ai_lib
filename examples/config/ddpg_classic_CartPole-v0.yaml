@@ -1,0 +1,32 @@
+algo: ddpg
+envparameters:
+  action_continuous: false
+  action_space: 2
+  n_player: 1
+  obs_continuous: true
+  obs_space: 4
+  scenario: classic_CartPole-v0
+hyperparameters:
+  a_lr: 0.0001
+  batch_size: 32
+  buffer_capacity: 1000
+  c_lr: 0.0001
+  epsilon: 0.2
+  epsilon_end: 0.02
+  gamma: 0.99
+  given_net: false
+  hidden_size: 256
+  network: actor_critic
+  tau: 0.02
+  update_freq: 10
+seedparameters:
+  seed_nn: 1
+  seed_np: 1
+  seed_random: 1
+trainingparameters:
+  evaluate_rate: 50
+  learn_freq: 1
+  learn_terminal: False
+  max_episodes: 1000
+  render: false
+  save_interval: 50

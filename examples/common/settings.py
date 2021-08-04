@@ -17,6 +17,7 @@ from typing import (
 @attr.s(auto_attribs=True)
 class HyperparamSettings:
     hidden_size: int = 100
+    given_net: bool = False
 
 
 @attr.s(auto_attribs=True)
@@ -47,6 +48,31 @@ class DDQNSettings(HyperparamSettings):
     epsilon_end: float = 0.05
     target_replace: int = 100
 
+
+@attr.s(auto_attribs=True)
+class DUELINGQSettings(HyperparamSettings):
+    c_lr: float = 0.005
+    buffer_capacity: int = 256
+    batch_size: int = 64
+    gamma: float = 0.99
+    epsilon: float = 0.5
+    epsilon_end: float = 0.05
+    target_replace: int = 100
+    network: str="critic"
+
+
+@attr.s(auto_attribs=True)
+class DDPGSettings(HyperparamSettings):
+    a_lr: float = 0.005
+    c_lr: float = 0.005
+    buffer_capacity: int = 256
+    batch_size: int = 64
+    gamma: float = 0.99
+    tau: float = 0.2
+    epsilon: float = 0.5
+    epsilon_end: float = 0.05
+    update_freq: int = 5
+    network: str="actor_critic"
 
 @attr.s(auto_attribs=True)
 class PGSettings(HyperparamSettings):
