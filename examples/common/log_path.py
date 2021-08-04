@@ -11,7 +11,8 @@ def make_logpath(game_name, algo):
 
     log_dir = base_dir / Path('./models/config_training')
     if not log_dir.exists():
-        os.mkdir(log_dir)
+        #os.mkdir(log_dir)
+        os.makedirs(log_dir)
 
     if not model_dir.exists():
         curr_run = 'run1'
