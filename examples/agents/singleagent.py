@@ -40,9 +40,13 @@ class SingleRLAgent(Baseagent):
         joint_action_ = []
         for a in range(self.args.n_player):
             action_a = joint_action["action"]
-            each = [0] * self.args.action_space
-            each[action_a] = 1
-            joint_action_.append(each)
+            if not self.args.action_continuous:   #discrete action space
+                each = [0] * self.args.action_space
+                each[action_a] = 1
+                joint_action_.append(each)
+            else:
+                joint_action_.append(action_a)   #continuous action space
+
         return joint_action_
 
 

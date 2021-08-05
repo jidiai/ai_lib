@@ -5,17 +5,17 @@ import torch
 from torch.optim import Adam
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.distributions import Categorical
-import random
+
 import numpy as np
 
-#from .algo.sac.Network import Actor, Critic
+from networks.critic import Critic
+from networks.actor import NoisyActor, CategoricalActor
 
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
 from common.buffer import Replay_buffer as buffer
 
-#from .Network import Actor, Critic
+
 
 def get_trajectory_property():  #for adding terms to the memory buffer
     return ["action"]
@@ -35,68 +35,9 @@ def update_params(optim, loss, clip=False, param_list=False,retain_graph=False):
     optim.step()
 
 
-class Discrete_Actor(nn.Module):
-
-    def __init__(self, state_dim, hidden_dim, action_dim):
-        super(Discrete_Actor, self).__init__()
-
-        self.linear1 = nn.Linear(state_dim, hidden_dim)
-        self.linear2 = nn.Linear(hidden_dim, hidden_dim)
-        self.linear3 = nn.Linear(hidden_dim, action_dim)  # should be followed by a softmax layer
-        self.apply(weights_init_)
-
-    def forward(self, state):
-
-        x = F.relu(self.linear1(state))
-        x = F.relu(self.linear2(x))
-        x = self.linear3(x)
-        prob = F.softmax(x, -1)  # [batch_size, action_dim]
-        return prob
-
-    def sample(self, state):
-        prob = self.forward(state)
-
-        distribution = Categorical(probs=prob)
-        sample_action = distribution.sample().unsqueeze(-1)  # [batch, 1]
-        z = (prob == 0.0).float() * 1e-8
-        logprob = torch.log(prob + z)
-        greedy = torch.argmax(prob, dim=-1).unsqueeze(-1)  # 1d tensor
-
-        return sample_action, prob, logprob, greedy
-
-class Determinisitc_Actor(nn.Module):
-    def __init__(self, state_dim, hidden_dim, action_high, action_low):
-        super(Determinisitc_Actor, self).__init__()
-
-        self.linear_in = nn.Linear(state_dim, hidden_dim)
-        self.linear_hid = nn.Linear(hidden_dim, hidden_dim)
-        self.linear_out = nn.Linear(hidden_dim, 1)
-        self.apply(weights_init_)
-        self.noise = torch.Tensor(1)
-
-        #print('action high = ', action_high)
-        #print('action low = ', action_low)
-        self.action_scale = torch.FloatTensor([(action_high - action_low) / 2.])
-        self.action_bias = torch.FloatTensor([(action_high + action_low) / 2.])
-
-    def forward(self, state):
-        x = F.relu(self.linear_in(state))
-        x = F.relu(self.linear_hid(x))
-        x = self.linear_out(x)
-        #mean = torch.tanh(x) * self.action_scale + self.action_bias
-        return x #mean
-
-    def sample(self, state):
-        mean = self.forward(state)
-        noise = self.noise.normal_(0., std = 0.1)
-        noise = noise.clamp(-0.25, 0.25)
-        action = mean + noise
-        return action, torch.tensor(1.), torch.tensor(0.), mean
-
-
 
 class SAC(object):
-    def __init__(self, args, given_critic):
+    def __init__(self, args):
 
         self.state_dim = args.obs_space
         self.action_dim = args.action_space
@@ -118,30 +59,32 @@ class SAC(object):
         self.policy_type = 'discrete' if (not self.action_continuous) else args.policy_type      #deterministic or gaussian policy
         self.device = 'cpu'
 
+        given_critic = Critic   #need to set a default value
+
         if self.policy_type == 'deterministic':
             self.preset_alpha = args.alpha
             self.tune_entropy = False
-
-            self.policy = Determinisitc_Actor(self.state_dim, self.hidden_size, args.action_high, args.action_low)
-
             hid_layer = args.num_hid_layer
+
+            self.policy = NoisyActor(state_dim = self.state_dim, hidden_dim=self.hidden_size, out_dim=1,
+                                     num_hidden_layer=hid_layer).to(self.device)
+            self.policy_target = NoisyActor(state_dim = self.state_dim, hidden_dim=self.hidden_size, out_dim=1,
+                                            num_hidden_layer=hid_layer).to(self.device)
+            self.policy_target.load_state_dict(self.policy.state_dict())
+
             self.q1 = given_critic(self.state_dim+self.action_dim, self.action_dim, self.hidden_size, hid_layer).to(self.device)
-            self.q2 = given_critic(self.state_dim+self.action_dim, self.action_dim, self.hidden_size, hid_layer).to(self.device)
             self.q1.apply(weights_init_)
-            self.q2.apply(weights_init_)
 
             self.q1_target = given_critic(self.state_dim+self.action_dim, self.action_dim, self.hidden_size, hid_layer).to(self.device)
-            self.q2_target = given_critic(self.state_dim+self.action_dim, self.action_dim, self.hidden_size, hid_layer).to(self.device)
             self.q1_target.load_state_dict(self.q1.state_dict())
-            self.q2_target.load_state_dict(self.q2.state_dict())
-            self.critic_optim = Adam(list(self.q1.parameters()) + list(self.q2.parameters()), lr=self.critic_lr)
+            self.critic_optim = Adam(self.q1.parameters(), lr = self.critic_lr)
 
         elif self.policy_type == 'discrete':
             self.preset_alpha = args.alpha
             self.tune_entropy = args.tune_entropy
             self.target_entropy_ratio = args.target_entropy_ratio
 
-            self.policy = Discrete_Actor(self.state_dim, self.hidden_size, self.action_dim).to(self.device)
+            self.policy = CategoricalActor(self.state_dim, self.hidden_size, self.action_dim).to(self.device)
 
             hid_layer = args.num_hid_layer
             self.q1 = given_critic(self.state_dim, self.action_dim, self.hidden_size, hid_layer).to(self.device)
@@ -158,13 +101,6 @@ class SAC(object):
         else:
             raise NotImplementedError
 
-
-        #self.policy = Actor(self.state_dim, self.hidden_size, self.action_dim).to(self.device)
-        #self.critic = Critic(self.hidden_size, self.state_dim, self.action_dim).to(self.device)
-
-
-        #self.critic_target = Critic(self.hidden_size, self.state_dim, self.action_dim).to(self.device)
-        #self.critic_target.load_state_dict(self.critic.state_dict())
         self.eps = args.epsilon
         self.eps_end = args.epsilon_end
         self.eps_delay = 1 / (args.max_episodes * 100)
@@ -174,7 +110,6 @@ class SAC(object):
         self.target_replace_iter = args.target_replace
 
         self.policy_optim = Adam(self.policy.parameters(), lr = self.actor_lr)
-        #self.critic_optim = Adam(self.critic.parameters(), lr = self.critic_lr)
 
         trajectory_property = get_trajectory_property()
         self.memory = buffer(self.buffer_size, trajectory_property)
@@ -204,19 +139,15 @@ class SAC(object):
 
         elif self.policy_type == 'deterministic':
             if train:
-                self.eps = max(self.eps_end, self.eps - self.eps_delay)
-                if random.random() < self.eps:
-                    #action = random.randrange(self.action_dim)
-                    action = np.random.uniform(-2,2)
-                    self.add_experience({"action": action})
-                else:
-                    _,_,_,action = self.policy.sample(state)
-                    action = action.item()
-                    self.add_experience({"action": action})
+                _,_,_,action = self.policy.sample(state)
+                action = action.item()
+                self.add_experience({"action": action})
             else:
                 _,_,_,action = self.policy.sample(state)
                 action = action.item()
             return {'action':action}
+        else:
+            raise NotImplementedError
 
 
     def add_experience(self, output):
@@ -316,43 +247,30 @@ class SAC(object):
 
         elif self.policy_type == 'deterministic':
 
-            with torch.no_grad():
-                _,_,_,next_state_action = self.policy.sample(obs_)
-                qf1_next_target = self.q1_target(torch.cat([obs_, next_state_action], 1))
-                qf2_next_target = self.q2_target(torch.cat([obs_, next_state_action], 1))
-                min_qf_next_target = torch.min(qf1_next_target, qf2_next_target)
-                next_q_value = reward + (1-done) * self.gamma * min_qf_next_target
-            qf1 = self.q1(torch.cat([obs, action], 1))
-            qf2 = self.q2(torch.cat([obs, action], 1))
-            qf1_loss = F.mse_loss(qf1, next_q_value)
-            qf2_loss = F.mse_loss(qf2, next_q_value)
-            qf_loss = qf1_loss + qf2_loss
+            current_q = self.q1(torch.cat([obs, action], 1))
 
+            target_next_action = self.policy_target(obs_)
+
+            target_next_q = self.q1_target(torch.cat([obs_, target_next_action], 1))
+            next_q_value = reward + (1-done) * self.gamma * target_next_q
+
+            qf_loss = F.mse_loss(current_q, next_q_value.detach())
             self.critic_optim.zero_grad()
             qf_loss.backward()
             self.critic_optim.step()
 
             _, _, _, current_action = self.policy.sample(obs)
-            qf1_pi = self.q1(torch.cat([obs, current_action], 1))
-            qf2_pi = self.q2(torch.cat([obs, current_action], 1))
-            min_qf_pi = torch.min(qf1_pi, qf2_pi)
-            policy_loss = (-min_qf_pi).mean()
-
+            qf_pi = self.q1(torch.cat([obs, current_action], 1))
+            policy_loss = -qf_pi.mean()
             self.policy_optim.zero_grad()
             policy_loss.backward()
             self.policy_optim.step()
 
-            alpha_loss, alpha_logs = torch.tensor(0.).to(self.device), self.alpha.detach().clone()
             if self.learn_step_counter % self.target_replace_iter == 0:
                 for param, target_param in zip(self.q1.parameters(), self.q1_target.parameters()):
                     target_param.data.copy_(self.tau * param.data + (1.-self.tau) * target_param.data)
-                for param, target_param in zip(self.q2.parameters(), self.q2_target.parameters()):
+                for param, target_param in zip(self.policy.parameters(), self.policy_target.parameters()):
                     target_param.data.copy_(self.tau * param.data + (1.-self.tau) * target_param.data)
-
-                #self.q1_target.load_state_dict(self.q1.state_dict())
-                #self.q2_target.load_state_dict(self.q2.state_dict())
-
-            self.learn_step_counter += 1
         else:
             raise NotImplementedError
 
