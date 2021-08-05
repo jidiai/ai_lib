@@ -101,6 +101,17 @@ class PPOSettings(HyperparamSettings):
     batch_size: int = 32
     gamma: float = 0.99
 
+@attr.s(auto_attribs=True)
+class SACSettings(HyperparamSettings):
+    c_lr: float = 0.0001
+    buffer_capacity: int = 256
+    batch_size: int = 64
+    gamma: float = 0.99
+    target_replace: int = 100
+    tune_entropy: bool = False
+    alpha: float = 0.2
+    network: str = "critic"
+    policy_type: str = "discrete"
 
 @attr.s(auto_attribs=True)
 class EnvSettingDefault:
