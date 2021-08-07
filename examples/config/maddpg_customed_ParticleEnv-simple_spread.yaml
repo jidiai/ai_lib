@@ -1,0 +1,37 @@
+algo: maddpg_customed
+envparameters:
+  action_continuous: false
+  action_space:
+  - 5
+  - 5
+  - 5
+  n_player: 3
+  obs_continuous: true
+  obs_space:
+  - 18
+  - 18
+  - 18
+  scenario: ParticleEnv-simple_spread
+hyperparameters:
+  action_continuous: true
+  batch_size: 1256
+  buffer_capacity: 1000000
+  gamma: 0.97
+  given_net: false
+  lr_a: 0.01
+  lr_c: 0.01
+  marl: true
+  start_step: 5000
+  tao: 0.01
+  target_replace: 100
+seedparameters:
+  seed_nn: 233
+  seed_np: 1
+  seed_random: 1
+trainingparameters:
+  evaluate_rate: 300
+  learn_freq: 1
+  learn_terminal: false
+  max_episodes: 15000
+  render: false
+  save_interval: 50
