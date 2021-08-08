@@ -9,7 +9,7 @@ import torch.nn.functional as F
 import numpy as np
 
 from networks.critic import Critic
-from networks.actor import NoisyActor, CategoricalActor
+from networks.actor import NoisyActor, CategoricalActor, GaussianActor
 
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
@@ -46,7 +46,6 @@ class SAC(object):
         self.tau = args.tau
 
         self.action_continuous = args.action_continuous
-        #self.update_freq = args.update_freq
 
         self.batch_size = args.batch_size
         self.hidden_size = args.hidden_size
@@ -60,9 +59,9 @@ class SAC(object):
         self.device = 'cpu'
 
         given_critic = Critic   #need to set a default value
+        self.preset_alpha = args.alpha
 
         if self.policy_type == 'deterministic':
-            self.preset_alpha = args.alpha
             self.tune_entropy = False
             hid_layer = args.num_hid_layer
 
@@ -80,7 +79,6 @@ class SAC(object):
             self.critic_optim = Adam(self.q1.parameters(), lr = self.critic_lr)
 
         elif self.policy_type == 'discrete':
-            self.preset_alpha = args.alpha
             self.tune_entropy = args.tune_entropy
             self.target_entropy_ratio = args.target_entropy_ratio
 
@@ -97,6 +95,21 @@ class SAC(object):
             self.q1_target.load_state_dict(self.q1.state_dict())
             self.q2_target.load_state_dict(self.q2.state_dict())
             self.critic_optim = Adam(list(self.q1.parameters()) + list(self.q2.parameters()), lr=self.critic_lr)
+
+        elif self.policy_type == 'gaussian':
+            self.tune_entropy = args.tune_entropy
+            self.target_entropy_ratio = args.target_entropy_ratio
+
+            self.policy = GaussianActor(self.state_dim, self.hidden_size, 1, tanh = False).to(self.device)
+            #self.policy_target = GaussianActor(self.state_dim, self.hidden_size, 1, tanh = False).to(self.device)
+
+            hid_layer = args.num_hid_layer
+            self.q1 = given_critic(self.state_dim+self.action_dim, self.action_dim, self.hidden_size, hid_layer).to(self.device)
+            self.q1.apply(weights_init_)
+            self.critic_optim = Adam(self.q1.parameters(), lr = self.critic_lr)
+
+            self.q1_target = given_critic(self.state_dim+self.action_dim, self.action_dim, self.hidden_size, hid_layer).to(self.device)
+            self.q1_target.load_state_dict(self.q1.state_dict())
 
         else:
             raise NotImplementedError
@@ -118,7 +131,8 @@ class SAC(object):
         if self.tune_entropy:
             self.target_entropy = -np.log(1./self.action_dim) * self.target_entropy_ratio
             self.log_alpha = torch.zeros(1, requires_grad=True, device=self.device)
-            self.alpha = self.log_alpha.exp()
+            #self.alpha = self.log_alpha.exp()
+            self.alpha = torch.tensor([self.preset_alpha])
             self.alpha_optim = Adam([self.log_alpha], lr=self.alpha_lr)
         else:
             self.alpha = torch.tensor([self.preset_alpha])  # coefficiency for entropy term
@@ -146,6 +160,17 @@ class SAC(object):
                 _,_,_,action = self.policy.sample(state)
                 action = action.item()
             return {'action':action}
+
+        elif self.policy_type == 'gaussian':
+            if train:
+                action, _, _ = self.policy.sample(state)
+                action = action.item()
+                self.add_experience({"action": action})
+            else:
+                _, _, action = self.policy.sample(state)
+                action = action.item()
+            return {'action':action}
+
         else:
             raise NotImplementedError
 
@@ -237,6 +262,7 @@ class SAC(object):
             update_params(self.policy_optim, policy_loss)
             if self.tune_entropy:
                 update_params(self.alpha_optim, alpha_loss)
+                self.alpha = self.log_alpha.exp().detach()
 
             if self.learn_step_counter % self.target_replace_iter == 0:
                 #self.critic_target.load_state_dict(self.critic.state_dict())
@@ -271,6 +297,44 @@ class SAC(object):
                     target_param.data.copy_(self.tau * param.data + (1.-self.tau) * target_param.data)
                 for param, target_param in zip(self.policy.parameters(), self.policy_target.parameters()):
                     target_param.data.copy_(self.tau * param.data + (1.-self.tau) * target_param.data)
+
+        elif self.policy_type == 'gaussian':
+            with torch.no_grad():
+                # next_action, next_action_logprob, _ = self.policy_target.sample(obs_)
+                next_action, next_action_logprob, _ = self.policy.sample(obs_)
+                target_next_q = self.q1_target(
+                    torch.cat([obs_, next_action], 1)) - self.alpha * next_action_logprob
+                next_q_value = reward + (1 - done) * self.gamma * target_next_q
+            qf1 = self.q1(torch.cat([obs, action], 1))
+            qf_loss = F.mse_loss(qf1, next_q_value)
+
+            self.critic_optim.zero_grad()
+            qf_loss.backward()
+            self.critic_optim.step()
+
+            pi, log_pi, _ = self.policy.sample(obs)
+            qf_pi = self.q1(torch.cat([obs, pi], 1))
+            policy_loss = ((self.alpha * log_pi) - qf_pi).mean()
+            self.policy_optim.zero_grad()
+            policy_loss.backward()
+            self.policy_optim.step()
+
+            if self.tune_entropy:
+                alpha_loss = -(self.log_alpha * (log_pi + self.target_entropy).detach()).mean()
+
+                self.alpha_optim.zero_grad()
+                alpha_loss.backward()
+                self.alpha_optim.step()
+                self.alpha = self.log_alpha.exp()
+            else:
+                pass
+
+            if self.learn_step_counter % self.target_replace_iter == 0:
+                for param, target_param in zip(self.q1.parameters(), self.q1_target.parameters()):
+                    target_param.data.copy_(self.tau * param.data + (1. - self.tau) * target_param.data)
+                # for param, target_param in zip(self.policy.parameters(), self.policy_target.parameters()):
+                #    target_param.data.copy_(self.tau * param.data + (1.-self.tau) * target_param.data)
+
         else:
             raise NotImplementedError
 
