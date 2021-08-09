@@ -165,7 +165,7 @@ def get_valid_agents():
 
 if __name__ == "__main__":
     # "gobang_1v1", "reversi_1v1", "snakes_1v1", "sokoban_2p", "snakes_3v3", "snakes_5p", "sokoban_1p"
-    # "classic_CartPole-v0", "classic_CartPole-v1", "classic_MountainCar-v0", "classic_MountainCarContinuous-v0",
+    # "classic_CartPole-v0", "classic_MountainCar-v0", "classic_MountainCarContinuous-v0",
     # "classic_Pendulum-v0", "classic_Acrobot-v1", "football_11v11_kaggle", "MiniWorld-Hallway-v0",
     # "MiniWorld-OneRoom-v0", "MiniWorld-OneRoomS6-v0", "MiniWorld-OneRoomS6Fast-v0",
     # "MiniWorld-TMaze-v0", "MiniWorld-TMazeLeft-v0", "MiniWorld-TMazeRight-v0", "MiniGrid-DoorKey-16x16-v0",
