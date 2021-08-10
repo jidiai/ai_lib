@@ -18,6 +18,7 @@ from typing import (
 class HyperparamSettings:
     hidden_size: int = 100
     given_net: bool = False
+    marl: bool = False
 
 
 @attr.s(auto_attribs=True)
@@ -100,6 +101,10 @@ class PPOSettings(HyperparamSettings):
     buffer_capacity: int = 100
     batch_size: int = 32
     gamma: float = 0.99
+
+@attr.s(auto_attribs=True)
+class PPO_CNNSettings(PPOSettings):
+    cnn_encoder: bool = True
 
 @attr.s(auto_attribs=True)
 class SACSettings(HyperparamSettings):

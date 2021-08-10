@@ -1,4 +1,4 @@
-from EnvWrapper.BaseWrapper import BaseWrapper
+from examples.EnvWrapper.BaseWrapper import BaseWrapper
 from pathlib import Path
 import sys
 import os
@@ -44,26 +44,26 @@ class MiniWorld_OneRoom_v0(BaseWrapper):
         return self.env.input_dimension.shape
 
     def step(self, action, train=True):
-        action = action_wrapper([action])
+        #action = action_wrapper([action])
         next_state, reward, done, _, _ = self.env.step(action)
         reward  =np.array(reward,dtype=np.float)
         reward *= 100
         if not done:
             reward -= 0.5
-        next_state = np.transpose(np.array(next_state).reshape(60,80,3),(2,0,1))
-        return next_state, reward, done, _, _
+        next_state = np.array(next_state[0]['obs']).reshape(60,80,3)
+        return [{'obs':next_state,"controlled_player_index": 0}], reward, done, _, _
     
     def reset(self):
         state = self.env.reset()
-        state = np.transpose(np.array(state).reshape(60,80,3),(2,0,1))
-        return state
+        state = np.array(state[0]['obs']).reshape(60,80,3)
+        return [{"obs": state, "controlled_player_index": 0}]
 
     def close(self):
         pass
 
     def set_seed(self, seed):
         self.env.set_seed(seed)
-
+'''
 def action_wrapper(joint_action):
     joint_action_ = []
     for a in range(env.n_player):
@@ -73,3 +73,4 @@ def action_wrapper(joint_action):
         action_one_hot = [[each]]
         joint_action_.append([action_one_hot[0][0]])
     return joint_action_
+'''
