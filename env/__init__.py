@@ -9,3 +9,4 @@ from .minigrid import *
 from .particleenv import *
 from .overcookedai import *
 from .magent import *
+from .gridworld import *
