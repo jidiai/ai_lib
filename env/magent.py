@@ -84,7 +84,7 @@ class MAgent(Game, DictObservation):
             self.done = True
 
         red_dones = [False for _ in range(self.agent_nums[0])]
-        blue_dones = [False for _ in range(self.agent_nums[0])]
+        blue_dones = [False for _ in range(self.agent_nums[1])]
 
         for idx, done in enumerate(self.dones.values()):
             if idx < self.agent_nums[0]:
