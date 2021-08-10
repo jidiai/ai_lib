@@ -21,7 +21,7 @@ hyperparameters:
   target_replace: 100
   network: critic
   policy_type: discrete
-  target_entropy_ratio: 0.95
+  target_entropy_ratio: 0.7
   tau: 0.005
   tune_entropy: false
 seedparameters:

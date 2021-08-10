@@ -55,6 +55,7 @@ class CCGame(Game, VectorObservation):
                 self.env_core.action_space = Discrete(discrete_n)
 
     def step(self, joint_action):
+        self.is_valid_action(joint_action)
         action = self.decode(joint_action)
         info_before = self.step_before_info()
         # print("action in step ", action)
@@ -77,7 +78,25 @@ class CCGame(Game, VectorObservation):
         if not self.is_act_continuous:
             return joint_action[0][0].index(1)
         else:
-            return joint_action[0]
+            return joint_action[0][0]
+
+    def is_valid_action(self, joint_action):
+
+        if len(joint_action) != self.n_player:
+            raise Exception("Input joint action dimension should be {}, not {}".format(
+                self.n_player, len(joint_action)))
+
+        for i in range(self.n_player):
+            if not self.is_act_continuous:
+                if len(joint_action[i][0]) != self.joint_action_space[i][0].n:
+                    raise Exception("The input action dimension for player {} should be {}, not {}".format(
+                        i, self.joint_action_space[i][0].n, len(joint_action[i][0])))
+            else:
+                if not isinstance(joint_action[i][0], np.ndarray):
+                    raise Exception("For continuous action, the input of player {} should be numpy.ndarray".format(i))
+                if joint_action[i][0].shape != self.joint_action_space[i][0].shape:
+                    raise Exception("The input action dimension for player {} should be {}, not {}".format(
+                        i, self.joint_action_space[i][0].shape, joint_action[i][0].shape))
 
     def get_next_state(self, action):
         observation, reward, done, info = self.env_core.step(action)

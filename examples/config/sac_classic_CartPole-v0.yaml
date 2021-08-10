@@ -22,9 +22,9 @@ hyperparameters:
   network: critic
   policy_type: discrete
   clip_param: 0.2
-  target_entropy_ratio: 0.95
+  target_entropy_ratio: 0.7
   tau: 0.005
-  tune_entropy: true
+  tune_entropy: false
 seedparameters:
   seed_nn: 1
   seed_np: 1

@@ -41,7 +41,7 @@ class MAgent(Game, DictObservation):
 
         self.new_action_spaces = self.load_action_space()
         self.joint_action_space = self.set_action_space()
-        self.action_dim = self.get_action_dim()
+        self.action_dim = self.joint_action_space
         self.input_dimension = self.env_core.observation_spaces
 
         self.init_info = None
@@ -83,10 +83,16 @@ class MAgent(Game, DictObservation):
         if self.step_cnt >= self.max_step:
             self.done = True
 
-        for done in self.dones.values():
-            if done == True:
-                self.done = True
-                break
+        red_dones = [False for _ in range(self.agent_nums[0])]
+        blue_dones = [False for _ in range(self.agent_nums[1])]
+
+        for idx, done in enumerate(self.dones.values()):
+            if idx < self.agent_nums[0]:
+                red_dones[idx] = done
+            else:
+                blue_dones[idx - self.agent_nums[0]] = done
+
+        self.done = all(red_dones) or all(blue_dones)
 
         return self.done
 
@@ -118,16 +124,6 @@ class MAgent(Game, DictObservation):
             return '1'
         else:
             return '-1'
-
-    def get_action_dim(self):
-        action_dim = 1
-
-        for i in range(len(self.joint_action_space)):
-            item = self.joint_action_space[i][0]
-            if isinstance(item, Discrete):
-                action_dim *= item.n
-
-        return action_dim
 
     def decode(self, joint_action):
         joint_action_decode = {}
@@ -175,9 +171,12 @@ class MAgent(Game, DictObservation):
     def get_all_observevs(self):
         all_observes = []
         for i in range(self.n_player):
-            each = copy.deepcopy(self.current_state[i])
-            if isinstance(each, np.ndarray):
-                each = each.tolist()
+            if i not in self.current_state.keys():
+                each = None
+            else:
+                each = copy.deepcopy(self.current_state[i])
+                if isinstance(each, np.ndarray):
+                    each = each.tolist()
             each = {"obs": each, "controlled_player_index": i}
             all_observes.append(each)
         return all_observes

@@ -481,5 +481,16 @@
     "is_act_continuous": false,
     "agent_nums": [20,20],
     "obs_type": ["dict", "dict"]
+  },
+  "gridworld": {
+    "class_literal": "GridWorld",
+    "n_player": 1,
+    "max_step": 1000,
+    "game_name": "gridworld",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [1],
+    "obs_type": ["dict"],
+    "act_box": {"discrete_n": 4}
   }
 }
