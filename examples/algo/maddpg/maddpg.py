@@ -7,8 +7,8 @@ import os
 import sys
 
 from examples.common.buffer import Replay_buffer as buffer
-from model import openai_critic as net_c
-from model import openai_actor as net_a
+from networks.actor import OpenaiActor as net_a
+from networks.critic import OpenaiCritic as net_c
 
 class Agent():
     def __init__(self, input_dim_a, input_dim_c, output_dim, lr_a=0.01, lr_c=0.01, buffer_capacity=1000000):
@@ -43,7 +43,7 @@ class Agent():
             self.memory.insert(k, None, v)
 
 
-class MADDPG_CUSTOMED():
+class MADDPG():
     def __init__(self, args):
         self.gamma = args.gamma #0.97
         self.batch_size = args.batch_size #1256
@@ -139,7 +139,7 @@ class MADDPG_CUSTOMED():
             agent = self.agents[n]
             para_dict[n] = agent.actor_target.state_dict()
         torch.save(para_dict, str(p_dir)+'/actor_dict_{}.pth'.format(epoch))
-
+'''
 class argument():
     def __init__(self):
         self.gamma = 0.97
@@ -151,4 +151,4 @@ class argument():
 
 if __name__ == '__main__':
     args = argument()
-    
+'''

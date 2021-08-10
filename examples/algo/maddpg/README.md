@@ -6,6 +6,6 @@ Follow the instructions and then you can reply the same performance as below.
 
 **ParticleEnv-simple_spread**
 
->python main.py --scenario ParticleEnv-simple_spread --algo maddpg_customed --reload_config
+>python main.py --scenario ParticleEnv-simple_spread --algo maddpg --reload_config
 
 ![image](https://github.com/eigebi/ai_lib/blob/master/examples/assets/maddpg_particleenv_simple_spread.png)

@@ -114,7 +114,7 @@ class SACSettings(HyperparamSettings):
     policy_type: str = "discrete"
 
 @attr.s(auto_attribs=True)
-class MADDPG_CUSTOMEDSettings(HyperparamSettings):
+class MADDPGSettings(HyperparamSettings):
     lr_c: float = 0.01
     lr_a: float = 0.01
     buffer_capacity: int = 1000000
