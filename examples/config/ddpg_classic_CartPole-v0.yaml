@@ -18,7 +18,7 @@ hyperparameters:
   hidden_size: 256
   network: actor_critic
   tau: 0.02
-  update_freq: 10
+  update_freq: 1
 seedparameters:
   seed_nn: 1
   seed_np: 1
@@ -26,7 +26,7 @@ seedparameters:
 trainingparameters:
   evaluate_rate: 50
   learn_freq: 1
-  learn_terminal: False
-  max_episodes: 1000
+  learn_terminal: false
+  max_episodes: 500
   render: false
   save_interval: 50

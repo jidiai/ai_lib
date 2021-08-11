@@ -46,6 +46,12 @@ class Replay_buffer(object):
                 self.buffer_dict[name].append(np.array(item_buffer.data[i], copy=False))
         return self.buffer_dict
 
+    def get_step_data(self):
+        self.buffer_dict_clear()
+        for name, item_buffer in self.item_buffers.items():
+            self.buffer_dict[name] = item_buffer.data[0]
+        return self.buffer_dict
+
     def item_buffer_clear(self):
         for p in self.properties_all:
             self.item_buffers[p].clear()

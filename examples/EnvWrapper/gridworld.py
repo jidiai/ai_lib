@@ -1,31 +1,31 @@
-import numpy as np
 from EnvWrapper.BaseWrapper import BaseWrapper
 from pathlib import Path
 import sys
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
 from env.chooseenv import make
-env = make("classic_Pendulum-v0")
+env = make("gridworld")
 
 
-class classic_Pendulum_v0(BaseWrapper):
+class gridworld(BaseWrapper):
     def __init__(self):
         self.env = env
         super().__init__(self.env)
 
     def get_actionspace(self):
-        return self.env.action_dim.shape[0]
+        return self.env.action_dim
 
     def get_observationspace(self):
-        return self.env.input_dimension.shape[0]
+        return int(self.env.input_dimension)
 
     def step(self, action, train=True):
         '''
         return: next_state, reward, done, _, _
         '''
-        next_state, reward, done, _, _ = self.env.step(action)
-        reward = np.array(reward)
-        return next_state, reward, done, _, _
+
+        next_state, reward, done, _, info = self.env.step(action)
+        reward = reward[0]
+        return next_state, reward, done, _, info
 
     def reset(self):
         state = self.env.reset()
@@ -34,13 +34,6 @@ class classic_Pendulum_v0(BaseWrapper):
     def close(self):
         pass
 
-    def set_seed(self, seed):
-        self.env.set_seed(seed)
-
-    def make_render(self):
-        self.env.env_core.render()
-
-
-
-
+    def set_seed(self, seed=None):
+        pass
 

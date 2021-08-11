@@ -27,6 +27,24 @@ class ExportableSettings:
 
 
 @attr.s(auto_attribs=True)
+class TABULARQSettings(HyperparamSettings):
+    lr: float = 0.1
+    buffer_capacity: int = 1
+    gamma: float = 0.9
+    epsilon: float = 0.2
+    epsilon_end: float = 0.01
+
+
+@attr.s(auto_attribs=True)
+class SARSASettings(HyperparamSettings):
+    lr: float = 0.1
+    buffer_capacity: int = 1
+    gamma: float = 0.9
+    epsilon: float = 0.2
+    epsilon_end: float = 0.01
+
+
+@attr.s(auto_attribs=True)
 class DQNSettings(HyperparamSettings):
     c_lr: float = 0.005
     buffer_capacity: int = 256
@@ -73,6 +91,7 @@ class DDPGSettings(HyperparamSettings):
     epsilon_end: float = 0.05
     update_freq: int = 5
     network: str="actor_critic"
+
 
 @attr.s(auto_attribs=True)
 class PGSettings(HyperparamSettings):
@@ -125,12 +144,12 @@ class EnvSettingDefault:
 
 @attr.s(auto_attribs=True)
 class TrainingDefault:
-    learn_freq: int = 10
-    learn_terminal: bool = True
-    max_episodes: int = 1000
+    learn_freq: int = 1
+    learn_terminal: bool = False
+    max_episodes: int = 500
     evaluate_rate: int = 50
     render: bool = False
-    save_interval: int = 50
+    save_interval: int = 500
 
 
 @attr.s(auto_attribs=True)
