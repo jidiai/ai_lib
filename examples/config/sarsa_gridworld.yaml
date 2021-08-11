@@ -1,21 +1,19 @@
-algo: ddqn
+algo: sarsa
 envparameters:
   action_continuous: false
-  action_space: 2
+  action_space: 4
   n_player: 1
   obs_continuous: true
-  obs_space: 4
-  scenario: classic_CartPole-v0
+  obs_space: 108
+  scenario: gridworld
 hyperparameters:
-  batch_size: 64
-  buffer_capacity: 256
-  c_lr: 0.005
+  buffer_capacity: 1
   epsilon: 0.2
   epsilon_end: 0.01
-  gamma: 0.99
+  gamma: 0.9
   given_net: false
-  hidden_size: 64
-  target_replace: 100
+  hidden_size: 100
+  lr: 0.1
 seedparameters:
   seed_nn: 1
   seed_np: 1
@@ -24,6 +22,6 @@ trainingparameters:
   evaluate_rate: 50
   learn_freq: 1
   learn_terminal: false
-  max_episodes: 500
+  max_episodes: 1000
   render: false
-  save_interval: 50
+  save_interval: 1000

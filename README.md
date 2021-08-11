@@ -3,7 +3,7 @@
 
 ## 项目依赖
 
-- `Python 3.6`
+- `Python 3.7.5`
 - `gym` https://github.com/openai/gym
 - `gfootball` https://github.com/google-research/football
 - `miniworld` https://github.com/maximecb/gym-miniworld#installation

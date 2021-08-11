@@ -11,8 +11,8 @@ hyperparameters:
   buffer_capacity: 100
   c_lr: 0.005
   gamma: 0.99
+  given_net: false
   hidden_size: 100
-  given_net: False
 seedparameters:
   seed_nn: 1
   seed_np: 1
@@ -21,6 +21,6 @@ trainingparameters:
   evaluate_rate: 50
   learn_freq: 10
   learn_terminal: true
-  max_episodes: 10000
+  max_episodes: 500
   render: false
   save_interval: 50

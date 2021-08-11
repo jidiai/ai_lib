@@ -6,7 +6,6 @@ base_dir = Path(__file__).resolve().parent
 sys.path.append(str(base_dir))
 from singleagent import SingleRLAgent
 
-print("++++++++++++++++++++++++++++++++++++++++")
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-obs_space", default=4, type=int)
@@ -20,6 +19,8 @@ args = parser.parse_args()
 agent = SingleRLAgent(args)
 critic_net = os.path.dirname(os.path.abspath(__file__)) + '/critic_200.pth'
 agent.load(critic_net)
+
+sys.path.pop(-1)  # just for safety
 
 
 def my_controller(obs_list, action_space_list, obs_space_list):

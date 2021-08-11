@@ -1,7 +1,10 @@
-IPython
-matplotlib
-gym
-torch
-tensorboardX
-pillow
-numpy
+IPython==7.25.0
+matplotlib==3.3.4
+gym==0.18.3
+torch==1.9.0
+tensorboardX==2.4
+pillow==8.2.0
+numpy==1.19.5
+cattrs==1.0.0
+pyyaml==5.4.1
+attrs==21.2.0

@@ -6,6 +6,8 @@ sys.path.append(str(base_dir))
 import os
 import yaml
 from types import SimpleNamespace as SN
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 def make_env(args):
@@ -60,3 +62,46 @@ def config_reformat(my_dict):
         else:
             dummy_dict[k] = v
     return dummy_dict
+
+
+def plot_values(grid, values, colormap='pink', vmin=0, vmax=10):
+    plt.imshow(values - 1000 * (grid < 0), interpolation="nearest", cmap=colormap, vmin=vmin, vmax=vmax)
+    plt.yticks([])
+    plt.xticks([])
+    plt.colorbar(ticks=[vmin, vmax])
+
+
+def plot_action_values(algo, grid, action_values, vmin=-5, vmax=5):
+    q = action_values
+    fig = plt.figure(figsize=(10, 10))
+    fig.subplots_adjust(wspace=0.3, hspace=0.3)
+
+    plot_values(grid, grid == 0, vmax=1)
+    for row in range(len(grid)):
+        for col in range(len(grid[0])):
+            if grid[row][col] == 0:
+                argmax_a = np.argmax(q[row, col])
+                if argmax_a == 0:
+                    x = col
+                    y = row + 0.5
+                    dx = 0
+                    dy = -0.8
+                if argmax_a == 1:
+                    x = col - 0.5
+                    y = row
+                    dx = 0.8
+                    dy = 0
+                if argmax_a == 2:
+                    x = col
+                    y = row - 0.5
+                    dx = 0
+                    dy = 0.8
+                if argmax_a == 3:
+                    x = col + 0.5
+                    y = row
+                    dx = -0.8
+                    dy = 0
+                plt.arrow(x, y, dx, dy, width=0.02, head_width=0.4, head_length=0.4, length_includes_head=True, fc='k',
+                          ec='k')
+    plt.savefig("./assets/" + "grid_" + algo + ".png")
+    plt.show()

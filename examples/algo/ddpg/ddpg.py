@@ -12,6 +12,7 @@ from torch.distributions import Categorical
 
 from algo.ddpg.Network import Actor, Critic
 
+import os
 from pathlib import Path
 import sys
 base_dir = Path(__file__).resolve().parent.parent.parent
@@ -126,8 +127,15 @@ class DDPG(object):
         for target_param, param in zip(net_target.parameters(), net.parameters()):
             target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
 
-    def save(self, save_path, i):
-        torch.save(self.actor.state_dict(), str(save_path) + '/actor_net_{}.pth'.format(i))
+    def save(self, save_path, episode):
+        base_path = os.path.join(save_path, 'trained_model')
+        if not os.path.exists(base_path):
+            os.makedirs(base_path)
+
+        model_critic_path = os.path.join(base_path, "critic_" + str(episode) + ".pth")
+        torch.save(self.critic.state_dict(), model_critic_path)
+        model_actor_path = os.path.join(base_path, "actor_" + str(episode) + ".pth")
+        torch.save(self.critic.state_dict(), model_actor_path)
 
     def load(self, load_path, i):
         self.actor.load_state_dict(torch.load(str(load_path) + '/actor_net_{}.pth'.format(i)))

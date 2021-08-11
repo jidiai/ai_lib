@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.optim as optimizer
 import numpy as np
 
-from networks.critic import Critic
+from networks.critic import Dueling_Critic as Critic
 
 import os
 from pathlib import Path

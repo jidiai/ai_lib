@@ -100,7 +100,7 @@ class GridWorld(Game):
         if self.step_cnt >= self.max_step:
             self.done = True
 
-        return self.done
+        return self.done or self.env_core._done
 
     def set_action_space(self):
         action_space = [[self.env_core.action_space] for _ in range(self.n_player)]
@@ -147,6 +147,7 @@ class Grid(object):
         self._state = self._start_state
         self._number_of_states = np.prod(np.shape(self._layout))
         self._noisy = noisy
+        self._done = False
 
     @property
     def number_of_states(self):
@@ -157,6 +158,7 @@ class Grid(object):
         self._start_state = (2, 2)
         self._state = self._start_state
         self._number_of_states = np.prod(np.shape(self._layout))
+        self._done = False
         return self.get_obs()
 
     def get_obs(self):
@@ -186,6 +188,7 @@ class Grid(object):
 
         new_y, new_x = new_state
         reward = self._layout[new_y, new_x]
+        reward = float(reward)
         if self._layout[new_y, new_x] == W:  # wall
             discount = 0.9
             new_state = (y, x)
@@ -193,6 +196,7 @@ class Grid(object):
             reward = -1.
             discount = 0.9
         else:  # a goal
+            self._done = True
             discount = 0.
             new_state = self._start_state
 

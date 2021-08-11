@@ -134,9 +134,7 @@ class Runner:
             while not self.g_core.is_terminal():
                 step += 1
                 joint_act = self.get_joint_action_eval(self.env, multi_part_agent_ids, self.policy, actions_space, state)
-
                 next_state, reward, done, info_before, info_after = self.env.step(joint_act)
-
                 self.add_experience(state, next_state, reward, np.float32(done))
 
                 state = next_state
