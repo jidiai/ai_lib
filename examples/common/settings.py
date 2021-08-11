@@ -18,6 +18,7 @@ from typing import (
 class HyperparamSettings:
     hidden_size: int = 100
     given_net: bool = False
+    marl: bool = False
 
 
 @attr.s(auto_attribs=True)
@@ -121,6 +122,10 @@ class PPOSettings(HyperparamSettings):
     gamma: float = 0.99
 
 @attr.s(auto_attribs=True)
+class PPO_CNNSettings(PPOSettings):
+    cnn_encoder: bool = True
+
+@attr.s(auto_attribs=True)
 class SACSettings(HyperparamSettings):
     c_lr: float = 0.0001
     buffer_capacity: int = 256
@@ -131,6 +136,18 @@ class SACSettings(HyperparamSettings):
     alpha: float = 0.2
     network: str = "critic"
     policy_type: str = "discrete"
+
+@attr.s(auto_attribs=True)
+class MADDPGSettings(HyperparamSettings):
+    lr_c: float = 0.01
+    lr_a: float = 0.01
+    buffer_capacity: int = 1000000
+    batch_size: int = 1256
+    gamma: float = 0.97
+    tao: float = 0.01
+    target_replace: int = 100
+    marl: bool = True
+    action_continuous: bool = True
 
 @attr.s(auto_attribs=True)
 class EnvSettingDefault:

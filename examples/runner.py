@@ -9,6 +9,7 @@ from common.log_path import make_logpath
 # from agents import ini_agents
 # todo
 from agents.singleagent import SingleRLAgent
+from agents.multiagents import MultiRLAgents
 from common.utils import *
 
 from common.settings import *
@@ -69,7 +70,10 @@ class Runner:
         random.seed(self.paras.seed_random)
 
         # todo
-        self.agent = SingleRLAgent(self.paras)
+        if self.paras.marl:
+            self.agent = MultiRLAgents(self.paras)
+        else:
+            self.agent = SingleRLAgent(self.paras)
         self.policy = [paras.algo]
         self.agent_num = 1
 
@@ -114,7 +118,7 @@ class Runner:
             for i in range(len(agents_id_list)):
                 agent_id = agents_id_list[i]
                 a_obs = all_observes[agent_id]
-                each = self.agent.choose_action_to_env(a_obs, agent_id)
+                each = self.agent.choose_action_to_env(a_obs)
                 joint_action.append(each)
         return joint_action
 
@@ -134,9 +138,9 @@ class Runner:
                 self.add_experience(state, next_state, reward, np.float32(done))
 
                 state = next_state
-
+                if self.paras.marl:
+                    reward = sum(reward)
                 Gt += reward
-
                 if not self.paras.learn_terminal:
                     if step % self.paras.learn_freq == 0:
                         self.agent.learn()
