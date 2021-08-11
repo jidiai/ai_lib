@@ -8,4 +8,4 @@ Follow the instructions and then you can reply the same performance as below.
 
 >python main.py --scenario gridworld --algo sarsa --reload_config
 
-![image](https://github.com/jidiai/ai_lib/raw/master/examples/assets/grid_sarsa.png)
+<img src="https://github.com/jidiai/ai_lib/raw/master/examples/assets/grid_sarsa.png" alt="grid_sarsa" width="400" height="300" align="middle" />
