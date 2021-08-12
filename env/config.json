@@ -460,6 +460,17 @@
     "obs_type": ["dict", "dict"],
     "act_box": {"discrete_n": 6}
   },
+  "battle_3v3": {
+    "class_literal": "Battle",
+    "n_player": 6,
+    "max_step": 1000,
+    "map_size": 15,
+    "game_name": "battle_3v3",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [3,3],
+    "obs_type": ["dict", "dict"]
+  },
   "magent-battle_v3-12v12": {
     "class_literal": "MAgent",
     "n_player": 24,

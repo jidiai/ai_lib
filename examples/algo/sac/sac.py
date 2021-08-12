@@ -159,7 +159,7 @@ class SAC(object):
             else:
                 _,_,_,action = self.policy.sample(state)
                 action = action.item()
-            return {'action':action}
+            return {'action':np.array([action])}
 
         elif self.policy_type == 'gaussian':
             if train:
@@ -169,7 +169,7 @@ class SAC(object):
             else:
                 _, _, action = self.policy.sample(state)
                 action = action.item()
-            return {'action':action}
+            return {'action':np.array([action])}
 
         else:
             raise NotImplementedError

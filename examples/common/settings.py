@@ -150,6 +150,10 @@ class MADDPGSettings(HyperparamSettings):
     action_continuous: bool = True
 
 @attr.s(auto_attribs=True)
+class ILDQNSettings(HyperparamSettings):
+    marl: bool = True
+
+@attr.s(auto_attribs=True)
 class EnvSettingDefault:
     scenario: str = "classic_CartPole-v0"
     obs_space: int = 100

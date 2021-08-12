@@ -70,19 +70,34 @@ class Runner:
         random.seed(self.paras.seed_random)
 
         # todo
-        if self.paras.marl:
-            self.agent = MultiRLAgents(self.paras)
-        else:
+        try:
+            if self.paras.marl:
+                self.agent = MultiRLAgents(self.paras)
+                self.policy = ['ildqn', 'random'] if 'battle' in self.EnvSetting.scenario else [paras.algo]
+                            #here needs a second thought, when doing adversarial simulation, different groups of agents perfrom
+                            #different strategy, runner need to take that into consideration
+            else:
+                self.agent = SingleRLAgent(self.paras)
+                self.policy = [paras.algo]
+        except AttributeError:      #when "marl" is not specified
             self.agent = SingleRLAgent(self.paras)
-        self.policy = [paras.algo]
+            self.policy = [paras.algo]
+
         self.agent_num = 1
 
     def add_experience(self, states, state_next, reward, done):
         for agent_index, agent_i in enumerate(self.agent.agent):
-            agent_i.memory.insert("states", agent_index, states[agent_index]["obs"])
-            agent_i.memory.insert("states_next", agent_index, state_next[agent_index]["obs"])
-            agent_i.memory.insert("rewards", agent_index, reward)
-            agent_i.memory.insert("dones", agent_index, np.array(done, dtype=bool))
+            try:
+                if states[agent_index]['obs'] is None:   #when an agent dies, obs is None,  skip
+                    continue
+                else:
+                    agent_i.memory.insert("states", agent_index, states[agent_index]["obs"])
+                    agent_i.memory.insert("states_next", agent_index, state_next[agent_index]["obs"])
+                    agent_i.memory.insert("rewards", agent_index, reward)
+                    agent_i.memory.insert("dones", agent_index, np.array(done, dtype=bool))
+            except AttributeError:   #capturing error when some agent does not need recording (i.e. random, greedy adversarials)
+                pass
+
 
     def get_players_and_action_space_list(self):
         if sum(self.g_core.agent_nums) != self.g_core.n_player:
@@ -131,6 +146,9 @@ class Runner:
             state = self.env.reset()
             step = 0
             Gt = 0
+            if 'battle' in self.EnvSetting.scenario:      #here we specify a special case (magent) where the rewards should be handled separately
+                G_red, G_blue = 0, 0
+
             while not self.g_core.is_terminal():
                 step += 1
                 joint_act = self.get_joint_action_eval(self.env, multi_part_agent_ids, self.policy, actions_space, state)
@@ -138,19 +156,46 @@ class Runner:
                 self.add_experience(state, next_state, reward, np.float32(done))
 
                 state = next_state
-                if self.paras.marl:
-                    reward = sum(reward)
-                Gt += reward
+
+                if 'battle' in self.EnvSetting.scenario:   #special case where rewards need to be handled separately
+                    reward_red = sum(reward[:3])
+                    reward_blue = sum(reward[3:])
+                    G_red += reward_red
+                    G_blue += reward_blue
+                else:
+                    try:
+                        if self.paras.marl:
+                            reward = sum(reward)
+                    except AttributeError:      #when "marl" is not specified
+                        pass
+
+                    Gt += reward
+
+
                 if not self.paras.learn_terminal:
                     if step % self.paras.learn_freq == 0:
                         self.agent.learn()
 
+                if self.paras.render:      #render
+                    self.env.make_render()
+
             if self.paras.learn_terminal:
                 self.agent.learn()
-            print('i_epoch: ', i_epoch, 'Gt: ', '%.2f' % Gt)
-            reward_tag = 'reward'
-            self.writer.add_scalars(reward_tag, global_step=i_epoch,
-                                    tag_scalar_dict={'return': Gt})
+
+            if 'battle' in self.EnvSetting.scenario:    #special case when the print reward needs special care
+                red_killed, blue_killed = self.env.count_killed()
+                print('i_epoch: ', i_epoch, '; G_red:', '%.2f;' % G_red, 'G_blue', '%.2f;' % G_blue,
+                      'red_killed = {}; blue_killed = {},'.format(red_killed, blue_killed),'steps', step)
+                reward_tag = 'reward'
+                self.writer.add_scalars(reward_tag, global_step=i_epoch,
+                                        tag_scalar_dict={'return': G_red})
+                #self.writer.add_scalars('reward red', global_step=i_epoch,tag_scalar_dict={'return': G_red})
+                #self.writer.add_scalars('reward blue', global_step=i_epoch,tag_scalar_dict={'return': G_blue})
+            else:
+                print('i_epoch: ', i_epoch, 'Gt: ', '%.2f' % Gt)
+                reward_tag = 'reward'
+                self.writer.add_scalars(reward_tag, global_step=i_epoch,
+                                        tag_scalar_dict={'return': Gt})
 
             if i_epoch % self.paras.save_interval == 0:
                 self.agent.save(self.run_dir, i_epoch)

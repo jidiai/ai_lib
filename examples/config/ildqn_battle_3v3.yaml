@@ -1,0 +1,31 @@
+algo: ildqn
+envparameters:
+  action_continuous: false
+  n_player: 6
+  action_space: [21,21,21,21,21,21]
+  obs_space: (13,13,5)
+  obs_continuous: true
+  scenario: battle_3v3
+hyperparameters:
+  single_handle: true
+  batch_size: 64
+  buffer_capacity: 256
+  c_lr: 0.005
+  epsilon: 0.5
+  epsilon_end: 0.05
+  gamma: 0.99
+  hidden_size: 64
+  target_replace: 100
+  network: critic
+  marl: true
+seedparameters:
+  seed_nn: 1
+  seed_np: 1
+  seed_random: 1
+trainingparameters:
+  evaluate_rate: 50
+  learn_freq: 1
+  learn_terminal: false
+  max_episodes: 100
+  render: true
+  save_interval: 50
