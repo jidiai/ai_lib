@@ -11,18 +11,17 @@ hyperparameters:
   epsilon: 0.2
   epsilon_end: 0.01
   gamma: 0.9
-  given_net: false
-  hidden_size: 100
+  learn_freq: 1
+  learn_terminal: false
   lr: 0.1
   marl: false
+  use_network: false
 seedparameters:
   seed_nn: 1
   seed_np: 1
   seed_random: 1
 trainingparameters:
   evaluate_rate: 50
-  learn_freq: 1
-  learn_terminal: false
   max_episodes: 1000
   render: false
   save_interval: 1000

@@ -1,4 +1,4 @@
-algo: sac
+algo: ddqn
 envparameters:
   action_continuous: false
   action_space: 3
@@ -7,25 +7,17 @@ envparameters:
   obs_space: 2
   scenario: classic_MountainCar-v0
 hyperparameters:
-  a_lr: 0.0001
-  alpha: 0.3
-  alpha_lr: 0.0001
   batch_size: 64
   buffer_capacity: 10240
-  c_lr: 0.005
+  c_lr: 0.001
   epsilon: 0.5
   epsilon_end: 0.05
   gamma: 0.99
-  hidden_size: 100
+  hidden_size: 64
   learn_freq: 1
   learn_terminal: false
   marl: false
-  num_hid_layer: 1
-  policy_type: discrete
-  target_entropy_ratio: 0.7
   target_replace: 100
-  tau: 0.005
-  tune_entropy: false
   use_network: true
 seedparameters:
   seed_nn: 1
@@ -35,4 +27,4 @@ trainingparameters:
   evaluate_rate: 50
   max_episodes: 1000
   render: false
-  save_interval: 200
+  save_interval: 100

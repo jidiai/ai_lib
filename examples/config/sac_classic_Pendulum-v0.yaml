@@ -26,14 +26,14 @@ hyperparameters:
   tau: 0.001
   tune_entropy: true
   marl: false
+  learn_freq: 1
+  learn_terminal: false
 seedparameters:
   seed_nn: 1
   seed_np: 1
   seed_random: 1
 trainingparameters:
   evaluate_rate: 50
-  learn_freq: 1
-  learn_terminal: false
   max_episodes: 300
   render: false
-  save_interval: 50
+  save_interval: 100
