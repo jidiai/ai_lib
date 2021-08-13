@@ -110,7 +110,7 @@ Come and play these games together~
 
 
 ---
-##Start to play around^^
+## Start to play around^^
 
 More information and results under each algorithm's folder.
 
