@@ -25,7 +25,7 @@ class PG(object):
         self.state_dim = args.obs_space
         self.action_dim = args.action_space
 
-        self.lr = args.c_lr
+        self.lr = args.lr
         self.gamma = args.gamma
 
         self.policy = Actor(self.state_dim, self.action_dim)

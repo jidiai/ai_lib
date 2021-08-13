@@ -24,6 +24,7 @@ hyperparameters:
   target_entropy_ratio: 0.7
   tau: 0.005
   tune_entropy: false
+  marl: false
 seedparameters:
   seed_nn: 1
   seed_np: 1

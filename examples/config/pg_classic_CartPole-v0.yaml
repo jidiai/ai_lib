@@ -9,18 +9,18 @@ envparameters:
 hyperparameters:
   batch_size: 64
   buffer_capacity: 256
-  c_lr: 0.005
   gamma: 0.99
-  given_net: false
-  hidden_size: 100
+  hidden_size: 64
+  learn_terminal: true
+  lr: 0.001
+  marl: false
+  use_network: true
 seedparameters:
   seed_nn: 1
   seed_np: 1
   seed_random: 1
 trainingparameters:
   evaluate_rate: 50
-  learn_freq: 10
-  learn_terminal: true
   max_episodes: 1000
   render: false
-  save_interval: 50
+  save_interval: 100

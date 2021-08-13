@@ -7,24 +7,24 @@ envparameters:
   obs_space: 4
   scenario: classic_CartPole-v0
 hyperparameters:
-  a_lr: 0.005
+  a_lr: 0.001
   batch_size: 32
   buffer_capacity: 100
-  c_lr: 0.005
+  c_lr: 0.001
   clip_param: 0.2
   gamma: 0.99
-  given_net: false
-  hidden_size: 100
+  hidden_size: 64
+  learn_terminal: true
+  marl: false
   max_grad_norm: 0.5
   update_freq: 10
+  use_network: true
 seedparameters:
   seed_nn: 1
   seed_np: 1
   seed_random: 1
 trainingparameters:
   evaluate_rate: 50
-  learn_freq: 10
-  learn_terminal: true
   max_episodes: 1000
   render: false
-  save_interval: 50
+  save_interval: 100

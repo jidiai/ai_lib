@@ -16,6 +16,7 @@ hyperparameters:
   given_net: false
   hidden_size: 64
   target_replace: 100
+  marl: false
 seedparameters:
   seed_nn: 1
   seed_np: 1
