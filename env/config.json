@@ -492,5 +492,16 @@
     "agent_nums": [1],
     "obs_type": ["dict"],
     "act_box": {"discrete_n": 4}
+  },
+  "cliffwalking": {
+    "class_literal": "CliffWalking",
+    "n_player": 1,
+    "max_step": 1000,
+    "game_name": "cliff_walking",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [1],
+    "obs_type": ["dict"],
+    "act_box": {"discrete_n": 4}
   }
 }
