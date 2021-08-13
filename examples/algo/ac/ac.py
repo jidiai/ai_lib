@@ -30,10 +30,7 @@ class AC(object):
         self.lr = args.c_lr
         self.gamma = args.gamma
 
-        if args.given_net:
-            self.policy = args.network(self.state_dim, self.action_dim, self.hidden_size)
-        else:
-            self.policy = ActorCritic(self.state_dim, self.action_dim, self.hidden_size)
+        self.policy = ActorCritic(self.state_dim, self.action_dim, self.hidden_size)
         self.optimizer = optim.Adam(self.policy.parameters(), lr=self.lr)
 
         self.save_actions = []

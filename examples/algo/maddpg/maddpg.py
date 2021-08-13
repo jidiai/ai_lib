@@ -139,16 +139,3 @@ class MADDPG():
             agent = self.agents[n]
             para_dict[n] = agent.actor_target.state_dict()
         torch.save(para_dict, str(p_dir)+'/actor_dict_{}.pth'.format(epoch))
-'''
-class argument():
-    def __init__(self):
-        self.gamma = 0.97
-        self.lr_c = 0.01
-        self.lr_a = 0.01
-        self.buffer_size = 1e6
-        self.batch_size = 1256
-        self.tao = 0.01
-
-if __name__ == '__main__':
-    args = argument()
-'''

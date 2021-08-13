@@ -16,8 +16,7 @@ from typing import (
 
 @attr.s(auto_attribs=True)
 class HyperparamSettings:
-    hidden_size: int = 100
-    given_net: bool = False
+    use_network: bool = True
     marl: bool = False
 
 
@@ -48,58 +47,92 @@ class SARSASettings(HyperparamSettings):
 @attr.s(auto_attribs=True)
 class DQNSettings(HyperparamSettings):
     c_lr: float = 0.005
-    buffer_capacity: int = 256
+    buffer_capacity: int = 1024
     batch_size: int = 64
     gamma: float = 0.99
     epsilon: float = 0.5
     epsilon_end: float = 0.05
     target_replace: int = 100
-    network: str="critic"
+    hidden_size: int = 64
+    learn_freq: int = 1
+    learn_terminal: bool = False
+    property_additional: list = ["action"]
 
 
 @attr.s(auto_attribs=True)
 class DDQNSettings(HyperparamSettings):
     c_lr: float = 0.005
-    buffer_capacity: int = 256
+    buffer_capacity: int = 1024
     batch_size: int = 64
     gamma: float = 0.99
     epsilon: float = 0.5
     epsilon_end: float = 0.05
     target_replace: int = 100
+    hidden_size: int = 64
+    learn_freq: int = 1
+    learn_terminal: bool = False
 
 
 @attr.s(auto_attribs=True)
 class DUELINGQSettings(HyperparamSettings):
     c_lr: float = 0.005
-    buffer_capacity: int = 256
+    buffer_capacity: int = 1024
     batch_size: int = 64
     gamma: float = 0.99
     epsilon: float = 0.5
     epsilon_end: float = 0.05
     target_replace: int = 100
-    network: str="critic"
+    hidden_size: int = 64
+    learn_freq: int = 1
+    learn_terminal: bool = False
 
 
 @attr.s(auto_attribs=True)
 class DDPGSettings(HyperparamSettings):
     a_lr: float = 0.005
     c_lr: float = 0.005
-    buffer_capacity: int = 256
+    buffer_capacity: int = 1024
     batch_size: int = 64
     gamma: float = 0.99
     tau: float = 0.2
     epsilon: float = 0.5
     epsilon_end: float = 0.05
+    hidden_size: int = 64
     update_freq: int = 5
-    network: str="actor_critic"
+    learn_freq: int = 10
+    learn_terminal: bool = False
+
+
+@attr.s(auto_attribs=True)
+class TD3Settings(HyperparamSettings):
+    a_lr: float = 0.0003
+    batch_size: int = 100
+    buffer_capacity: int = 10240
+    c_lr: float = 0.0003
+    epsilon: float = 0.3
+    epsilon_end: float = 0.05
+    exploration_noise: float = 0.1
+    gamma: float = 0.99
+    hidden_size: int = 100
+    noise_clip: float = 0.5
+    policy_delay: int = 2
+    policy_noise: float = 0.2
+    target_replace: int = 100
+    tau: float = 0.005
+    update_freq: int = 10
+    marl: bool = False
+    learn_freq: int = 10
+    learn_terminal: bool = False
 
 
 @attr.s(auto_attribs=True)
 class PGSettings(HyperparamSettings):
-    c_lr: float = 0.005
+    lr: float = 0.005
     buffer_capacity: int = 256
     batch_size: int = 64
     gamma: float = 0.99
+    hidden_size: int = 64
+    learn_terminal: bool = True
 
 
 @attr.s(auto_attribs=True)
@@ -108,6 +141,8 @@ class ACSettings(HyperparamSettings):
     buffer_capacity: int = 100
     batch_size: int = 32
     gamma: float = 0.99
+    hidden_size: int = 64
+    learn_terminal: bool = True
 
 
 @attr.s(auto_attribs=True)
@@ -120,22 +155,36 @@ class PPOSettings(HyperparamSettings):
     buffer_capacity: int = 100
     batch_size: int = 32
     gamma: float = 0.99
+    hidden_size: int = 64
+    learn_terminal: bool = True
+
 
 @attr.s(auto_attribs=True)
 class PPO_CNNSettings(PPOSettings):
     cnn_encoder: bool = True
 
+
 @attr.s(auto_attribs=True)
 class SACSettings(HyperparamSettings):
     c_lr: float = 0.0001
-    buffer_capacity: int = 256
+    a_lr: float = 0.0001
+    alpha_lr: float = 0.0001
+    target_entropy_ratio: float = 0.7
+    buffer_capacity: int = 1024
     batch_size: int = 64
     gamma: float = 0.99
     target_replace: int = 100
     tune_entropy: bool = False
     alpha: float = 0.2
-    network: str = "critic"
-    policy_type: str = "discrete"
+    epsilon: float = 0.2
+    epsilon_end: float = 0.05
+    hidden_size: int = 128
+    num_hid_layer: int = 1
+    learn_freq: int = 1
+    learn_terminal: bool = False
+    tau: float = 0.005
+
+
 
 @attr.s(auto_attribs=True)
 class MADDPGSettings(HyperparamSettings):
@@ -149,6 +198,7 @@ class MADDPGSettings(HyperparamSettings):
     marl: bool = True
     action_continuous: bool = True
 
+
 @attr.s(auto_attribs=True)
 class EnvSettingDefault:
     scenario: str = "classic_CartPole-v0"
@@ -161,12 +211,10 @@ class EnvSettingDefault:
 
 @attr.s(auto_attribs=True)
 class TrainingDefault:
-    learn_freq: int = 1
-    learn_terminal: bool = False
-    max_episodes: int = 500
+    max_episodes: int = 1000
     evaluate_rate: int = 50
     render: bool = False
-    save_interval: int = 500
+    save_interval: int = 100
 
 
 @attr.s(auto_attribs=True)

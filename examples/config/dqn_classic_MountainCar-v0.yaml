@@ -16,6 +16,7 @@ hyperparameters:
   hidden_size: 100
   target_replace: 100
   network: critic
+  marl: false
 seedparameters:
   seed_nn: 1
   seed_np: 1

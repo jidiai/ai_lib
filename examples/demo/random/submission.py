@@ -5,7 +5,7 @@
 """
 # =================================== Important =========================================
 Notes:
-1. this agent is random agent , which can fit any env in Jidi platform.
+1. this agents is random agents , which can fit any env in Jidi platform.
 2. if you want to load .pth file, please follow the instruction here:
 https://github.com/jidiai/ai_lib/blob/master/examples/demo
 """
