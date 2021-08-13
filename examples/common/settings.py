@@ -33,6 +33,9 @@ class TABULARQSettings(HyperparamSettings):
     gamma: float = 0.9
     epsilon: float = 0.2
     epsilon_end: float = 0.01
+    learn_freq: int = 1
+    learn_terminal: bool = False
+    use_network: bool = False
 
 
 @attr.s(auto_attribs=True)
@@ -42,6 +45,9 @@ class SARSASettings(HyperparamSettings):
     gamma: float = 0.9
     epsilon: float = 0.2
     epsilon_end: float = 0.01
+    learn_freq: int = 1
+    learn_terminal: bool = False
+    use_network: bool = False
 
 
 @attr.s(auto_attribs=True)
@@ -56,7 +62,6 @@ class DQNSettings(HyperparamSettings):
     hidden_size: int = 64
     learn_freq: int = 1
     learn_terminal: bool = False
-    property_additional: list = ["action"]
 
 
 @attr.s(auto_attribs=True)
@@ -183,7 +188,7 @@ class SACSettings(HyperparamSettings):
     learn_freq: int = 1
     learn_terminal: bool = False
     tau: float = 0.005
-
+    policy_type: str = "discrete"
 
 
 @attr.s(auto_attribs=True)

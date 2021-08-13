@@ -164,7 +164,7 @@ class SAC(object):
         elif self.policy_type == 'gaussian':
             if train:
                 action, _, _ = self.policy.sample(state)
-                action = action.item()
+                action = action.detach().numpy().squeeze(1)
                 self.add_experience({"action": action})
             else:
                 _, _, action = self.policy.sample(state)
@@ -299,6 +299,9 @@ class SAC(object):
                     target_param.data.copy_(self.tau * param.data + (1.-self.tau) * target_param.data)
 
         elif self.policy_type == 'gaussian':
+
+            action = torch.tensor(transitions["u_0"], dtype=torch.float).view(self.batch_size, -1)
+
             with torch.no_grad():
                 # next_action, next_action_logprob, _ = self.policy_target.sample(obs_)
                 next_action, next_action_logprob, _ = self.policy.sample(obs_)

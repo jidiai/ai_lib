@@ -26,6 +26,7 @@ hyperparameters:
   tau: 0.005
   tune_entropy: false
   use_network: true
+  policy_type: discrete
 seedparameters:
   seed_nn: 1
   seed_np: 1

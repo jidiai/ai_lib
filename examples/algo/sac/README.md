@@ -1,4 +1,4 @@
-**Start to train your own dqn-agent**
+**Start to train your own sac-agent**
 
 Follow the instructions and then you can reply the same performance as below.
 
