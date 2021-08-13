@@ -62,6 +62,7 @@ class MAgent(Game, DictObservation):
         return self.all_observes
 
     def step(self, joint_action):
+        self.is_valid_action(joint_action)
         info_before = self.step_before_info()
         joint_action_decode = self.decode(joint_action)
         all_observations, reward, self.dones, info_after = \
@@ -75,6 +76,19 @@ class MAgent(Game, DictObservation):
         self.step_cnt += 1
         done = self.is_terminal()
         return self.all_observes, reward, done, info_before, info_after
+
+    def is_valid_action(self, joint_action):
+
+        if len(joint_action) != self.n_player:
+            raise Exception("Input joint action dimension should be {}, not {}".format(
+                self.n_player, len(joint_action)))
+
+        for i in range(self.n_player):
+            if joint_action[i] is None or joint_action[i][0] is None:
+                continue
+            if len(joint_action[i][0]) != self.joint_action_space[i][0].n:
+                raise Exception("The input action dimension for player {} should be {}, not {}".format(
+                    i, self.joint_action_space[i][0].n, len(joint_action[i][0])))
 
     def step_before_info(self, info=''):
         return info
@@ -130,6 +144,8 @@ class MAgent(Game, DictObservation):
         for act_id, nested_action in enumerate(joint_action):
             # print("debug nested_action ", nested_action)
             key = self.player_id_reverses_map[act_id]
+            if nested_action is None or nested_action[0] is None:
+                continue
             joint_action_decode[key] = nested_action[0].index(1)
             # joint_action_decode.append(nested_action[0])
 
