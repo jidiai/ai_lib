@@ -2,21 +2,19 @@
 # Time  : 2021/8/13 下午3:01
 # Author: Yahui Cui
 
-from env.simulators.game import Game
 from utils.discrete import Discrete
+from env.simulators.gridgame import GridGame
 
 import json
 import numpy as np
 
 
-class CliffWalking(Game):
+class CliffWalking(GridGame):
     def __init__(self, conf):
-        super().__init__(conf['n_player'], conf['is_obs_continuous'], conf['is_act_continuous'],
-                         conf['game_name'], conf['agent_nums'], conf['obs_type'])
         self.env_core = CliffWalkingEnv(12, 4)
-
         self.load_action_space(conf)
-
+        colors = conf.get('colors', [(255, 255, 255), (255, 140, 0), (181, 255, 80), (100, 100, 100), (100, 144, 255)])
+        super(CliffWalking, self).__init__(conf, colors)
         self.done = False
         self.step_cnt = 0
         self.max_step = int(conf["max_step"])
@@ -91,6 +89,15 @@ class CliffWalking(Game):
 
     def check_win(self):
         return '0'
+
+    def get_render_data(self, current_state):
+        grid_map = [[0] * self.board_width for _ in range(self.board_height)]
+        grid_map[-1][0] = 1
+        grid_map[3][-1] = 2
+        for j in range(1, self.board_width-1):
+            grid_map[3][j] = 3
+        grid_map[self.env_core.y][self.env_core.x] = 4
+        return grid_map
 
     def reset(self):
         observation = self.env_core.reset()

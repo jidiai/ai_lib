@@ -60,23 +60,14 @@ def get_joint_action_eval(game, multi_part_agent_ids, policy_list, actions_space
 
         agents_id_list = multi_part_agent_ids[policy_i]
 
-        # if game.obs_type[policy_i] == "grid":
-        #     obs_list = game.get_grid_many_observation(game.current_state, players_id_list, info_before)
-        # elif game.obs_type[policy_i] == "vector":
-        #     obs_list = game.get_vector_many_observation(game.current_state, players_id_list, info_before)
-        # elif game.obs_type[policy_i] == "dict":
-        #     obs_list = game.get_dict_many_observation(game.current_state, players_id_list, info_before)
-
         action_space_list = actions_spaces[policy_i]
         function_name = 'm%d' % policy_i
         for i in range(len(agents_id_list)):
             agent_id = agents_id_list[i]
             a_obs = all_observes[agent_id]
             each = eval(function_name)(a_obs, action_space_list[i], game.is_act_continuous)
-            # if len(each) != game.agent_nums[policy_i]:
-            #     error = "模型%d动作空间维度%d不正确！应该是%d" % (int(t_agents_id[policy_i]), len(each), game.agent_nums[policy_i])
-            #     raise Exception(error)
             joint_action.append(each)
+    print(joint_action)
     return joint_action
 
 
@@ -85,6 +76,72 @@ def set_seed(g, env_name):
         g.reset()
         seed = g.create_seed()
         g.set_seed(seed)
+
+
+def render_game(g, fps=1):
+    """
+    This function is used to generate log for pygame rendering locally and render in time.
+    The higher the fps, the faster the speed for rendering next step.
+    only support gridgame:
+    "gobang_1v1", "reversi_1v1", "snakes_1v1", "sokoban_2p", "snakes_3v3", "snakes_5p", "sokoban_1p", "cliffwalking"
+    """
+
+    import pygame
+    pygame.init()
+    screen = pygame.display.set_mode(g.grid.size)
+    pygame.display.set_caption(g.game_name)
+    clock = pygame.time.Clock()
+    for i in range(len(policy_list)):
+        if policy_list[i] not in get_valid_agents():
+            raise Exception("agent {} not valid!".format(policy_list[i]))
+
+        file_path = os.path.dirname(os.path.abspath(__file__)) + "/examples/algo/" + policy_list[i] + "/submission.py"
+        if not os.path.exists(file_path):
+            raise Exception("file {} not exist!".format(file_path))
+
+        import_path = '.'.join(file_path.split('/')[-4:])[:-3]
+        function_name = 'm%d' % i
+        import_name = "my_controller"
+        import_s = "from %s import %s as %s" % (import_path, import_name, function_name)
+        print(import_s)
+        exec(import_s, globals())
+
+    st = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+    game_info = dict(game_name=env_type, n_player=g.n_player, board_height=g.board_height, board_width=g.board_width,
+                     init_state=str(g.get_render_data(g.current_state)), init_info=str(g.init_info), start_time=st,
+                     mode="window", render_info={"color": g.colors, "grid_unit": g.grid_unit, "fix": g.grid_unit_fix})
+
+    all_observes = g.all_observes
+    while not g.is_terminal():
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+        step = "step%d" % g.step_cnt
+        print(step)
+        game_info[step] = {}
+        game_info[step]["time"] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+        joint_act = get_joint_action_eval(g, multi_part_agent_ids, policy_list, actions_space, all_observes)
+        next_state, reward, done, info_before, info_after = g.step(joint_act)
+        if info_before:
+            game_info[step]["info_before"] = info_before
+        game_info[step]["joint_action"] = str(joint_act)
+
+        pygame.surfarray.blit_array(screen, g.render_board().transpose(1, 0, 2))
+        pygame.display.flip()
+
+        game_info[step]["state"] = str(g.get_render_data(g.current_state))
+        game_info[step]["reward"] = str(reward)
+
+        if info_after:
+            game_info[step]["info_after"] = info_after
+
+        clock.tick(fps)
+
+    game_info["winner"] = g.check_win()
+    game_info["winner_information"] = str(g.won)
+    game_info["n_return"] = str(g.n_return)
+    ed = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+    game_info["end_time"] = ed
 
 
 def run_game(g, env_name, multi_part_agent_ids, actions_spaces, policy_list, render_mode):
@@ -125,7 +182,6 @@ def run_game(g, env_name, multi_part_agent_ids, actions_spaces, policy_list, ren
                  "map_size": g.map_size if hasattr(g, "map_size") else None}
 
     steps = []
-    info_before = ''
     all_observes = g.all_observes
     while not g.is_terminal():
         step = "step%d" % g.step_cnt
@@ -135,8 +191,7 @@ def run_game(g, env_name, multi_part_agent_ids, actions_spaces, policy_list, ren
         if hasattr(g, "env_core"):
             if hasattr(g.env_core, "render"):
                 g.env_core.render()
-        info_dict = {}
-        info_dict["time"] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+        info_dict = {"time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))}
         joint_act = get_joint_action_eval(g, multi_part_agent_ids, policy_list, actions_spaces, all_observes)
         all_observes, reward, done, info_before, info_after = g.step(joint_act)
         if env_name.split("-")[0] in ["magent"]:
@@ -180,11 +235,19 @@ if __name__ == "__main__":
     game = make(env_type)
 
     # 针对"classic_"环境，使用gym core 进行render;
-    # 非"classic_"环境，使用replay工具包的replay.html，通过上传.json进行网页回放
-    render_mode = True
+    # gridgame类环境（"gobang_1v1", "reversi_1v1", "snakes_1v1", "sokoban_2p", "snakes_3v3",
+    # "snakes_5p", "sokoban_1p", "cliffwalking"），使用replay工具包的replay.html，通过上传.json进行网页回放
+    render_mode = False
+
+    # gridgame类环境支持实时render（"gobang_1v1", "reversi_1v1", "snakes_1v1", "sokoban_2p", "snakes_3v3",
+    # "snakes_5p", "sokoban_1p", "cliffwalking"）
+    render_in_time = False
 
     # print("可选policy 名称类型:", get_valid_agents())
     policy_list = ["random"] * len(game.agent_nums)
 
     multi_part_agent_ids, actions_space = get_players_and_action_space_list(game)
-    run_game(game, env_type, multi_part_agent_ids, actions_space, policy_list, render_mode)
+    if render_in_time:
+        render_game(game)
+    else:
+        run_game(game, env_type, multi_part_agent_ids, actions_space, policy_list, render_mode)
