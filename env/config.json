@@ -119,6 +119,20 @@
     "agent_nums": [3,3],
     "obs_type": ["dict","dict"]
   },
+  "snakes_2p": {
+    "class_literal": "SnakeEatBeans",
+    "n_player": 2,
+    "board_width": 8,
+    "board_height": 6,
+    "cell_range": 4,
+    "n_beans": 5,
+    "max_step": 50,
+    "game_name": "snakes",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [2],
+    "obs_type": ["dict"]
+  },
   "snakes_5p": {
     "class_literal": "SnakeEatBeans",
     "n_player": 5,

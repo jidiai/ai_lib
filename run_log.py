@@ -219,7 +219,7 @@ def get_valid_agents():
 
 
 if __name__ == "__main__":
-    # "gobang_1v1", "reversi_1v1", "snakes_1v1", "sokoban_2p", "snakes_3v3", "snakes_5p", "sokoban_1p"
+    # "gobang_1v1", "reversi_1v1", "snakes_1v1", "sokoban_2p", "snakes_3v3", "snakes_2p", "snakes_5p", "sokoban_1p"
     # "classic_CartPole-v0", "classic_MountainCar-v0", "classic_MountainCarContinuous-v0",
     # "classic_Pendulum-v0", "classic_Acrobot-v1", "football_11v11_kaggle", "MiniWorld-Hallway-v0",
     # "MiniWorld-OneRoom-v0", "MiniWorld-OneRoomS6-v0", "MiniWorld-OneRoomS6Fast-v0",
@@ -231,7 +231,7 @@ if __name__ == "__main__":
     # "overcookedai-cramped_room", "overcookedai-asymmetric_advantages", "overcookedai-coordination_ring",
     # "overcookedai-forced_coordination", "overcookedai-counter_circuit", "magent-battle_v3-12v12",
     # "magent-battle_v3-20v20", "gridworld", "cliffwalking"
-    env_type = "cliffwalking"
+    env_type = "snakes_2p"
     game = make(env_type)
 
     # 针对"classic_"环境，使用gym core 进行render;
