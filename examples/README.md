@@ -1,4 +1,4 @@
-# JIdiAlgo V1.0 Framework
+# JidiAlgo V1.0 Framework
 
 Now JidiAlgo V1.0 includes 12 single RL algorithms. 
 
