@@ -80,7 +80,7 @@ class MiniWorld(Game, VectorObservation):
         reward = self.get_reward(reward)
         if not isinstance(next_state, np.ndarray):
             next_state = np.array(next_state)
-        next_state = next_state.reshape(-1).tolist()
+        next_state = next_state.tolist()
         self.current_state = [next_state] * self.n_player
         self.all_observes = self.get_all_observes()
         done = self.is_terminal()
