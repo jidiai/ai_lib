@@ -52,26 +52,34 @@ def get_args():
 
 
 def test_dqn(args=get_args()):
+    # ============================================================================
+    # ============================ JIDI ENV EXAMPLE ==============================
+    # ============================================================================
+
+    """
     from pathlib import Path
     import sys
     base_dir = Path(__file__).resolve().parent.parent
     sys.path.append(str(base_dir))
-    # from CartPole_v0_wrapper import classic_CartPole_v0
-    # env = classic_CartPole_v0()
     from env.chooseenv import make
     env = make("classic_CartPole-v0")
+    args.state_shape = env.input_dimension.shape[0]
+    args.action_shape = env.action_dim
+    """
 
+    from jidi_interface import make_env_wrapper
+    env = make_env_wrapper("classic_CartPole-v0")
     args.state_shape = env.input_dimension.shape[0]
     args.action_shape = env.action_dim
 
     # train_envs = gym.make(args.task)
     # you can also use tianshou.env.SubprocVectorEnv
     train_envs = DummyVectorEnv(
-        [lambda: make("classic_CartPole-v0") for _ in range(args.training_num)]
+        [lambda:  make_env_wrapper("classic_CartPole-v0") for _ in range(args.training_num)]
     )
     # test_envs = gym.make(args.task)
     test_envs = DummyVectorEnv(
-        [lambda: make("classic_CartPole-v0") for _ in range(args.test_num)]
+        [lambda:  make_env_wrapper("classic_CartPole-v0") for _ in range(args.test_num)]
     )
     # seed
     np.random.seed(args.seed)
@@ -157,7 +165,7 @@ def test_dqn(args=get_args()):
     if __name__ == '__main__':
         pprint.pprint(result)
         # Let's watch its performance!
-        env = make(args.task)
+        env = make_env_wrapper("classic_CartPole-v0")
         policy.eval()
         policy.set_eps(args.eps_test)
         collector = Collector(policy, env)

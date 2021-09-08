@@ -57,9 +57,13 @@ class Collector(object):
         exploration_noise: bool = False,
     ) -> None:
         super().__init__()
-        if isinstance(env, gym.Env) and not hasattr(env, "__len__"):
+        # if isinstance(env, gym.Env) and not hasattr(env, "__len__"):
+        #     warnings.warn("Single environment detected, wrap to DummyVectorEnv.")
+        #     env = DummyVectorEnv([lambda: env])
+        if not hasattr(env, "__len__"):
             warnings.warn("Single environment detected, wrap to DummyVectorEnv.")
             env = DummyVectorEnv([lambda: env])
+
         self.env = env
         self.env_num = len(env)
         self.exploration_noise = exploration_noise
@@ -203,7 +207,6 @@ class Collector(object):
             assert len(self.data) == len(ready_env_ids)
             # restore the state: if the last state is None, it won't store
             last_state = self.data.policy.pop("hidden_state", None)
-
             # get the next action
             if random:
                 self.data.update(
