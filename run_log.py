@@ -95,7 +95,7 @@ def render_game(g, fps=1):
         if policy_list[i] not in get_valid_agents():
             raise Exception("agent {} not valid!".format(policy_list[i]))
 
-        file_path = os.path.dirname(os.path.abspath(__file__)) + "/examples/algo/" + policy_list[i] + "/submission.py"
+        file_path = os.path.dirname(os.path.abspath(__file__)) + "/jidi_examples/algo/" + policy_list[i] + "/submission.py"
         if not os.path.exists(file_path):
             raise Exception("file {} not exist!".format(file_path))
 
@@ -159,7 +159,7 @@ def run_game(g, env_name, multi_part_agent_ids, actions_spaces, policy_list, ren
         if policy_list[i] not in get_valid_agents():
             raise Exception("agent {} not valid!".format(policy_list[i]))
 
-        file_path = os.path.dirname(os.path.abspath(__file__)) + "/examples/algo/" + policy_list[i] + "/submission.py"
+        file_path = os.path.dirname(os.path.abspath(__file__)) + "/jidi_examples/algo/" + policy_list[i] + "/submission.py"
         if not os.path.exists(file_path):
             raise Exception("file {} not exist!".format(file_path))
 
@@ -214,7 +214,7 @@ def run_game(g, env_name, multi_part_agent_ids, actions_spaces, policy_list, ren
 
 
 def get_valid_agents():
-    dir_path = os.path.join(os.path.dirname(__file__), 'examples', 'algo')
+    dir_path = os.path.join(os.path.dirname(__file__), 'jidi_examples', 'algo')
     return [f for f in os.listdir(dir_path) if f != "__pycache__"]
 
 
@@ -230,8 +230,8 @@ if __name__ == "__main__":
     # "ParticleEnv-simple_tag", "ParticleEnv-simple_world_comm", "football_11_vs_11_stochastic",
     # "overcookedai-cramped_room", "overcookedai-asymmetric_advantages", "overcookedai-coordination_ring",
     # "overcookedai-forced_coordination", "overcookedai-counter_circuit", "magent-battle_v3-12v12",
-    # "magent-battle_v3-20v20", "gridworld", "cliffwalking"
-    env_type = "snakes_2p"
+    # "magent-battle_v3-20v20", "gridworld", "cliffwalking", "smarts-loop"
+    env_type = "smarts-loop"
     game = make(env_type)
 
     # 针对"classic_"环境，使用gym core 进行render;

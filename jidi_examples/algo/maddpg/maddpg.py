@@ -6,7 +6,7 @@ import numpy as np
 import os
 import sys
 
-from examples.common.buffer import Replay_buffer as buffer
+from jidi_examples.common.buffer import Replay_buffer as buffer
 from networks.actor import OpenaiActor as net_a
 from networks.critic import OpenaiCritic as net_c
 

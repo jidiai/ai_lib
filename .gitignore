@@ -2,4 +2,4 @@ __pycache__
 .idea*
 /logs
 .DS_Store
-/examples/models
+/jidi_examples/models
