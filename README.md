@@ -14,6 +14,10 @@
   
   (Using `pip install 'pettingzoo[magent]'` if you are using zsh; 
   Using render_from_log.py for MAgent local render)
+- `SMARTS` https://gitee.com/mirrors_huawei-noah/SMARTS
+
+  (Put repo `SMARTS` and `ai_lib` under the same folder;
+  If not using smarts, comment out `from .smarts_jidi import *` in `env/__init__.py`)
 - `Torch 1.7.0` 可选
   - 支持提交Torch训练后的模型.pth附属文件
 

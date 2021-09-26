@@ -2,12 +2,17 @@
 import os
 import time
 import json
-
+import sys
 import numpy as np
 
 from env.chooseenv import make
 from utils.get_logger import get_logger
 from env.obs_interfaces.observation import obs_type
+from pathlib import Path
+CURRENT_PATH = str(Path(__file__).resolve().parent)
+examples_path = os.path.join(CURRENT_PATH, "examples")
+sys.path.append(examples_path)
+print(sys.path)
 
 
 class NpEncoder(json.JSONEncoder):
@@ -99,7 +104,7 @@ def render_game(g, fps=1):
         if not os.path.exists(file_path):
             raise Exception("file {} not exist!".format(file_path))
 
-        import_path = '.'.join(file_path.split('/')[-4:])[:-3]
+        import_path = '.'.join(file_path.split('/')[-3:])[:-3]
         function_name = 'm%d' % i
         import_name = "my_controller"
         import_s = "from %s import %s as %s" % (import_path, import_name, function_name)
@@ -163,7 +168,7 @@ def run_game(g, env_name, multi_part_agent_ids, actions_spaces, policy_list, ren
         if not os.path.exists(file_path):
             raise Exception("file {} not exist!".format(file_path))
 
-        import_path = '.'.join(file_path.split('/')[-4:])[:-3]
+        import_path = '.'.join(file_path.split('/')[-3:])[:-3]
         function_name = 'm%d' % i
         import_name = "my_controller"
         import_s = "from %s import %s as %s" % (import_path, import_name, function_name)
@@ -230,8 +235,8 @@ if __name__ == "__main__":
     # "ParticleEnv-simple_tag", "ParticleEnv-simple_world_comm", "football_11_vs_11_stochastic",
     # "overcookedai-cramped_room", "overcookedai-asymmetric_advantages", "overcookedai-coordination_ring",
     # "overcookedai-forced_coordination", "overcookedai-counter_circuit", "magent-battle_v3-12v12",
-    # "magent-battle_v3-20v20", "gridworld", "cliffwalking"
-    env_type = "snakes_2p"
+    # "magent-battle_v3-20v20", "gridworld", "cliffwalking", "smarts-loop"
+    env_type = "smarts-loop"
     game = make(env_type)
 
     # 针对"classic_"环境，使用gym core 进行render;
