@@ -531,5 +531,17 @@
     "agent_nums": [1],
     "obs_type": ["dict"],
     "act_box": {"discrete_n": 4}
+  },
+  "sc2-MoveToBeacon": {
+    "class_literal": "SC2",
+    "n_player": 1,
+    "max_step": 300,
+    "game_name": "sc2_MoveToBeacon",
+    "map_name": "MoveToBeacon",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1],
+    "agent_type": ["random"],
+    "obs_type": ["dict"]
   }
 }

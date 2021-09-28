@@ -12,3 +12,4 @@ from .magent import *
 from .gridworld import *
 from .cliffwalking import *
 from .smarts_jidi import *
+from .sc2 import *
