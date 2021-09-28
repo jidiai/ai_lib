@@ -8,7 +8,7 @@ def get_logger(log_path, name, save_file=False, console_out=False, json_file=Fal
     if not os.path.exists(log_path):
         os.mkdir(log_path)
 
-    logger = logging.getLogger()
+    logger = logging.getLogger(name='Jidi')
     logger.setLevel(logging.INFO)
     # 每分钟建一个文件
     rq = time.strftime('%Y%m%d%H%M', time.localtime(time.time()))

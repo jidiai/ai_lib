@@ -235,8 +235,8 @@ if __name__ == "__main__":
     # "ParticleEnv-simple_tag", "ParticleEnv-simple_world_comm", "football_11_vs_11_stochastic",
     # "overcookedai-cramped_room", "overcookedai-asymmetric_advantages", "overcookedai-coordination_ring",
     # "overcookedai-forced_coordination", "overcookedai-counter_circuit", "magent-battle_v3-12v12",
-    # "magent-battle_v3-20v20", "gridworld", "cliffwalking", "smarts-loop"
-    env_type = "smarts-loop"
+    # "magent-battle_v3-20v20", "gridworld", "cliffwalking", "smarts-loop", "sc2-MoveToBeacon"
+    env_type = "sc2-MoveToBeacon"
     game = make(env_type)
 
     # 针对"classic_"环境，使用gym core 进行render;
