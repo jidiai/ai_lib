@@ -543,5 +543,15 @@
     "agent_nums": [1],
     "agent_type": ["random"],
     "obs_type": ["dict"]
+  },
+  "olympics-running": {
+    "class_literal": "olympics_running",
+    "n_player": 2,
+    "max_step": 500,
+    "game_name": "olympics_running",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1,1],
+    "obs_type": ["vector", "vector"]
   }
 }

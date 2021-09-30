@@ -13,3 +13,4 @@ from .gridworld import *
 from .cliffwalking import *
 from .smarts_jidi import *
 from .sc2 import *
+from .olympics_running import *
