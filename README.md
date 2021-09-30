@@ -19,6 +19,7 @@
   (Put repo `SMARTS` and `ai_lib` under the same folder;
   If not using smarts, comment out `from .smarts_jidi import *` in `env/__init__.py`)
 - `StartCraft II` https://github.com/deepmind/pysc2
+- `Olympics Engine`https://github.com/jidiai/OlympicsEnv
 - `Torch 1.7.0` 可选
   - 支持提交Torch训练后的模型.pth附属文件
 
