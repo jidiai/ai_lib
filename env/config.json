@@ -526,7 +526,7 @@
     "n_player": 1,
     "max_step": 1000,
     "game_name": "smarts_loop",
-    "is_obs_continuous": false,
+    "is_obs_continuous": true,
     "is_act_continuous": false,
     "agent_nums": [1],
     "obs_type": ["dict"],
@@ -553,5 +553,87 @@
     "is_act_continuous": false,
     "agent_nums": [1,1],
     "obs_type": ["vector", "vector"]
+  },
+  "smarts-cloverleaf": {
+    "class_literal": "SmartsJidi",
+    "n_player": 1,
+    "max_step": 1000,
+    "game_name": "smarts_cloverleaf",
+    "scenario_name": "cloverleaf",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1],
+    "obs_type": ["dict"],
+    "act_box": {"discrete_n": 4}
+  },
+  "smarts-figure_eight": {
+    "class_literal": "SmartsJidi",
+    "n_player": 1,
+    "max_step": 1000,
+    "game_name": "smarts_figure_eight",
+    "scenario_name": "figure_eight",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1],
+    "obs_type": ["dict"],
+    "act_box": {"discrete_n": 4}
+  },
+  "smarts-minicity": {
+    "class_literal": "SmartsJidi",
+    "n_player": 1,
+    "max_step": 1000,
+    "game_name": "smarts_minicity",
+    "scenario_name": "minicity",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1],
+    "obs_type": ["dict"],
+    "act_box": {"discrete_n": 4}
+  },
+  "smarts-straight": {
+    "class_literal": "SmartsJidi",
+    "n_player": 1,
+    "max_step": 1000,
+    "game_name": "smarts_straight",
+    "scenario_name": "straight",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1],
+    "obs_type": ["dict"],
+    "act_box": {"discrete_n": 4}
+  },
+  "smarts-zoo_intersection": {
+    "class_literal": "SmartsJidi",
+    "n_player": 1,
+    "max_step": 1000,
+    "game_name": "smarts_zoo_intersection",
+    "scenario_name": "zoo_intersection",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1],
+    "obs_type": ["dict"],
+    "act_box": {"discrete_n": 4}
+  },
+  "smarts-ngsim-partial": {
+    "class_literal": "SmartsNGSIM",
+    "n_player": 1,
+    "game_name": "smarts_ngsim_partial",
+    "scenario_name": "ngsim",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [1],
+    "obs_type": ["dict"],
+    "partial": true
+  },
+  "smarts-ngsim": {
+    "class_literal": "SmartsNGSIM",
+    "n_player": 1,
+    "game_name": "smarts_ngsim",
+    "scenario_name": "ngsim",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [1],
+    "obs_type": ["dict"],
+    "partial": false
   }
 }

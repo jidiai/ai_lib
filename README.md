@@ -16,8 +16,15 @@
   Using render_from_log.py for MAgent local render)
 - `SMARTS` https://gitee.com/mirrors_huawei-noah/SMARTS
 
-  (Put repo `SMARTS` and `ai_lib` under the same folder;
-  If not using smarts, comment out `from .smarts_jidi import *` in `env/__init__.py`)
+  (Put repo `SMARTS` and `ai_lib` under the same folder.
+  
+  If not using smarts, comment out `from .smarts_jidi import *` in `env/__init__.py`.
+  
+  If want to use NGSIM scenario, download NGSIM scenario 
+  here: https://www.dropbox.com/sh/fcky7jt49x6573z/AADUmqmIXhz_MfBcenid43hqa/ngsim?dl=0&subfolder_nav_tracking=1 
+  and put the `ngsim` folder under `SMARTS/scenarios`.
+  
+  If not using smarts NGSIM, comment out `from .smarts_ngsim import *` in `env/__init__.py`.)
 - `StartCraft II` https://github.com/deepmind/pysc2
 - `Olympics Engine` https://github.com/jidiai/OlympicsEnv
 - `Torch 1.7.0` 可选
