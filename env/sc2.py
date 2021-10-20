@@ -42,6 +42,9 @@ class SC2(Game):
         self.n_return = [0] * self.n_player
 
     def reset(self):
+        self.dones = False
+        self.done = False
+        self.init_info = None
         timesteps = self.env_core.reset()
         self.current_state = timesteps
         self.all_observes = self.get_all_observevs()

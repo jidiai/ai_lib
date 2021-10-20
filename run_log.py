@@ -237,14 +237,15 @@ if __name__ == "__main__":
     # "overcookedai-forced_coordination", "overcookedai-counter_circuit", "magent-battle_v3-12v12",
     # "magent-battle_v3-20v20", "gridworld", "cliffwalking", "smarts-loop", "sc2-MoveToBeacon", "olympics-running",
     # "smarts-cloverleaf", "smarts-figure_eight", "smarts-minicity", "smarts-straight", "smarts-zoo_intersection",
-    # "smarts-ngsim-partial", "smarts-ngsim"
-    env_type = "olympics-running"
+    # "smarts-ngsim-partial", "smarts-ngsim", "robotics_FetchPickAndPlace", "robotics_HandManipulateBlock",
+    # "robotics_HandManipulatePen"
+    env_type = "robotics_HandManipulatePen"
     game = make(env_type)
 
     # 针对"classic_"环境，使用gym core 进行render;
     # gridgame类环境（"gobang_1v1", "reversi_1v1", "snakes_1v1", "sokoban_2p", "snakes_3v3",
     # "snakes_5p", "sokoban_1p", "cliffwalking"），使用replay工具包的replay.html，通过上传.json进行网页回放
-    render_mode = False
+    render_mode = True
 
     # gridgame类环境支持实时render（"gobang_1v1", "reversi_1v1", "snakes_1v1", "sokoban_2p", "snakes_3v3",
     # "snakes_5p", "sokoban_1p", "cliffwalking"）

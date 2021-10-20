@@ -33,20 +33,23 @@ class SmartsNGSIM(Game):
     def __init__(self, conf):
         super(SmartsNGSIM, self).__init__(conf['n_player'], conf['is_obs_continuous'], conf['is_act_continuous'],
                                          conf['game_name'], conf['agent_nums'], conf['obs_type'])
-        # self.max_step = int(conf["max_step"])
+        self.max_step = int(conf["max_step"])
         self.partial = conf["partial"]
         scenario_name = conf["scenario_name"]
         self.scenario_path = os.path.join(CURRENT_PATH, "SMARTS", "scenarios", scenario_name)
-        test_file_path = os.path.join(CURRENT_FOLDER, "env", "ngsim_jidi", "test_ids.pkl")
+        test_file_path = os.path.join(CURRENT_FOLDER, "env", "ngsim_jidi", "test_data.pkl")
 
         with open(test_file_path, "rb") as f:
             self.test_ids = pickle.load(f)
 
         if self.partial:
             sample_num = 10
-            sample_list = [i for i in range(len(self.test_ids))]
+            sample_list = [key for key in self.test_ids.keys()]
             sample_list = random.sample(sample_list, sample_num)
-            self.test_ids = self.test_ids[sample_list]
+            temp_data = {}
+            for key in sample_list:
+                temp_data[key] = self.test_ids[key]
+            self.test_ids = temp_data
 
         self.joint_action_space = self.set_action_space()
         self.action_dim = self.joint_action_space
@@ -56,6 +59,7 @@ class SmartsNGSIM(Game):
     def reset(self):
         self.env_core = SMARTSImitation([self.scenario_path], self.test_ids)
         self.step_cnt = 0
+        self.step_cnt_per_vehicle = 0
         self.done = False
         self.init_info = None
         obs = self.env_core.reset()
@@ -73,7 +77,12 @@ class SmartsNGSIM(Game):
         self.all_observes = self.get_all_observes()
         reward = self.get_reward(reward)
         self.step_cnt += 1
+        self.step_cnt_per_vehicle += 1
+        if self.step_cnt_per_vehicle >= self.max_step:
+            self.done = True
         done = self.is_terminal()
+        if done:
+            self.set_final_n_return()
         info_after = self.info
         return self.all_observes, reward, done, info_before, info_after
 
@@ -91,6 +100,10 @@ class SmartsNGSIM(Game):
             self.n_return[i] += r[i]
         return r
 
+    def set_final_n_return(self):
+        for i in range(self.n_player):
+            self.n_return[i] /= len(self.test_ids)
+
     def decode(self, joint_action):
         return joint_action[0][0]
 
@@ -102,6 +115,7 @@ class SmartsNGSIM(Game):
             self.current_state = obs
             self.all_observes = self.get_all_observes()
             self.done = False
+            self.step_cnt_per_vehicle = 0
             return False
         else:
             return False
@@ -117,13 +131,15 @@ class SmartsNGSIM(Game):
 
 
 class SMARTSImitation:
-    def __init__(self, scenarios, vehicle_ids):
+    def __init__(self, scenarios, vehicle_data):
         self.scenarios_iterator = Scenario.scenario_variations(scenarios, [])
         self._init_scenario()
-        self.vehicle_ids = vehicle_ids
-        self.vehicle_num = len(vehicle_ids)
+        self.vehicle_demo_data = vehicle_data
+        self.vehicle_ids = list(vehicle_data.keys())
+        self.vehicle_num = len(self.vehicle_ids)
         self.obs_stacked_size = 1
         self.agent_spec = get_agent_spec(self.obs_stacked_size)
+        self._vehicle_step = 0
 
         self.smarts = SMARTS(
             agent_interfaces={},
@@ -134,11 +150,31 @@ class SMARTSImitation:
     def seed(self, seed):
         np.random.seed(seed)
 
+    def _compute_reward(self, observations, dones):
+        ego_pos = observations[self.vehicle_id].ego_vehicle_state.position[:2]
+        demo_total_step = len(self.vehicle_demo_data[self.vehicle_id])
+        if self._vehicle_step < demo_total_step:
+            # if ego vehicle terminates before the expert demo, we still need to take
+            # into account the additional penalty of expert's remaining timesteps.
+            if dones[self.vehicle_id]:
+                distance = 0
+                for ts in range(self._vehicle_step, demo_total_step):
+                    distance += np.linalg.norm(ego_pos - self.vehicle_demo_data[self.vehicle_id][ts])
+                return -distance
+            demo_pos = self.vehicle_demo_data[self.vehicle_id][self._vehicle_step]
+        else:
+            demo_pos = self.vehicle_demo_data[self.vehicle_id][-1]
+        distance = np.linalg.norm(ego_pos - demo_pos)
+        return -distance
+
     def step(self, action):
 
         observations, rewards, dones, _ = self.smarts.step(
             {self.vehicle_id: self.agent_spec.action_adapter(action)}
         )
+        self._vehicle_step += 1
+
+        rewards[self.vehicle_id] = self._compute_reward(observations, dones)
 
         if dones[self.vehicle_id] and self.vehicle_itr == self.vehicle_num:
             info = dict(finish=True)
@@ -156,6 +192,7 @@ class SMARTSImitation:
         if self.vehicle_itr >= len(self.vehicle_ids):
             self.vehicle_itr = 0
 
+        self._vehicle_step = 0
         self.vehicle_id = self.vehicle_ids[self.vehicle_itr]
         vehicle_mission = self.vehicle_missions[self.vehicle_id]
 
