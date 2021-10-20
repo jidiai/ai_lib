@@ -27,6 +27,9 @@
   If not using smarts NGSIM, comment out `from .smarts_ngsim import *` in `env/__init__.py`.)
 - `StartCraft II` https://github.com/deepmind/pysc2
 - `Olympics Engine` https://github.com/jidiai/OlympicsEnv
+  
+    (Notice: Put repo `OlympicsEnv` and `ai_lib` under the same folder)
+- `mujoco-py` https://github.com/openai/mujoco-py
 - `Torch 1.7.0` 可选
   - 支持提交Torch训练后的模型.pth附属文件
 

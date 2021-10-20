@@ -61,6 +61,7 @@ class SmartsJidi(Game):
     def reset(self):
         self.step_cnt = 0
         self.dones = {"__all__": False}
+        self.done = False
         self.init_info = None
         obs_list = self.env_core.reset()
         self.current_state = self.change_observation_keys(obs_list)

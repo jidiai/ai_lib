@@ -15,3 +15,4 @@ from .smarts_jidi import *
 from .sc2 import *
 from .olympics_running import *
 from .smarts_ngsim import *
+from .gym_robotics import *

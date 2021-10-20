@@ -617,6 +617,7 @@
   "smarts-ngsim-partial": {
     "class_literal": "SmartsNGSIM",
     "n_player": 1,
+    "max_step": 1000,
     "game_name": "smarts_ngsim_partial",
     "scenario_name": "ngsim",
     "is_obs_continuous": true,
@@ -628,6 +629,7 @@
   "smarts-ngsim": {
     "class_literal": "SmartsNGSIM",
     "n_player": 1,
+    "max_step": 1000,
     "game_name": "smarts_ngsim",
     "scenario_name": "ngsim",
     "is_obs_continuous": true,
@@ -635,5 +637,35 @@
     "agent_nums": [1],
     "obs_type": ["dict"],
     "partial": false
+  },
+  "robotics_FetchPickAndPlace": {
+    "class_literal": "GymRobotics",
+    "n_player": 1,
+    "max_step": 50,
+    "game_name": "FetchPickAndPlace-v1",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [1],
+    "obs_type": ["dict"]
+  },
+  "robotics_HandManipulateBlock": {
+    "class_literal": "GymRobotics",
+    "n_player": 1,
+    "max_step": 100,
+    "game_name": "HandManipulateBlock-v0",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [1],
+    "obs_type": ["dict"]
+  },
+  "robotics_HandManipulatePen": {
+    "class_literal": "GymRobotics",
+    "n_player": 1,
+    "max_step": 100,
+    "game_name": "HandManipulatePen-v0",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [1],
+    "obs_type": ["dict"]
   }
 }
