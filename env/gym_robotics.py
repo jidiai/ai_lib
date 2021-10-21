@@ -4,6 +4,9 @@
 
 
 import gym
+import numpy as np
+
+
 from env.simulators.game import Game
 
 
@@ -40,6 +43,7 @@ class GymRobotics(Game):
 
     def step(self, joint_action):
         info_before = ''
+        self.is_valid_action(joint_action)
         action = self.decode(joint_action)
         observation, reward, self.done, info = self.env_core.step(action)
         if info['is_success']:
@@ -60,6 +64,22 @@ class GymRobotics(Game):
         each = {"obs": self.current_state, "controlled_player_index": 0, "task_name": self.game_name}
         all_observes.append(each)
         return all_observes
+
+    def is_valid_action(self, joint_action):
+        if len(joint_action) != self.n_player:
+            raise Exception("Input joint action dimension should be {}, not {}".format(
+                self.n_player, len(joint_action)))
+
+        if (not isinstance(joint_action[0], list)) and (not isinstance(joint_action[0], np.ndarray)):
+            raise Exception("Submitted action should be list or np.ndarray, not {}.".format(type(joint_action[0])))
+
+        action_shape = np.array(joint_action).shape if not isinstance(joint_action, np.ndarray) else joint_action.shape
+        if len(action_shape) != 3:
+            raise Exception("joint action shape should be in length 3: (1, 1, {}), not the length of {}."
+                            .format(self.joint_action_space[0][0].shape[0], len(action_shape)))
+        if action_shape[0] != 1 or action_shape[1] != 1 or action_shape[2] != self.joint_action_space[0][0].shape[0]:
+            raise Exception("joint action shape should be (1, 1, {}), not {}."
+                            .format(self.joint_action_space[0][0].shape[0], action_shape))
 
     def set_action_space(self):
         action_space = [[self.env_core.action_space] for _ in range(self.n_player)]
