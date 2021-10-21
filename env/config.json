@@ -667,5 +667,65 @@
     "is_act_continuous": true,
     "agent_nums": [1],
     "obs_type": ["dict"]
+  },
+  "sc2-CollectMineralShards": {
+    "class_literal": "SC2",
+    "n_player": 1,
+    "max_step": 300,
+    "game_name": "sc2_CollectMineralShards",
+    "map_name": "CollectMineralShards",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1],
+    "agent_type": ["random"],
+    "obs_type": ["dict"]
+  },
+  "sc2-FindAndDefeatZerglings": {
+    "class_literal": "SC2",
+    "n_player": 1,
+    "max_step": 300,
+    "game_name": "sc2_FindAndDefeatZerglings",
+    "map_name": "FindAndDefeatZerglings",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1],
+    "agent_type": ["random"],
+    "obs_type": ["dict"]
+  },
+  "sc2-DefeatRoaches": {
+    "class_literal": "SC2",
+    "n_player": 1,
+    "max_step": 300,
+    "game_name": "sc2_DefeatRoaches",
+    "map_name": "DefeatRoaches",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1],
+    "agent_type": ["random"],
+    "obs_type": ["dict"]
+  },
+  "sc2-DefeatZerglingsAndBanelings": {
+    "class_literal": "SC2",
+    "n_player": 1,
+    "max_step": 300,
+    "game_name": "sc2_DefeatZerglingsAndBanelings",
+    "map_name": "DefeatZerglingsAndBanelings",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1],
+    "agent_type": ["random"],
+    "obs_type": ["dict"]
+  },
+  "sc2-Simple64": {
+    "class_literal": "SC2",
+    "n_player": 2,
+    "max_step": 300,
+    "game_name": "sc2_Simple64",
+    "map_name": "Simple64",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1,1],
+    "agent_type": ["random","random"],
+    "obs_type": ["dict","dict"]
   }
 }
