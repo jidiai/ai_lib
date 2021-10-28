@@ -727,5 +727,65 @@
     "agent_nums": [1,1],
     "agent_type": ["random","random"],
     "obs_type": ["dict","dict"]
+  },
+  "chessandcard-go_v4": {
+    "class_literal": "ChessAndCard",
+    "n_player": 2,
+    "max_step": 10000,
+    "game_name": "go_v4",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [1,1],
+    "obs_type": ["dict", "dict"]
+  },
+  "chessandcard-chess_v3": {
+    "class_literal": "ChessAndCard",
+    "n_player": 2,
+    "max_step": 10000,
+    "game_name": "chess_v3",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [1,1],
+    "obs_type": ["dict", "dict"]
+  },
+  "chessandcard-checkers_v3": {
+    "class_literal": "ChessAndCard",
+    "n_player": 2,
+    "max_step": 10000,
+    "game_name": "checkers_v3",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [1,1],
+    "obs_type": ["dict", "dict"]
+  },
+  "chessandcard-mahjong_v3": {
+    "class_literal": "ChessAndCard",
+    "n_player": 4,
+    "max_step": 10000,
+    "game_name": "mahjong_v3",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [1,1,1,1],
+    "obs_type": ["dict", "dict", "dict", "dict"]
+  },
+  "chessandcard-texas_holdem_v3": {
+    "class_literal": "ChessAndCard",
+    "n_player": 2,
+    "max_step": 10000,
+    "game_name": "texas_holdem_v3",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [1,1],
+    "obs_type": ["dict", "dict"]
+  },
+  "chessandcard-texas_holdem_no_limit_v3": {
+    "class_literal": "ChessAndCard",
+    "n_player": 2,
+    "max_step": 10000,
+    "game_name": "texas_holdem_no_limit_v3",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [1,1],
+    "obs_type": ["dict", "dict"]
   }
 }

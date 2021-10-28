@@ -30,6 +30,12 @@
   
     (Notice: Put repo `OlympicsEnv` and `ai_lib` under the same folder)
 - `mujoco-py` https://github.com/openai/mujoco-py
+- `Classic` https://www.pettingzoo.ml/classic 
+  
+  `pip install pettingzoo[classic]==1.10.0`
+  
+  (Using `pip install 'pettingzoo[classic]==1.10.0'` if you are using zsh.)
+  
 - `Torch 1.7.0` 可选
   - 支持提交Torch训练后的模型.pth附属文件
 
