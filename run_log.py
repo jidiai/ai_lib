@@ -241,8 +241,8 @@ if __name__ == "__main__":
     # "robotics_HandManipulatePen", "sc2-CollectMineralShards", "sc2-FindAndDefeatZerglings", "sc2-DefeatRoaches",
     # "sc2-DefeatZerglingsAndBanelings", "sc2-Simple64", "chessandcard-go_v4", "chessandcard-chess_v3",
     # "chessandcard-checkers_v3", "chessandcard-mahjong_v3", "chessandcard-texas_holdem_v3",
-    # "chessandcard-texas_holdem_no_limit_v3"
-    env_type = "chessandcard-texas_holdem_no_limit_v3"
+    # "chessandcard-texas_holdem_no_limit_v3", "chinesechess"
+    env_type = "chinesechess"
     game = make(env_type)
 
     # 针对"classic_"环境，使用gym core 进行render;

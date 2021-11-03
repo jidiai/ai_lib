@@ -17,3 +17,4 @@ from .olympics_running import *
 from .smarts_ngsim import *
 from .gym_robotics import *
 from .chessandcard import *
+from .chinesechess import *
