@@ -787,5 +787,15 @@
     "is_act_continuous": false,
     "agent_nums": [1,1],
     "obs_type": ["dict", "dict"]
+  },
+  "chinesechess": {
+    "class_literal": "ChineseChess",
+    "n_player": 2,
+    "max_step": 10000,
+    "game_name": "gym_chinese_chess:cchess-v0",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [1,1],
+    "obs_type": ["dict", "dict"]
   }
 }
