@@ -1,6 +1,7 @@
 import time
 import math
 import random
+import numpy as np
 import os
 import sys
 from pathlib import Path
@@ -9,13 +10,13 @@ CURRENT_PATH = str(Path(__file__).resolve().parent.parent.parent)
 olympics_path = os.path.join(CURRENT_PATH)
 sys.path.append(olympics_path)
 
-object_path = '/OlympicsEnv/olympics'
+object_path = '/olympics'
 sys.path.append(os.path.join(olympics_path+object_path))
 print('sys path = ', sys.path)
 
-from OlympicsEnv.olympics.core import OlympicsBase
-from OlympicsEnv.olympics.generator import create_scenario
-from OlympicsEnv.olympics.scenario.arc_running import *
+from olympics.core import OlympicsBase
+from olympics.generator import create_scenario
+from olympics.scenario.running import *
 
 from env.simulators.game import Game
 from utils.box import Box
@@ -32,27 +33,27 @@ def load_record(path):
     filejson = json.load(file)
     return filejson
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--map', default="map10", type=str,
-                    help= "map1/map2/map3/map4/map5/map6/map7/map8/map9/map10")
-parser.add_argument("--seed", default=1, type=int)
-args = parser.parse_args()
 
-map_index_seq = list(range(1,11))
-
-rand_map_idx = random.choice(map_index_seq)     #sample one map
-Gamemap = create_scenario("map" + str(rand_map_idx))
-
-
-class olympics_running(Game):
-    def __init__(self, conf):
-        super(olympics_running, self).__init__(conf['n_player'], conf['is_obs_continuous'], conf['is_act_continuous'],
+class OlympicsRunning(Game):
+    def __init__(self, conf, seed=None):
+        super(OlympicsRunning, self).__init__(conf['n_player'], conf['is_obs_continuous'], conf['is_act_continuous'],
                                          conf['game_name'], conf['agent_nums'], conf['obs_type'])
-        self.env_core = arc_running(Gamemap)
-        self.max_step = int(conf['max_step'])
 
+        self.seed = seed
+        self.set_seed()
+
+        #choose a map randomly
+        self.num_map = conf['map_num']
+        map_index_seq = list(range(1, conf['map_num']+1))
+        rand_map_idx = random.choice(map_index_seq)
+        Gamemap = create_scenario("map"+str(rand_map_idx))
+
+        self.env_core = Running(Gamemap)
+        self.max_step = int(conf['max_step'])
         self.joint_action_space = self.set_action_space()
         self.action_dim = self.joint_action_space
+
+        self.env_core.map_num = rand_map_idx
 
         self.step_cnt = 0
         self.init_info = None
@@ -61,7 +62,38 @@ class olympics_running(Game):
 
         _ = self.reset()
 
-    def reset(self):
+        self.board_width = self.env_core.view_setting['width']+2*self.env_core.view_setting['edge']
+        self.board_height = self.env_core.view_setting['height']+2*self.env_core.view_setting['edge']
+
+    @staticmethod
+    def create_seed():
+        seed = random.randrange(1000)
+        return seed
+
+    def set_seed(self, seed=None):
+        if not seed:        #use previous seed when no new seed input
+            seed = self.seed
+        else:               #update env global seed
+            self.seed = seed
+        random.seed(seed)
+        np.random.seed(seed)
+
+    def specify_a_map(self, num):
+        assert num <= self.num_map, print('the num is larger than the total number of map')
+        Gamemap = create_scenario("map"+str(num))
+        self.env_core = Running(Gamemap)
+        _ = self.reset()
+        self.env_core.map_num = num
+
+    def reset(self, shuffle_map=False):
+        #self.set_seed()
+
+        if shuffle_map:   #if shuffle the map, randomly sample a map again
+            map_index_seq = list(range(1, self.num_map + 1))
+            rand_map_idx = random.choice(map_index_seq)
+            Gamemap = create_scenario("map"+str(rand_map_idx))
+            self.env_core = Running(Gamemap)
+            self.env_core.map_num = rand_map_idx
 
         self.env_core.reset()
         self.step_cnt = 0
