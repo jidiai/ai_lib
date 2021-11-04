@@ -28,7 +28,7 @@
 - `StartCraft II` https://github.com/deepmind/pysc2
 - `Olympics Engine` https://github.com/jidiai/Competition_Olympics-Running/tree/main/olympics
   
-    (Notice: Put repo `OlympicsEnv` and `ai_lib` under the same folder)
+    (Notice: Put `olympics` and `ai_lib` under the same folder)
 - `mujoco-py` https://github.com/openai/mujoco-py
 - `Classic` https://www.pettingzoo.ml/classic 
   
