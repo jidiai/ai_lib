@@ -1,0 +1,94 @@
+{
+  "n_vertex": 5,
+  "vertices": [
+    {
+      "key": 0,
+      "production": 22,
+      "init_storage": 22,
+      "upper_storage": 60,
+      "store_cost": 2,
+      "loss_cost": 1,
+      "lambda": 18
+    },
+    {
+      "key": 1,
+      "production": 12,
+      "init_storage": 18,
+      "upper_storage": 80,
+      "store_cost": 1,
+      "loss_cost": 1,
+      "lambda": 20
+    },
+    {
+      "key": 2,
+      "production": 21,
+      "init_storage": 14,
+      "upper_storage": 100,
+      "store_cost": 3,
+      "loss_cost": 2,
+      "lambda": 15
+    },
+    {
+      "key": 3,
+      "production": 20,
+      "init_storage": 12,
+      "upper_storage": 70,
+      "store_cost": 2,
+      "loss_cost": 2,
+      "lambda": 15
+    },
+    {
+      "key": 4,
+      "production": 24,
+      "init_storage": 19,
+      "upper_storage": 80,
+      "store_cost": 3,
+      "loss_cost": 1,
+      "lambda": 15
+    }
+  ],
+  "edges": [
+    {
+      "start": 0,
+      "end": 1,
+      "upper_capacity": 4,
+      "trans_time": 10,
+      "trans_cost": 2
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "upper_capacity": 5,
+      "trans_time": 15,
+      "trans_cost": 1
+    },
+    {
+      "start": 2,
+      "end": 0,
+      "upper_capacity": 6,
+      "trans_time": 8,
+      "trans_cost": 1
+    },
+    {
+      "start": 2,
+      "end": 3,
+      "upper_capacity": 3,
+      "trans_time": 13,
+      "trans_cost": 3
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "upper_capacity": 4,
+      "trans_time": 6,
+      "trans_cost": 2
+    },
+    {
+      "start": 4,
+      "end": 1,
+      "upper_capacity": 6,
+      "trans_time": 12,
+      "trans_cost": 1
+    }
+  ]
+}
