@@ -798,5 +798,15 @@
     "is_act_continuous": false,
     "agent_nums": [1,1],
     "obs_type": ["dict", "dict"]
+  },
+  "Logistics_Transportation": {
+    "class_literal": "LogisticsEnv",
+    "n_player": 5,
+    "max_step": 1000,
+    "game_name": "logistics transportation",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [5],
+    "obs_type": ["dict"]
   }
 }
