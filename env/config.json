@@ -803,7 +803,7 @@
     "class_literal": "LogisticsEnv",
     "n_player": 5,
     "max_step": 1000,
-    "game_name": "logistics transportation",
+    "game_name": "logistics_transportation",
     "is_obs_continuous": true,
     "is_act_continuous": true,
     "agent_nums": [5],
