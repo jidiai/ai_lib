@@ -40,7 +40,6 @@ class LogisticsEnv(Game, DictObservation):
         self.won = {}
         self.init_info = None
         self.done = False
-        self.current_frame = 0
         self.interface_ctrl = None
         self.FPSClock = None
         self.joint_action_space = None
@@ -95,7 +94,6 @@ class LogisticsEnv(Game, DictObservation):
         self.n_return = 0
         self.won = {}
         self.done = False
-        self.current_frame = 0
 
         self.joint_action_space = self.set_action_space()
         self.info = {
@@ -300,24 +298,21 @@ class LogisticsEnv(Game, DictObservation):
             self.render_reset()
             self.render_mode = True
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-
-        if self.current_frame % (FPS * SPD) == 0:
-            if self.done:
-                pygame.quit()
-                sys.exit()
-
         render_data = self.get_render_data()
 
-        self.interface_ctrl.refresh_background(render_data)
-        self.interface_ctrl.move_trucks(render_data['actions'])
-        self.current_frame += 1
+        current_frame = 0
+        while current_frame < FPS * SPD:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
 
-        self.FPSClock.tick(FPS)
-        pygame.display.update()
+            self.interface_ctrl.refresh_background(render_data)
+            self.interface_ctrl.move_trucks(render_data['actions'])
+            current_frame += 1
+
+            self.FPSClock.tick(FPS)
+            pygame.display.update()
 
 
 class LogisticsVertex(object):

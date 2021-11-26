@@ -193,11 +193,12 @@ def run_game(g, env_name, multi_part_agent_ids, actions_spaces, policy_list, ren
         if g.step_cnt % 10 == 0:
             print(step)
 
-        if hasattr(g, "env_core"):
-            if hasattr(g.env_core, "render"):
-                g.env_core.render()
-        elif hasattr(g, "render"):
-            g.render()
+        if render_mode:
+            if hasattr(g, "env_core"):
+                if hasattr(g.env_core, "render"):
+                    g.env_core.render()
+            elif hasattr(g, "render"):
+                g.render()
         info_dict = {"time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))}
         joint_act = get_joint_action_eval(g, multi_part_agent_ids, policy_list, actions_spaces, all_observes)
         all_observes, reward, done, info_before, info_after = g.step(joint_act)
