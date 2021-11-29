@@ -801,12 +801,12 @@
   },
   "Logistics_Transportation": {
     "class_literal": "LogisticsEnv",
-    "n_player": 5,
+    "n_player": 10,
     "max_step": 1000,
     "game_name": "logistics_transportation",
     "is_obs_continuous": true,
     "is_act_continuous": true,
-    "agent_nums": [5],
+    "agent_nums": [10],
     "obs_type": ["dict"]
   }
 }
