@@ -1,0 +1,200 @@
+{
+  "n_vertex": 10,
+  "vertices": [
+    {
+      "key": 0,
+      "production": 21,
+      "init_storage": 22,
+      "upper_storage": 60,
+      "store_cost": 0.2,
+      "loss_cost": 0.1,
+      "lambda": 18
+    },
+    {
+      "key": 1,
+      "production": 21,
+      "init_storage": 25,
+      "upper_storage": 80,
+      "store_cost": 0.1,
+      "loss_cost": 0.1,
+      "lambda": 17
+    },
+    {
+      "key": 2,
+      "production": 12,
+      "init_storage": 30,
+      "upper_storage": 100,
+      "store_cost": 0.3,
+      "loss_cost": 0.2,
+      "lambda": 23
+    },
+    {
+      "key": 3,
+      "production": 20,
+      "init_storage": 28,
+      "upper_storage": 70,
+      "store_cost": 0.1,
+      "loss_cost": 0.1,
+      "lambda": 14
+    },
+    {
+      "key": 4,
+      "production": 9,
+      "init_storage": 24,
+      "upper_storage": 90,
+      "store_cost": 0.3,
+      "loss_cost": 0.1,
+      "lambda": 18
+    },
+    {
+      "key": 5,
+      "production": 22,
+      "init_storage": 30,
+      "upper_storage": 70,
+      "store_cost": 0.1,
+      "loss_cost": 0.2,
+      "lambda": 15
+    },
+    {
+      "key": 6,
+      "production": 13,
+      "init_storage": 38,
+      "upper_storage": 80,
+      "store_cost": 0.2,
+      "loss_cost": 0.2,
+      "lambda": 19
+    },
+    {
+      "key": 7,
+      "production": 19,
+      "init_storage": 32,
+      "upper_storage": 70,
+      "store_cost": 0.1,
+      "loss_cost": 0.2,
+      "lambda": 17
+    },
+    {
+      "key": 8,
+      "production": 16,
+      "init_storage": 24,
+      "upper_storage": 90,
+      "store_cost": 0.2,
+      "loss_cost": 0.1,
+      "lambda": 14
+    },
+    {
+      "key": 9,
+      "production": 22,
+      "init_storage": 26,
+      "upper_storage": 80,
+      "store_cost": 0.1,
+      "loss_cost": 0.2,
+      "lambda": 20
+    }
+  ],
+  "coords": [
+    [3.9, 0],
+    [3.9, 1],
+    [2.6, 1],
+    [2.6, 2],
+    [3.9, 3],
+    [2.6, 3],
+    [2.6, 4],
+    [1.3, 2],
+    [0, 1],
+    [0, 3]
+  ],
+  "edges": [
+    {
+      "start": 0,
+      "end": 1,
+      "upper_capacity": 18,
+      "trans_time": 14,
+      "trans_cost": 0.2
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "upper_capacity": 20,
+      "trans_time": 12,
+      "trans_cost": 0.15
+    },
+    {
+      "start": 2,
+      "end": 4,
+      "upper_capacity": 14,
+      "trans_time": 21,
+      "trans_cost": 0.15
+    },
+    {
+      "start": 3,
+      "end": 2,
+      "upper_capacity": 14,
+      "trans_time": 11,
+      "trans_cost": 0.1
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "upper_capacity": 18,
+      "trans_time": 14,
+      "trans_cost": 0.1
+    },
+    {
+      "start": 3,
+      "end": 5,
+      "upper_capacity": 22,
+      "trans_time": 13,
+      "trans_cost": 0.1
+    },
+    {
+      "start": 4,
+      "end": 6,
+      "upper_capacity": 10,
+      "trans_time": 22,
+      "trans_cost": 0.25
+    },
+    {
+      "start": 5,
+      "end": 4,
+      "upper_capacity": 15,
+      "trans_time": 15,
+      "trans_cost": 0.2
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "upper_capacity": 18,
+      "trans_time": 18,
+      "trans_cost": 0.2
+    },
+    {
+      "start": 7,
+      "end": 2,
+      "upper_capacity": 10,
+      "trans_time": 20,
+      "trans_cost": 0.2
+    },
+    {
+      "start": 7,
+      "end": 3,
+      "upper_capacity": 12,
+      "trans_time": 16,
+      "trans_cost": 0.1
+    },
+    {
+      "start": 8,
+      "end": 7,
+      "upper_capacity": 15,
+      "trans_time": 23,
+      "trans_cost": 0.15
+    },
+    {
+      "start": 9,
+      "end": 7,
+      "upper_capacity": 11,
+      "trans_time": 18,
+      "trans_cost": 0.25
+    }
+  ]
+}
