@@ -1,4 +1,3 @@
-
 import json
 import os.path
 import sys
@@ -40,7 +39,7 @@ class LogisticsEnv(Game, DictObservation):
         self.players = []
         # self.current_state = self.init_map(self.map_conf)
         # self.all_observes = self.get_all_observations()
-        self.n_return = 0
+        self.n_return = [0] * self.n_player
         self.won = {}
         self.init_info = None
         self.done = False
@@ -95,7 +94,7 @@ class LogisticsEnv(Game, DictObservation):
         self.players = []
         self.current_state = self.init_map(self.map_conf)
         self.all_observes = self.get_all_observations()
-        self.n_return = 0
+        self.n_return = [0] * self.n_player
         self.won = {}
         self.done = False
 
@@ -117,7 +116,7 @@ class LogisticsEnv(Game, DictObservation):
         self.info = {
             'upper_storages': [self.players[i].upper_storage for i in range(self.n_player)],
             'upper_capacity': [act[0].high.tolist() for act in self.joint_action_space],
-            'reward': self.n_return,
+            'reward': sum(self.n_return),
             'actual_actions': [[[0] * space[0].shape[0]] for space in self.joint_action_space]
         }
         self.info['actual_actions'] = self.bound_actions(self.info['actual_actions'])
@@ -224,8 +223,7 @@ class LogisticsEnv(Game, DictObservation):
             reward = self.players[i].calc_reward(action)
             total_reward += reward
             single_rewards.append(reward)
-
-        self.n_return += total_reward
+            self.n_return[i] += reward
 
         return total_reward, single_rewards
 
