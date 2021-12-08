@@ -6,6 +6,10 @@
 - `Python 3.7.5`
 - `gym` https://github.com/openai/gym
 - `gfootball` https://github.com/google-research/football
+  
+  (If want to use `football_5v5_malib`, put the `env/football_scenarios/malib_5_vs_5.py` file under folder like 
+  `~/anaconda3/envs/env_name/lib/python3.x/site-packages/gfootball/scenarios`using environment `env_name` or
+  `~/anaconda3/lib/python3.x/site-packages/gfootball/scenarios` using base environment.)
 - `miniworld` https://github.com/maximecb/gym-miniworld#installation
 - `minigrid` https://github.com/maximecb/gym-minigrid
 - `Multi-Agent Particle Environment` https://github.com/openai/multiagent-particle-envs
