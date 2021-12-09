@@ -105,6 +105,9 @@ class Football(Game, DictObservation):
         if self.step_cnt >= self.max_step:
             self.done = True
 
+        if self.done:
+            self.env_core.close()
+
         return self.done
 
     def set_action_space(self):
