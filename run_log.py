@@ -197,11 +197,13 @@ def run_game(g, env_name, multi_part_agent_ids, actions_spaces, policy_list, ren
             if hasattr(g, "env_core"):
                 if hasattr(g.env_core, "render"):
                     g.env_core.render()
-            elif hasattr(g, "render"):
-                g.render()
+
         info_dict = {"time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))}
         joint_act = get_joint_action_eval(g, multi_part_agent_ids, policy_list, actions_spaces, all_observes)
         all_observes, reward, done, info_before, info_after = g.step(joint_act)
+        if render_mode:
+            if hasattr(g, "render") and g.game_name == 'logistics_transportation':
+                g.render()
         if env_name.split("-")[0] in ["magent"]:
             info_dict["joint_action"] = g.decode(joint_act)
         if info_before:
@@ -245,7 +247,7 @@ if __name__ == "__main__":
     # "sc2-DefeatZerglingsAndBanelings", "sc2-Simple64", "chessandcard-go_v4", "chessandcard-chess_v3",
     # "chessandcard-checkers_v3", "chessandcard-mahjong_v3", "chessandcard-texas_holdem_v3",
     # "chessandcard-texas_holdem_no_limit_v3", "chinesechess", "Logistics_Transportation", "football_5v5_malib"
-    env_type = "football_5v5_malib"
+    env_type = "Logistics_Transportation"
     game = make(env_type)
 
     # 针对"classic_"环境，使用gym core 进行render;
