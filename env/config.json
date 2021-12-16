@@ -819,5 +819,35 @@
     "agent_nums": [1,4],
     "obs_type": ["dict", "dict"],
     "act_box": {"discrete_n": 19}
+  },
+  "olympics-tablehockey": {
+    "class_literal": "OlympicsTablehockey",
+    "n_player": 2,
+    "max_step": 500,
+    "game_name": "tablehockey",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [1,1],
+    "obs_type": ["vector", "vector"]
+  },
+  "olympics-football": {
+    "class_literal": "OlympicsFootball",
+    "n_player": 2,
+    "max_step": 500,
+    "game_name": "football",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [1,1],
+    "obs_type": ["vector", "vector"]
+  },
+  "olympics-wrestling": {
+    "class_literal": "OlympicsWrestling",
+    "n_player": 2,
+    "max_step": 500,
+    "game_name": "wrestling",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [1,1],
+    "obs_type": ["vector", "vector"]
   }
 }
