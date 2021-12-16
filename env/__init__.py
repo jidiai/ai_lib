@@ -19,3 +19,6 @@ from .gym_robotics import *
 from .chessandcard import *
 from .chinesechess import *
 from .logisticsenv import *
+from .olympics_tablehockey import *
+from .olympics_football import *
+from .olympics_wrestling import *
