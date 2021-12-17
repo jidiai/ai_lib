@@ -30,9 +30,13 @@
   
   If not using smarts NGSIM, comment out `from .smarts_ngsim import *` in `env/__init__.py`.)
 - `StartCraft II` https://github.com/deepmind/pysc2
-- `Olympics Engine` https://github.com/jidiai/Competition_Olympics-Running/tree/main/olympics
+- `olympics-running` https://github.com/jidiai/Competition_Olympics-Running
+
+  (Notice: Put folder `olympics` and `jidi` under the same folder)
   
-    (Notice: Put `olympics` and `ai_lib` under the same folder)
+- `olympics-tablehockey olympics-football olympics-wrestling` https://github.com/jidiai/olympics_engine
+  
+  (Notice: Put repo `olympics_engine` and `jidi` under the same folder)
 - `mujoco-py` https://github.com/openai/mujoco-py
 - `Classic` https://www.pettingzoo.ml/classic 
   

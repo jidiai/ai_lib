@@ -13,7 +13,6 @@ from .gridworld import *
 from .cliffwalking import *
 from .smarts_jidi import *
 from .sc2 import *
-from .olympics_running import *
 from .smarts_ngsim import *
 from .gym_robotics import *
 from .chessandcard import *
@@ -22,3 +21,4 @@ from .logisticsenv import *
 from .olympics_tablehockey import *
 from .olympics_football import *
 from .olympics_wrestling import *
+from .olympics_running import *
