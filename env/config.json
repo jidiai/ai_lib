@@ -849,5 +849,15 @@
     "is_act_continuous": true,
     "agent_nums": [1,1],
     "obs_type": ["vector", "vector"]
+  },
+  "olympics-billiard": {
+      "class_literal": "OlympicsBilliard",
+      "n_player": 1,
+      "max_step": 500,
+      "game_name": "billiard",
+      "is_obs_continuous": true,
+      "is_act_continuous": true,
+      "agent_nums": [1],
+      "obs_type": ["vector"]
   }
 }

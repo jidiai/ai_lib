@@ -21,4 +21,5 @@ from .logisticsenv import *
 from .olympics_tablehockey import *
 from .olympics_football import *
 from .olympics_wrestling import *
+from .olympics_billiard import *
 from .olympics_running import *
