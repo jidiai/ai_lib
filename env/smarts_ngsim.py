@@ -76,11 +76,11 @@ class SmartsNGSIM(Game):
         obs, reward, self.done, self.info = self.env_core.step(action)
         self.current_state = obs
         self.all_observes = self.get_all_observes()
-        reward = self.get_reward(reward)
         self.step_cnt += 1
         self.step_cnt_per_vehicle += 1
         if self.step_cnt_per_vehicle >= self.max_step:
             self.done = True
+        reward = self.get_reward(reward)
         done = self.is_terminal()
         if done:
             self.set_final_n_return()
@@ -114,7 +114,8 @@ class SmartsNGSIM(Game):
         # print("reward is ", reward)
         for i in range(self.n_player):
             r[i] = reward
-            self.n_return[i] += r[i]
+            if self.done:
+                self.n_return[i] += r[i]
         return r
 
     def set_final_n_return(self):
@@ -169,6 +170,7 @@ class SMARTSImitation:
 
     def _compute_reward(self, observations, dones):
         ego_pos = observations[self.vehicle_id].ego_vehicle_state.position[:2]
+        self.single_traj.append(ego_pos)
         demo_total_step = len(self.vehicle_demo_data[self.vehicle_id])
         if self._vehicle_step < demo_total_step:
             # if ego vehicle terminates before the expert demo, we still need to take
@@ -179,10 +181,14 @@ class SMARTSImitation:
                     distance += np.linalg.norm(ego_pos - self.vehicle_demo_data[self.vehicle_id][ts])
                 return -distance
             demo_pos = self.vehicle_demo_data[self.vehicle_id][self._vehicle_step]
+            demo_traj = self.vehicle_demo_data[self.vehicle_id][:self._vehicle_step]
         else:
             demo_pos = self.vehicle_demo_data[self.vehicle_id][-1]
+            demo_traj = self.vehicle_demo_data[self.vehicle_id][:]
         distance = np.linalg.norm(ego_pos - demo_pos)
-        return -distance
+        frechet_distance = compute_frechet_distance(self.single_traj, demo_traj)
+        # return -distance
+        return -frechet_distance
 
     def step(self, action):
 
@@ -210,6 +216,7 @@ class SMARTSImitation:
             self.vehicle_itr = 0
 
         self._vehicle_step = 0
+        self.single_traj = []
         self.vehicle_id = self.vehicle_ids[self.vehicle_itr]
         vehicle_mission = self.vehicle_missions[self.vehicle_id]
 
@@ -237,6 +244,18 @@ class SMARTSImitation:
             self.smarts.destroy()
 
 
+def compute_frechet_distance(sample_traj, expert_traj):
+
+    frechet_solver = DiscreteFrechet(
+        dist_func=lambda p, q: np.linalg.norm(p - q)
+    )
+    frechet_distance = frechet_solver.distance(
+        np.stack([traj[:2] for traj in expert_traj], axis=0),
+        np.concatenate([traj for traj in sample_traj], axis=0),
+    )
+    return frechet_distance
+
+
 def get_action_adapter():
     def action_adapter(model_action):
         assert len(model_action) == 2
@@ -261,3 +280,64 @@ def get_agent_spec(obs_stack_size):
     )
 
     return agent_spec
+
+
+class DiscreteFrechet(object):
+    """
+    Calculates the discrete Fréchet distance between two poly-lines using the
+    original recursive algorithm
+    """
+
+    def __init__(self, dist_func):
+        """
+        Initializes the instance with a pairwise distance function.
+        :param dist_func: The distance function. It must accept two NumPy
+        arrays containing the point coordinates (x, y), (lat, long)
+        """
+        self.dist_func = dist_func
+        self.ca = np.array([0.0])
+
+    def distance(self, p: np.ndarray, q: np.ndarray) -> float:
+        """
+        Calculates the Fréchet distance between poly-lines p and q
+        This function implements the algorithm described by Eiter & Mannila
+        :param p: Poly-line p
+        :param q: Poly-line q
+        :return: Distance value
+        """
+
+        def calculate(i: int, j: int) -> float:
+            """
+            Calculates the distance between p[i] and q[i]
+            :param i: Index into poly-line p
+            :param j: Index into poly-line q
+            :return: Distance value
+            """
+            if self.ca[i, j] > -1.0:
+                return self.ca[i, j]
+
+            d = self.dist_func(p[i], q[j])
+            if i == 0 and j == 0:
+                self.ca[i, j] = d
+            elif i > 0 and j == 0:
+                self.ca[i, j] = max(calculate(i - 1, 0), d)
+            elif i == 0 and j > 0:
+                self.ca[i, j] = max(calculate(0, j - 1), d)
+            elif i > 0 and j > 0:
+                self.ca[i, j] = max(
+                    min(
+                        calculate(i - 1, j),
+                        calculate(i - 1, j - 1),
+                        calculate(i, j - 1),
+                    ),
+                    d,
+                )
+            else:
+                self.ca[i, j] = np.infty
+            return self.ca[i, j]
+
+        n_p = p.shape[0]
+        n_q = q.shape[0]
+        self.ca = np.zeros((n_p, n_q))
+        self.ca.fill(-1.0)
+        return calculate(n_p - 1, n_q - 1)
