@@ -116,7 +116,7 @@ class OlympicsBilliard(Game):
         return self.done
 
     def set_n_return(self):
-        self.n_return = self.env_core.total_reward
+        self.n_return[0] = self.env_core.total_reward
 
     def check_win(self):
         return "0"
