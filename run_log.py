@@ -247,8 +247,12 @@ if __name__ == "__main__":
     # "sc2-DefeatZerglingsAndBanelings", "sc2-Simple64", "chessandcard-go_v4", "chessandcard-chess_v3",
     # "chessandcard-checkers_v3", "chessandcard-mahjong_v3", "chessandcard-texas_holdem_v3",
     # "chessandcard-texas_holdem_no_limit_v3", "chinesechess", "Logistics_Transportation", "football_5v5_malib",
-    # "olympics-tablehockey", "olympics-football", "olympics-wrestling"
-    env_type = "olympics-wrestling"
+    # "olympics-tablehockey", "olympics-football", "olympics-wrestling", "ParticleEnv-simple-continuous",
+    # "ParticleEnv-simple_adversary-continuous", "ParticleEnv-simple_crypto-continuous",
+    # "ParticleEnv-simple_push-continuous", "ParticleEnv-simple_reference-continuous",
+    # "ParticleEnv-simple_speaker_listener-continuous", "ParticleEnv-simple_spread-continuous",
+    # "ParticleEnv-simple_tag-continuous", "ParticleEnv-simple_world_comm-continuous"
+    env_type = "ParticleEnv-simple_world_comm-continuous"
     game = make(env_type)
 
     # 针对"classic_"环境，使用gym core 进行render;
