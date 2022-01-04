@@ -23,3 +23,4 @@ from .olympics_football import *
 from .olympics_wrestling import *
 from .olympics_billiard import *
 from .olympics_running import *
+from .olympics_curling import *
