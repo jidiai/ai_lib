@@ -248,7 +248,7 @@ if __name__ == "__main__":
     # "chessandcard-checkers_v3", "chessandcard-mahjong_v3", "chessandcard-texas_holdem_v3",
     # "chessandcard-texas_holdem_no_limit_v3", "chinesechess", "Logistics_Transportation", "football_5v5_malib",
     # "olympics-tablehockey", "olympics-football", "olympics-wrestling"
-    env_type = "olympics-wrestling"
+    env_type = "olympics-curling"
     game = make(env_type)
 
     # 针对"classic_"环境，使用gym core 进行render;
