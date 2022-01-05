@@ -37,7 +37,8 @@ class SmartsJidi(Game):
             self.AGENT_ID: self.agent_spec
         }
 
-        scenario_path = os.path.join(CURRENT_PATH, "SMARTS", "scenarios", "loop")
+        scenario_name = conf["scenario_name"]
+        scenario_path = os.path.join(CURRENT_PATH, "SMARTS", "scenarios", scenario_name)
         self.env_core = gym.make(
             "smarts.env:hiway-v0",
             scenarios=[scenario_path],

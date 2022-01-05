@@ -12,7 +12,11 @@
   `~/anaconda3/lib/python3.x/site-packages/gfootball/scenarios` using base environment.)
 - `miniworld` https://github.com/maximecb/gym-miniworld#installation
 - `minigrid` https://github.com/maximecb/gym-minigrid
-- `Multi-Agent Particle Environment` https://github.com/openai/multiagent-particle-envs
+- `Multi-Agent Particle Environment` https://www.pettingzoo.ml/mpe
+
+  `pip install pettingzoo[mpe]==1.10.0`
+  
+  (Using `pip install 'pettingzoo[mpe]==1.10.0'` if you are using zsh.)
 - `Overcooked-AI` https://github.com/HumanCompatibleAI/overcooked_ai
 - `MAgent` https://www.pettingzoo.ml/magent
   
