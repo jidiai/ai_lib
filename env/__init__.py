@@ -6,8 +6,7 @@ from .ccgame import *
 from .football import *
 from .MiniWorld import *
 from .minigrid import *
-from .particleenv import *
-# from .overcookedai import *
+from .overcookedai import *
 from .magent import *
 from .gridworld import *
 from .cliffwalking import *
@@ -24,3 +23,4 @@ from .olympics_wrestling import *
 from .olympics_billiard import *
 from .olympics_running import *
 from .mpe_jidi import *
+from .olympics_curling import *

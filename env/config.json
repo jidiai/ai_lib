@@ -950,5 +950,15 @@
     "is_act_continuous": true,
     "agent_nums": [4,2],
     "obs_type": ["vector","vector"]
+  },
+  "olympics-curling": {
+      "class_literal": "OlympicsCurling",
+      "n_player": 2,
+      "max_step": 1000,
+      "game_name": "curling",
+      "is_obs_continuous": true,
+      "is_act_continuous": true,
+      "agent_nums": [1,1],
+      "obs_type": ["vector", "vector"]
   }
 }
