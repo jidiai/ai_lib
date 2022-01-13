@@ -812,12 +812,12 @@
   },
   "football_5v5_malib": {
     "class_literal": "Football",
-    "n_player": 5,
+    "n_player": 8,
     "max_step": 3000,
     "game_name": "malib_5_vs_5",
     "is_obs_continuous": false,
     "is_act_continuous": false,
-    "agent_nums": [1,4],
+    "agent_nums": [4,4],
     "obs_type": ["dict", "dict"],
     "act_box": {"discrete_n": 19}
   },
