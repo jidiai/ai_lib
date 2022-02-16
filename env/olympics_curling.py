@@ -127,9 +127,12 @@ class OlympicsCurling(Game):
         winner = self.env_core.final_winner
         if winner == 0:
             self.n_return = [1,0.]
-        else:
+        elif winner == 1:
             self.n_return = [0.,1]
-
+        elif winner == -1:
+            self.n_return = [0., 0]
+        else:
+            raise NotImplementedError
 
 
     def check_win(self):
