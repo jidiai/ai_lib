@@ -55,14 +55,19 @@ class OlympicsCurling(Game):
         np.random.seed(seed)
 
     def reset(self):
-        self.env_core.reset()
+        self.current_state = self.env_core.reset()
+        self.current_game_round = self.env_core.game_round
+        self.current_score = [self.env_core.purple_game_point, self.env_core.green_game_point]
+        self.current_throws_left = [self.env_core.max_n-self.env_core.num_purple, self.env_core.max_n-self.env_core.num_green]
+        self.current_release = self.env_core.release
+
         self.step_cnt = 0
         self.done = False
         self.init_info = None
         self.won = {}
         self.n_return = [0]*self.n_player
 
-        self.current_state = self.env_core.get_obs_encode()
+        # self.current_state = self.env_core.get_obs_encode()
         self.all_observes = self.get_all_observes()
 
         return self.all_observes
@@ -75,6 +80,12 @@ class OlympicsCurling(Game):
         all_observations, reward, done, info_after = self.env_core.step(joint_action_decode)
         info_after = ''
         self.current_state = all_observations
+
+        self.current_game_round = self.env_core.game_round
+        self.current_score = [self.env_core.purple_game_point, self.env_core.green_game_point]
+        self.current_throws_left = [self.env_core.max_n-self.env_core.num_purple, self.env_core.max_n-self.env_core.num_green]
+        self.current_release = self.env_core.release
+
         self.all_observes = self.get_all_observes()
 
         self.step_cnt += 1
@@ -107,7 +118,9 @@ class OlympicsCurling(Game):
     def get_all_observes(self):
         all_observes = []
         for i in range(self.n_player):
-            each = {"obs": self.current_state[i], "controlled_player_index": i}
+            each = {"obs": self.current_state[i], 'team color': ['purple', 'green'][i], 'release': self.current_release,
+                   'game round':self.current_game_round, "throws left": self.current_throws_left,
+                    "score": self.current_score ,"controlled_player_index": i}
             all_observes.append(each)
 
         return all_observes
