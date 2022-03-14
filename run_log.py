@@ -251,8 +251,9 @@ if __name__ == "__main__":
     # "ParticleEnv-simple_adversary-continuous", "ParticleEnv-simple_crypto-continuous",
     # "ParticleEnv-simple_push-continuous", "ParticleEnv-simple_reference-continuous",
     # "ParticleEnv-simple_speaker_listener-continuous", "ParticleEnv-simple_spread-continuous",
-    # "ParticleEnv-simple_tag-continuous", "ParticleEnv-simple_world_comm-continuous", "olympics-curling"
-    env_type = "olympics-curling"
+    # "ParticleEnv-simple_tag-continuous", "ParticleEnv-simple_world_comm-continuous", "olympics-curling",
+    # "delivery_two_agents"
+    env_type = "delivery_two_agents"
     game = make(env_type)
 
     # 针对"classic_"环境，使用gym core 进行render;

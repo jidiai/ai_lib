@@ -960,5 +960,15 @@
       "is_act_continuous": true,
       "agent_nums": [1,1],
       "obs_type": ["vector", "vector"]
+  },
+  "delivery_two_agents": {
+    "class_literal": "DeliveryGame",
+    "n_player": 2,
+    "max_step": 500,
+    "game_name": "delivery_two_agents",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [1,1],
+    "obs_type": ["dict","dict"]
   }
 }
