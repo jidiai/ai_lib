@@ -655,17 +655,17 @@ class Delivery:
 
 def agent2dict(agent):
     return {
-        "agent_id": agent.agent_id,
-        "position": agent.position,
-        "order_list": [order2dict(order) for order in agent.order_list],
-        "orders_to_pick": [order2dict(order) for order in agent.orders_to_pick]
+        "agent_id": copy.deepcopy(agent.agent_id),
+        "position": copy.deepcopy(agent.position),
+        "order_list": copy.deepcopy([order2dict(order) for order in agent.order_list]),
+        "orders_to_pick": copy.deepcopy([order2dict(order) for order in agent.orders_to_pick])
     }
 
 
 def agent2dict_info_after(agent):
     return {
-        "agent_id": agent.agent_id,
-        "position": agent.position,
+        "agent_id": copy.deepcopy(agent.agent_id),
+        "position": copy.deepcopy(agent.position),
         "order_list_length": len(agent.order_list)
     }
 
@@ -731,16 +731,16 @@ class Agent:
 
 def restaurant2dict(restaurant):
     return {
-        "restaurant_id": restaurant.restaurant_id,
-        "position": restaurant.position,
-        "order_list": [order2dict(order) for order in restaurant.order_list]
+        "restaurant_id": copy.deepcopy(restaurant.restaurant_id),
+        "position": copy.deepcopy(restaurant.position),
+        "order_list": copy.deepcopy([order2dict(order) for order in restaurant.order_list])
     }
 
 
 def restaurant2dict_info_after(restaurant):
     return {
-        "restaurant_id": restaurant.restaurant_id,
-        "position": restaurant.position,
+        "restaurant_id": copy.deepcopy(restaurant.restaurant_id),
+        "position": copy.deepcopy(restaurant.position),
         "order_list_length": len(restaurant.order_list)
     }
 
@@ -799,8 +799,8 @@ class Restaurant:
 
 def customer2dict(customer):
     return {
-        "customer_id": customer.customer_id,
-        "position": customer.position
+        "customer_id": copy.deepcopy(customer.customer_id),
+        "position": copy.deepcopy(customer.position)
     }
 
 
