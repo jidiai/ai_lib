@@ -24,3 +24,4 @@ from .olympics_billiard import *
 from .olympics_running import *
 from .mpe_jidi import *
 from .olympics_curling import *
+from .delivery import *
