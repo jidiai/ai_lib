@@ -146,22 +146,24 @@ TIME_INTERVAL_END_TIME = 400
 GRID_UNIT = 40
 FIX = 8
 
-MAP = [[0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0],
-       [0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0],
-       [0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+# 0: obstacles 1: roads 2: available positions for customers and restaurants
+# 3: customers and restaurants(modified after init)
+MAP = [[0, 0, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 0, 0],
+       [0, 0, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 0, 0],
+       [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-       [0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0],
-       [0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+       [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
+       [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-       [0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0],
-       [0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+       [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
+       [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-       [0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0],
-       [0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+       [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
+       [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-       [0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0],
-       [0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0],
-       [0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0]]
+       [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
+       [0, 0, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 0, 0],
+       [0, 0, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 0, 0]]
 
 
 class Delivery:
@@ -198,12 +200,18 @@ class Delivery:
 
     def set_up(self):
         # add road
+        # all_pos_key: add available positions for customers and restaurants
+        all_pos_keys = []
         for row in range(N):
             for col in range(N):
                 if MAP[row][col] == 1:
                     self.board[row][col] = 1
                     key = pos2key([row, col])
                     self.road.append(key)
+                elif MAP[row][col] == 2:
+                    self.board[row][col] = 2
+                    key = pos2key([row, col])
+                    all_pos_keys.append(key)
 
         # generate agents
         for agent_id in range(self.agent_num):
@@ -213,10 +221,6 @@ class Delivery:
             new_agent = Agent(agent_id, init_pos)
             self.agents.append(new_agent)
 
-        all_pos_keys = []
-        for key in self.road:
-            all_pos_keys.append(key)
-
         # generate restaurants
         for restaurant_id in range(RESTAURANT_NUM):
             init_pos_key = random.choice(all_pos_keys)
@@ -225,6 +229,7 @@ class Delivery:
             new_restaurant = Restaurant(restaurant_id, init_pos)
             self.restaurants[restaurant_id] = new_restaurant
             self.pos2restaurant[init_pos_key] = restaurant_id
+            self.board[init_pos[0]][init_pos[1]] = 3
 
         # generate customers
         for customer_id in range(CUSTOMER_NUM):
@@ -233,6 +238,7 @@ class Delivery:
             init_pos = key2pos(init_pos_key)
             new_customer = Customer(customer_id, init_pos)
             self.customers[customer_id] = new_customer
+            self.board[init_pos[0]][init_pos[1]] = 3
 
         # initial orders
         added_orders_restaurants = [[] for _ in range(len(self.restaurants))]
@@ -375,7 +381,6 @@ class Delivery:
             start_time = step_cnt
             distance = calculate_distance(restaurant.position, self.customers[customer_id].position)
             end_time = random.randint(step_cnt + distance, step_cnt + TIME_INTERVAL_END_TIME)
-            # end_time = random.randint(step_cnt, step_cnt + 2)
             new_order = Order(order_id, customer_id, restaurant_id, start_time, end_time, -1)
             new_orders.append(new_order)
             self.total_order += 1
@@ -519,9 +524,9 @@ class Delivery:
             "agents": [agent2dict(agent) for agent in self.agents],
             "restaurants": [restaurant2dict(restaurant) for _, restaurant in self.restaurants.items()],
             "customers": [customer2dict(customer) for _, customer in self.customers.items()],
-            "distributed_orders": [(agent_id, [order2dict(order) for order in agent_orders]) for agent_id, agent_orders
-                                   in self.distribute_map.items()],
-            "roads": [[key2pos(pos)[0], key2pos(pos)[1]] for pos in self.road]
+            "distributed_orders": copy.deepcopy([(agent_id, [order2dict(order) for order in agent_orders])
+                                                 for agent_id, agent_orders in self.distribute_map.items()]),
+            "roads": copy.deepcopy([[key2pos(pos)[0], key2pos(pos)[1]] for pos in self.road])
         }
 
     def get_info_after(self):
@@ -529,6 +534,8 @@ class Delivery:
             "agents": [agent2dict_info_after(agent) for agent in self.agents],
             "restaurants": [restaurant2dict_info_after(restaurant) for _, restaurant in self.restaurants.items()],
             "customers": [customer2dict(customer) for _, customer in self.customers.items()],
+            "distributed_orders": copy.deepcopy([(agent_id, [order2dict(order) for order in agent_orders])
+                                                 for agent_id, agent_orders in self.distribute_map.items()]),
             "step_rewards": self.step_rewards
         }
 
@@ -537,9 +544,9 @@ class Delivery:
             "agents": [agent2dict_info_after(agent) for agent in self.agents],
             "restaurants": [restaurant2dict_info_after(restaurant) for _, restaurant in self.restaurants.items()],
             "customers": [customer2dict(customer) for _, customer in self.customers.items()],
-            "roads": [[key2pos(pos)[0], key2pos(pos)[1]] for pos in self.road],
-            "distributed_orders": [(agent_id, [order2dict(order) for order in agent_orders]) for agent_id, agent_orders
-                                   in self.distribute_map.items()]
+            "roads": copy.deepcopy([[key2pos(pos)[0], key2pos(pos)[1]] for pos in self.road]),
+            "distributed_orders": copy.deepcopy([(agent_id, [order2dict(order) for order in agent_orders])
+                                                 for agent_id, agent_orders in self.distribute_map.items()])
         }
 
     def render(self, fps=1):
@@ -551,10 +558,10 @@ class Delivery:
             self.images = {
                 "agents": [Bitmap(Image.open(resource_path_rider), GRID_UNIT, (0, 191, 255))
                            for _ in range(len(self.agents))],
-                "restaurants": [Bitmap(change_background(Image.open(resource_path_restaurant), (250, 235, 215)),
+                "restaurants": [Bitmap(change_background(Image.open(resource_path_restaurant), (148, 0, 211)),
                                        GRID_UNIT - 1, (0, 0, 0)) for _ in range(len(self.restaurants))],
                 "customers": [
-                    Bitmap(change_background(Image.open(resource_path_customer), (250, 235, 215)), GRID_UNIT - 1,
+                    Bitmap(change_background(Image.open(resource_path_customer), (148, 0, 211)), GRID_UNIT - 1,
                            (0, 0, 0)) for _ in range(len(self.customers))]
             }
             pygame.init()
@@ -614,6 +621,8 @@ class Delivery:
             y = customer.position[1]
             self.images["customers"][customer_id].set_pos(x, y)
 
+        # print("extra info is {}".format(extra_info))
+
         im_data = np.array(self._render_board(self.grid, GRID_UNIT, FIX, self.images, extra_info))
         self.game_tape.append(im_data)
         return im_data
@@ -629,9 +638,11 @@ class Delivery:
             draw.rectangle(build_rectangle(col, row, unit, fix), fill=(250, 235, 215), outline=(0, 0, 0))
 
         for image in images["restaurants"]:
+            # draw.bitmap((image.y * unit + unit // fix - 4, image.x * unit + unit // fix - 4), image.bitmap, image.color)
             im.paste(image.bitmap, (image.y * unit + unit // fix - 4, image.x * unit + unit // fix - 4))
 
         for image in images["customers"]:
+            # draw.bitmap((image.y * unit + unit // fix - 4, image.x * unit + unit // fix - 4), image.bitmap, image.color)
             im.paste(image.bitmap, (image.y * unit + unit // fix - 4, image.x * unit + unit // fix - 4))
 
         image_id = 0
@@ -681,7 +692,7 @@ class Agent:
         new_row = self.position[0] + DIRECTION[move_action][0]
         new_col = self.position[1] + DIRECTION[move_action][1]
 
-        if 0 <= new_row < N and 0 <= new_col < N and board[new_row][new_col] == 1:
+        if 0 <= new_row < N and 0 <= new_col < N and (board[new_row][new_col] == 1 or board[new_row][new_col] == 3):
             self.position[0] = new_row
             self.position[1] = new_col
 
