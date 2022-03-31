@@ -1,0 +1,787 @@
+{
+    "n_goods": 3,
+    "goods": [
+        {
+          "key": 0,
+          "volume": 0.2,
+          "price": 0.4
+        },
+        {
+          "key": 1,
+          "volume": 0.1,
+          "price": 0.2
+        },
+        {
+          "key": 2,
+          "volume": 0.4,
+          "price": 0.3
+        }
+    ],
+    "n_vertex": 31,
+    "vertices": [
+        {
+            "key": 0,
+            "production": [2200, 3000, 2500],
+            "init_storage": [2200, 1800, 2000],
+            "upper_capacity": 6000,
+            "store_cost": 2,
+            "loss_cost": [1, 0.5, 1],
+            "lambda": [1800, 2800, 2000]
+        },
+        {
+            "key": 1,
+            "production": [1200, 1800, 1000],
+            "init_storage": [2000, 2000, 2000],
+            "upper_capacity": 8000,
+            "store_cost": 1,
+            "loss_cost": [1, 1, 1],
+            "lambda": [2000, 1000, 1300]
+        },
+        {
+            "key": 2,
+            "production": [2100, 1000, 1800],
+            "init_storage": [1400, 2000, 1200],
+            "upper_capacity": 10000,
+            "store_cost": 3,
+            "loss_cost": [2, 0.5, 1],
+            "lambda": [1500, 1900, 1500]
+        },
+        {
+            "key": 3,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 4,
+            "production": [2400, 2000, 1200],
+            "init_storage": [1900, 1000, 2000],
+            "upper_capacity": 8000,
+            "store_cost": 3,
+            "loss_cost": [1, 0.5, 0.5],
+            "lambda": [1500, 1300, 1800]
+        },
+        {
+            "key": 5,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 6,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 7,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 8,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 9,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 10,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 11,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 12,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 13,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 14,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 15,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 16,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 17,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 18,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 19,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 20,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 21,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 22,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 23,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 24,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 25,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 26,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 27,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 28,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 29,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        },
+        {
+            "key": 30,
+            "production": [2000, 1400, 2200],
+            "init_storage": [1200, 1500, 1300],
+            "upper_capacity": 7000,
+            "store_cost": 2,
+            "loss_cost": [2, 1, 1],
+            "lambda": [1500, 1800, 2400]
+        }
+    ],
+    "is_graph_directed": false,
+    "roads": [
+        {
+            "start": 0,
+            "end": 1,
+            "upper_capacity": 8000,
+            "trans_time": 2.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 0,
+            "end": 2,
+            "upper_capacity": 8000,
+            "trans_time": 4,
+            "trans_cost": 1
+        },
+        {
+            "start": 0,
+            "end": 4,
+            "upper_capacity": 8000,
+            "trans_time": 6,
+            "trans_cost": 1
+        },
+        {
+            "start": 0,
+            "end": 5,
+            "upper_capacity": 8000,
+            "trans_time": 8,
+            "trans_cost": 1
+        },
+        {
+            "start": 1,
+            "end": 2,
+            "upper_capacity": 8000,
+            "trans_time": 4,
+            "trans_cost": 1
+        },
+        {
+            "start": 1,
+            "end": 5,
+            "upper_capacity": 8000,
+            "trans_time": 7.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 1,
+            "end": 14,
+            "upper_capacity": 8000,
+            "trans_time": 4,
+            "trans_cost": 1
+        },
+        {
+            "start": 2,
+            "end": 3,
+            "upper_capacity": 8000,
+            "trans_time": 3.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 2,
+            "end": 14,
+            "upper_capacity": 8000,
+            "trans_time": 4,
+            "trans_cost": 1
+        },
+        {
+            "start": 2,
+            "end": 15,
+            "upper_capacity": 8000,
+            "trans_time": 6,
+            "trans_cost": 1
+        },
+        {
+            "start": 3,
+            "end": 4,
+            "upper_capacity": 8000,
+            "trans_time": 5.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 3,
+            "end": 15,
+            "upper_capacity": 8000,
+            "trans_time": 6,
+            "trans_cost": 1
+        },
+        {
+            "start": 3,
+            "end": 26,
+            "upper_capacity": 8000,
+            "trans_time": 7,
+            "trans_cost": 1
+        },
+        {
+            "start": 3,
+            "end": 29,
+            "upper_capacity": 8000,
+            "trans_time": 8.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 4,
+            "end": 29,
+            "upper_capacity": 8000,
+            "trans_time": 8,
+            "trans_cost": 1
+        },
+        {
+            "start": 5,
+            "end": 6,
+            "upper_capacity": 8000,
+            "trans_time": 4,
+            "trans_cost": 1
+        },
+        {
+            "start": 6,
+            "end": 7,
+            "upper_capacity": 8000,
+            "trans_time": 5,
+            "trans_cost": 1
+        },
+        {
+            "start": 8,
+            "end": 9,
+            "upper_capacity": 8000,
+            "trans_time": 4.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 8,
+            "end": 10,
+            "upper_capacity": 8000,
+            "trans_time": 3,
+            "trans_cost": 1
+        },
+        {
+            "start": 9,
+            "end": 10,
+            "upper_capacity": 8000,
+            "trans_time": 4,
+            "trans_cost": 1
+        },
+        {
+            "start": 9,
+            "end": 11,
+            "upper_capacity": 8000,
+            "trans_time": 3,
+            "trans_cost": 1
+        },
+        {
+            "start": 9,
+            "end": 14,
+            "upper_capacity": 8000,
+            "trans_time": 7,
+            "trans_cost": 1
+        },
+        {
+            "start": 10,
+            "end": 11,
+            "upper_capacity": 8000,
+            "trans_time": 5,
+            "trans_cost": 1
+        },
+        {
+            "start": 10,
+            "end": 12,
+            "upper_capacity": 8000,
+            "trans_time": 8,
+            "trans_cost": 1
+        },
+        {
+            "start": 10,
+            "end": 13,
+            "upper_capacity": 8000,
+            "trans_time": 6.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 11,
+            "end": 13,
+            "upper_capacity": 8000,
+            "trans_time": 5.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 11,
+            "end": 14,
+            "upper_capacity": 8000,
+            "trans_time": 7,
+            "trans_cost": 1
+        },
+        {
+            "start": 11,
+            "end": 15,
+            "upper_capacity": 8000,
+            "trans_time": 6.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 11,
+            "end": 16,
+            "upper_capacity": 8000,
+            "trans_time": 6,
+            "trans_cost": 1
+        },
+        {
+            "start": 12,
+            "end": 13,
+            "upper_capacity": 8000,
+            "trans_time": 6.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 12,
+            "end": 18,
+            "upper_capacity": 8000,
+            "trans_time": 10,
+            "trans_cost": 1
+        },
+        {
+            "start": 13,
+            "end": 16,
+            "upper_capacity": 8000,
+            "trans_time": 4.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 13,
+            "end": 17,
+            "upper_capacity": 8000,
+            "trans_time": 4.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 13,
+            "end": 18,
+            "upper_capacity": 8000,
+            "trans_time": 9.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 14,
+            "end": 15,
+            "upper_capacity": 8000,
+            "trans_time": 5.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 15,
+            "end": 16,
+            "upper_capacity": 8000,
+            "trans_time": 6.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 15,
+            "end": 26,
+            "upper_capacity": 8000,
+            "trans_time": 6,
+            "trans_cost": 1
+        },
+        {
+            "start": 16,
+            "end": 17,
+            "upper_capacity": 8000,
+            "trans_time": 5,
+            "trans_cost": 1
+        },
+        {
+            "start": 16,
+            "end": 21,
+            "upper_capacity": 8000,
+            "trans_time": 11.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 16,
+            "end": 26,
+            "upper_capacity": 8000,
+            "trans_time": 10,
+            "trans_cost": 1
+        },
+        {
+            "start": 17,
+            "end": 18,
+            "upper_capacity": 8000,
+            "trans_time": 9.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 17,
+            "end": 19,
+            "upper_capacity": 8000,
+            "trans_time": 10.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 17,
+            "end": 21,
+            "upper_capacity": 8000,
+            "trans_time": 12.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 17,
+            "end": 23,
+            "upper_capacity": 8000,
+            "trans_time": 12.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 18,
+            "end": 19,
+            "upper_capacity": 8000,
+            "trans_time": 7,
+            "trans_cost": 1
+        },
+        {
+            "start": 18,
+            "end": 20,
+            "upper_capacity": 8000,
+            "trans_time": 8,
+            "trans_cost": 1
+        },
+        {
+            "start": 19,
+            "end": 20,
+            "upper_capacity": 8000,
+            "trans_time": 7,
+            "trans_cost": 1
+        },
+        {
+            "start": 19,
+            "end": 23,
+            "upper_capacity": 8000,
+            "trans_time": 7.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 19,
+            "end": 24,
+            "upper_capacity": 8000,
+            "trans_time": 9.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 21,
+            "end": 22,
+            "upper_capacity": 8000,
+            "trans_time": 4,
+            "trans_cost": 1
+        },
+        {
+            "start": 21,
+            "end": 23,
+            "upper_capacity": 8000,
+            "trans_time": 5,
+            "trans_cost": 1
+        },
+        {
+            "start": 21,
+            "end": 26,
+            "upper_capacity": 8000,
+            "trans_time": 9,
+            "trans_cost": 1
+        },
+        {
+            "start": 22,
+            "end": 23,
+            "upper_capacity": 8000,
+            "trans_time": 7.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 22,
+            "end": 24,
+            "upper_capacity": 8000,
+            "trans_time": 10.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 22,
+            "end": 25,
+            "upper_capacity": 8000,
+            "trans_time": 24,
+            "trans_cost": 1
+        },
+        {
+            "start": 22,
+            "end": 26,
+            "upper_capacity": 8000,
+            "trans_time": 9.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 22,
+            "end": 27,
+            "upper_capacity": 8000,
+            "trans_time": 13,
+            "trans_cost": 1
+        },
+        {
+            "start": 23,
+            "end": 24,
+            "upper_capacity": 8000,
+            "trans_time": 7,
+            "trans_cost": 1
+        },
+        {
+            "start": 25,
+            "end": 28,
+            "upper_capacity": 8000,
+            "trans_time": 24,
+            "trans_cost": 1
+        },
+        {
+            "start": 26,
+            "end": 27,
+            "upper_capacity": 8000,
+            "trans_time": 8,
+            "trans_cost": 1
+        },
+        {
+            "start": 26,
+            "end": 29,
+            "upper_capacity": 8000,
+            "trans_time": 8,
+            "trans_cost": 1
+        },
+        {
+            "start": 27,
+            "end": 28,
+            "upper_capacity": 8000,
+            "trans_time": 3.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 27,
+            "end": 29,
+            "upper_capacity": 8000,
+            "trans_time": 5.5,
+            "trans_cost": 1
+        },
+        {
+            "start": 27,
+            "end": 30,
+            "upper_capacity": 8000,
+            "trans_time": 23,
+            "trans_cost": 1
+        }
+    ],
+    "is_abs_coords": true,
+    "coords": [
+        [870, 300],
+        [890, 330],
+        [850, 350],
+        [805, 350],
+        [795, 280],
+        [985, 270],
+        [1020, 220],
+        [1045, 160],
+        [960, 505],
+        [920, 480],
+        [935, 520],
+        [885, 495],
+        [915, 610],
+        [865, 560],
+        [890, 380],
+        [830, 430],
+        [830, 510],
+        [805, 565],
+        [825, 675],
+        [745, 675],
+        [770, 750],
+        [710, 540],
+        [670, 505],
+        [715, 600],
+        [650, 635],
+        [465, 530],
+        [750, 430],
+        [670, 390],
+        [610, 380],
+        [705, 340],
+        [390, 215]
+    ]
+}

@@ -25,3 +25,4 @@ from .olympics_running import *
 from .mpe_jidi import *
 from .olympics_curling import *
 from .delivery import *
+from .logisticsenv2 import *
