@@ -202,7 +202,7 @@ def run_game(g, env_name, multi_part_agent_ids, actions_spaces, policy_list, ren
         joint_act = get_joint_action_eval(g, multi_part_agent_ids, policy_list, actions_spaces, all_observes)
         all_observes, reward, done, info_before, info_after = g.step(joint_act)
         if render_mode:
-            if hasattr(g, "render") and g.game_name == 'logistics_transportation':
+            if hasattr(g, "render") and g.game_name.split("_")[0] == 'logistics':
                 g.render()
         if env_name.split("-")[0] in ["magent"]:
             info_dict["joint_action"] = g.decode(joint_act)
@@ -252,8 +252,8 @@ if __name__ == "__main__":
     # "ParticleEnv-simple_push-continuous", "ParticleEnv-simple_reference-continuous",
     # "ParticleEnv-simple_speaker_listener-continuous", "ParticleEnv-simple_spread-continuous",
     # "ParticleEnv-simple_tag-continuous", "ParticleEnv-simple_world_comm-continuous", "olympics-curling",
-    # "delivery_two_agents"
-    env_type = "delivery_two_agents"
+    # "delivery_two_agents", "Logistics_Transportation2"
+    env_type = "Logistics_Transportation2"
     game = make(env_type)
 
     # 针对"classic_"环境，使用gym core 进行render;
