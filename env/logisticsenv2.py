@@ -60,14 +60,14 @@ class LogisticsEnv2(Game, DictObservation):
             goods_list.append(goods)
 
         # 添加图中的节点
-        vertices = self.map_conf['vertices'].copy()
+        vertices = self.map_conf['vertices'].deepcopy()
         for vertex_info in vertices:
             vertex_info.update({'goods': goods_list})
             vertex = Vertex(vertex_info['key'], vertex_info)
             self.players.append(vertex)
 
         # 添加图中的边
-        roads = self.map_conf['roads'].copy()
+        roads = self.map_conf['roads'].deepcopy()
         for road_info in roads:
             start = road_info['start']
             end = road_info['end']
