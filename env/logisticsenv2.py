@@ -1,6 +1,7 @@
 # -*- coding:utf-8  -*-
 # Time  : 2022/3/22 下午4:09
 # Author: Yahui Cui
+import copy
 import json
 import os
 from pathlib import Path
@@ -60,14 +61,14 @@ class LogisticsEnv2(Game, DictObservation):
             goods_list.append(goods)
 
         # 添加图中的节点
-        vertices = self.map_conf['vertices'].copy()
+        vertices = copy.deepcopy(self.map_conf['vertices'])
         for vertex_info in vertices:
             vertex_info.update({'goods': goods_list})
             vertex = Vertex(vertex_info['key'], vertex_info)
             self.players.append(vertex)
 
         # 添加图中的边
-        roads = self.map_conf['roads'].copy()
+        roads = copy.deepcopy(self.map_conf['roads'])
         for road_info in roads:
             start = road_info['start']
             end = road_info['end']
