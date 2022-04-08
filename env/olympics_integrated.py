@@ -4,8 +4,9 @@ import sys
 from pathlib import Path
 
 CURRENT_PATH = str(Path(__file__).resolve().parent.parent.parent)
-olympics_path = os.path.join(CURRENT_PATH)
+olympics_path = os.path.join(CURRENT_PATH, "olympics_engine")
 sys.path.append(olympics_path)
+sys.path.append(CURRENT_PATH)
 
 from olympics_engine.AI_olympics import AI_Olympics
 
@@ -121,9 +122,9 @@ class OlympicsIntegrated(Game):
         final_reward = self.env_core.final_reward
 
         if final_reward[0] > final_reward[1]:
-            self.n_return = [0,1]
-        elif final_reward[1] > final_reward[0]:
             self.n_return = [1,0]
+        elif final_reward[1] > final_reward[0]:
+            self.n_return = [0,1]
         else:
             self.n_return = [0,0]
 
