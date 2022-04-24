@@ -11,7 +11,7 @@ olympics_path = os.path.join(CURRENT_PATH)
 sys.path.append(olympics_path)
 
 from olympics_engine.generator import create_scenario
-from olympics_engine.scenario.curling import *
+from olympics_engine.scenario.curling_competition import *
 
 from utils.box import Box
 from env.simulators.game import Game
@@ -25,8 +25,8 @@ class OlympicsCurling(Game):
         self.seed = seed
         self.set_seed()
 
-        Gamemap = create_scenario("curling")
-        self.env_core = curling(Gamemap)
+        Gamemap = create_scenario("curling-competition")
+        self.env_core = curling_competition(Gamemap)
         self.max_step = int(conf['max_step'])
         self.joint_action_space = self.set_action_space()
         self.action_dim = self.joint_action_space

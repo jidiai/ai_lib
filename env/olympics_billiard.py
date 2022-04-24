@@ -8,7 +8,7 @@ olympics_path = os.path.join(CURRENT_PATH)
 sys.path.append(olympics_path)
 
 from olympics_engine.generator import create_scenario
-from olympics_engine.scenario.billiard import *
+from olympics_engine.scenario.billiard_joint import *
 
 from utils.box import Box
 from env.simulators.game import Game
@@ -22,8 +22,8 @@ class OlympicsBilliard(Game):
         self.seed = seed
         self.set_seed()
 
-        Gamemap = create_scenario("billiard")
-        self.env_core = billiard(Gamemap)
+        Gamemap = create_scenario("billiard-joint")
+        self.env_core = billiard_joint(Gamemap)
         self.max_step = int(conf['max_step'])
         self.joint_action_space = self.set_action_space()
         self.action_dim = self.joint_action_space
@@ -116,10 +116,24 @@ class OlympicsBilliard(Game):
         return self.done
 
     def set_n_return(self):
-        self.n_return[0] = self.env_core.total_reward
+        # self.n_return[0] = self.env_core.total_reward
+        total_reward = self.env_core.total_score
+        if total_reward[0]>total_reward[1]:
+            self.n_return = [1, 0.]
+        elif total_reward[0]<total_reward[1]:
+            self.n_return = [0.,1]
+        else:
+            self.n_return = [0., 0]
 
     def check_win(self):
-        return "0"
+        total_reward = self.env_core.total_score
+        if total_reward[0]>total_reward[1]:
+            return '0'
+        elif total_reward[0]<total_reward[1]:
+            return '1'
+        else:
+            return '-1'
+
 
     def get_single_action_space(self, player_id):
         return self.joint_action_space[player_id]
