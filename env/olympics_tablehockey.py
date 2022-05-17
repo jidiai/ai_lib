@@ -51,7 +51,7 @@ class OlympicsTablehockey(Game):
         np.random.seed(seed)
 
     def reset(self):
-        self.env_core.reset()
+        init_obs = self.env_core.reset()
         self.ball_pos_init()
         self.step_cnt = 0
         self.done = False
@@ -59,7 +59,7 @@ class OlympicsTablehockey(Game):
         self.won = {}
         self.n_return = [0]*self.n_player
 
-        self.current_state = self.env_core.get_obs()
+        self.current_state = init_obs
         self.all_observes = self.get_all_observes()
         self.ball_end_pos=None
 
