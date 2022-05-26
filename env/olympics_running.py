@@ -49,6 +49,22 @@ class OlympicsRunning(Game):
         Gamemap = create_scenario("running-competition")
 
         self.env_core = Running_competition(meta_map = Gamemap, map_id = rand_map_idx)
+        self.env_core.VIEW_BACK = -self.env_core.map['agents'][0].r/self.env_core.map['agents'][0].visibility
+        self.env_core.VIEW_ITSELF = True
+        self.env_core.obs_boundary_init = list()
+        self.env_core.obs_boundary = self.env_core.obs_boundary_init
+
+        for index, item in enumerate(self.env_core.map["agents"]):
+            position = item.position_init
+            r = item.r
+            if item.type == 'agent':
+                visibility = item.visibility
+                boundary = self.env_core.get_obs_boundaray(position, r, visibility)
+                self.env_core.obs_boundary_init.append(boundary)
+            else:
+                self.env_core.obs_boundary_init.append(None)
+
+
         self.max_step = int(conf['max_step'])
         self.joint_action_space = self.set_action_space()
         self.action_dim = self.joint_action_space
