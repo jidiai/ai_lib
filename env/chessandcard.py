@@ -201,9 +201,19 @@ class ChessAndCard(Game, DictObservation):
         for i in range(self.n_player):
             player_name = self.player_id_reverse_map[i]
             each_obs = copy.deepcopy(self.current_state)
-            each = {"obs": each_obs, "is_new_episode": is_new_episode,
-                    "current_move_player": self.env_core.agent_selection,
-                    "controlled_player_index": i, "controlled_player_name": player_name}
+            if self.game_name in ['texas_holdem_no_limit_v3', 'texas_holdem_v3']:
+                if self.player_id_map[self.env_core.agent_selection] == i:
+                    each = {"obs": each_obs, "is_new_episode": is_new_episode,
+                            "current_move_player": self.env_core.agent_selection,
+                            "controlled_player_index": i, "controlled_player_name": player_name}
+                else:
+                    each = {"obs": None, "is_new_episode": is_new_episode,
+                            "current_move_player": self.env_core.agent_selection,
+                            "controlled_player_index": i, "controlled_player_name": player_name}
+            else:
+                each = {"obs": each_obs, "is_new_episode": is_new_episode,
+                        "current_move_player": self.env_core.agent_selection,
+                        "controlled_player_index": i, "controlled_player_name": player_name}
             all_observes.append(each)
         return all_observes
 
