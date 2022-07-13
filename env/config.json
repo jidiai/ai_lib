@@ -990,5 +990,15 @@
     "is_act_continuous": true,
     "agent_nums": [1,1],
     "obs_type": ["vector", "vector"]
+  },
+  "wilderness-navigation": {
+    "class_literal": "Wilderness",
+    "n_player": 1,
+    "max_step": 2000,
+    "game_name": "wilderness-navigation",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1],
+    "obs_type": ["vector"]
   }
 }
