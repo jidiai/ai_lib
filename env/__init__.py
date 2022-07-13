@@ -27,3 +27,4 @@ from .olympics_curling import *
 from .delivery import *
 from .logisticsenv2 import *
 from .olympics_integrated import *
+from .wilderness import *
