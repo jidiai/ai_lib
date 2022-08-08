@@ -28,3 +28,4 @@ from .delivery import *
 from .logisticsenv2 import *
 from .olympics_integrated import *
 from .wilderness import *
+from .revive_refrigerator import *
