@@ -1000,5 +1000,25 @@
     "is_act_continuous": false,
     "agent_nums": [1],
     "obs_type": ["vector"]
+  },
+  "chessandcard-leduc_holdem_v3": {
+    "class_literal": "ChessAndCard",
+    "n_player": 2,
+    "max_step": 10000,
+    "game_name": "leduc_holdem_v3",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [1,1],
+    "obs_type": ["dict", "dict"]
+  },
+  "revive-refrigerator": {
+    "class_literal": "Refrigerator",
+    "n_player": 1,
+    "max_step": 2000,
+    "game_name": "refrigerator",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [1],
+    "obs_type": ["dict"]
   }
 }

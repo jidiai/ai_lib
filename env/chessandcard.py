@@ -11,9 +11,9 @@ from utils.discrete import Discrete
 
 
 class ChessAndCard(Game, DictObservation):
-    def __init__(self, conf):
+    def __init__(self, conf, seed=None):
         super(ChessAndCard, self).__init__(conf['n_player'], conf['is_obs_continuous'], conf['is_act_continuous'],
-                                     conf['game_name'], conf['agent_nums'], conf['obs_type'])
+                                           conf['game_name'], conf['agent_nums'], conf['obs_type'])
         self.seed = None
         self.done = False
         self.dones = {}
@@ -30,13 +30,14 @@ class ChessAndCard(Game, DictObservation):
         if self.env_core is None:
             raise Exception("ChessAndCard env_core is None!")
 
-        self.init_info = None
         self.episode_count = 30 if self.game_name in ['texas_holdem_no_limit_v3', 'texas_holdem_v3'] else 1
         self.won = {}
         self.n_return = [0] * self.n_player
         self.step_cnt = 0
         self.step_cnt_episode = 0
         self.done = False
+        self.seed = seed
+        self.env_core.seed(self.seed)
         self.env_core.reset()
         self.player_id_map, self.player_id_reverse_map = self.get_player_id_map(self.env_core.agents)
 
@@ -50,16 +51,17 @@ class ChessAndCard(Game, DictObservation):
         obs, _, _, _ = self.env_core.last()
         self.current_state = obs
         self.all_observes = self.get_all_observes()
+        self.init_info = self.get_info_after()
 
     def reset(self):
         self.step_cnt = 0
         self.step_cnt_episode = 0
         self.done = False
-        self.init_info = None
         self.env_core.reset()
         obs, _, _, _ = self.env_core.last()
         self.current_state = obs
         self.all_observes = self.get_all_observes()
+        self.init_info = self.get_info_after()
         self.won = {}
         self.n_return = [0] * self.n_player
         return self.all_observes
@@ -71,7 +73,7 @@ class ChessAndCard(Game, DictObservation):
         obs, _, _, _ = self.env_core.last()
         self.current_state = obs
         self.all_observes = self.get_all_observes()
-        self.init_info = None
+        self.init_info = self.get_info_after()
         return self.all_observes
 
     def step(self, joint_action):
@@ -81,7 +83,7 @@ class ChessAndCard(Game, DictObservation):
         joint_action_decode = self.decode(joint_action)
         self.env_core.step(joint_action_decode)
         obs, reward, episode_done, info_after = self.env_core.last()
-        info_after = ''
+        info_after = self.get_info_after()
         self.current_state = obs
         self.all_observes = self.get_all_observes()
         # print("debug all observes ", type(self.all_observes[0]["obs"]))
@@ -201,7 +203,7 @@ class ChessAndCard(Game, DictObservation):
         for i in range(self.n_player):
             player_name = self.player_id_reverse_map[i]
             each_obs = copy.deepcopy(self.current_state)
-            if self.game_name in ['texas_holdem_no_limit_v3', 'texas_holdem_v3']:
+            if self.game_name in ['texas_holdem_no_limit_v3', 'texas_holdem_v3', 'leduc_holdem_v3']:
                 if self.player_id_map[self.env_core.agent_selection] == i:
                     each = {"obs": each_obs, "is_new_episode": is_new_episode,
                             "current_move_player": self.env_core.agent_selection,
@@ -215,7 +217,28 @@ class ChessAndCard(Game, DictObservation):
                         "current_move_player": self.env_core.agent_selection,
                         "controlled_player_index": i, "controlled_player_name": player_name}
             all_observes.append(each)
+
         return all_observes
 
     def all_equals(self, list_to_compare):
         return len(set(list_to_compare)) == 1
+
+    def get_info_after(self):
+        info_after = ''
+        if self.game_name in ['texas_holdem_no_limit_v3', 'texas_holdem_v3']:
+            info_after = {}
+            for i in range(self.n_player):
+                temp_info = copy.deepcopy(self.env_core.env.env.env.env.game.get_state(i))
+                if self.game_name in ['texas_holdem_no_limit_v3']:
+                    for action_index, action in enumerate(temp_info['legal_actions']):
+                        temp_info['legal_actions'][action_index] = str(action)
+                    temp_info['stage'] = str(temp_info['stage'])
+                info_after[self.player_id_reverse_map[i]] = temp_info
+
+        if self.game_name in ['leduc_holdem_v3']:
+            info_after = {}
+            for i in range(self.n_player):
+                temp_info = self.env_core.env.env.env.env.env.game.get_state(i)
+                info_after[self.player_id_reverse_map[i]] = copy.deepcopy(temp_info)
+
+        return info_after

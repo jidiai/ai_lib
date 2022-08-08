@@ -49,6 +49,7 @@
   (Using `pip install 'pettingzoo[classic]==1.10.0'` if you are using zsh.)
 - `gym-chinese-chess` https://github.com/bupticybee/gym_chinese_chess
 - `Wilderness Scavenger` https://github.com/inspirai/wilderness-scavenger
+- `REVIVE SDK` https://www.revive.cn/help/polixir-revive-sdk/text/introduction.html
   
 - `Torch 1.7.0` 可选
   - 支持提交Torch训练后的模型.pth附属文件
