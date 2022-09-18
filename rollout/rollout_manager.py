@@ -6,18 +6,19 @@ import threading
 from typing import Dict
 import numpy as np
 
-from light_malib.utils.desc.policy_desc import PolicyDesc
-from light_malib.utils.logger import Logger
+from tools.desc.policy_desc import PolicyDesc
+from tools.utils.logger import Logger
 
-from ..utils.remote import get_actor
+from tools.remote import get_actor
 from ..agent.agent import Agent
 from . import rollout_worker
 import ray
 from omegaconf import DictConfig
 import queue
-from ..utils.desc.task_desc import RolloutDesc, RolloutEvalDesc
-from ..utils.decorator import limited_calls
+from tools.desc.task_desc import RolloutDesc, RolloutEvalDesc
+from tools.utils.decorator import limited_calls
 import traceback
+
 
 class RolloutManager:
     def __init__(self,cfg:DictConfig,agents:Dict[str,Agent]):

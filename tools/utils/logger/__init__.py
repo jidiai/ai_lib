@@ -8,14 +8,13 @@ import time
 from contextlib import contextmanager
 from collections import defaultdict
 
-from malib import settings
-from malib.rpc.ExperimentManager import ExperimentServer
-from malib.rpc.ExperimentManager.ExperimentClient import ExprManagerClient
-from malib.rpc.ExperimentManager.mongo_client import MongoClient
-from malib.utils.typing import Any, EventReportStatus, Dict
-from malib.utils.aggregators import Aggregator
+from tools.rpc.ExperimentManager import ExperimentServer
+from tools.rpc.ExperimentManager.ExperimentClient import ExprManagerClient
+from tools.rpc.ExperimentManager.mongo_client import MongoClient
+from tools.utils.typing import Any, EventReportStatus, Dict
+from tools.utils.aggregators import Aggregator
 from .logger import LoggerFactory
-from malib import settings
+import settings
 
 Logger=LoggerFactory.build_logger() # For global usage, initialized in 
 # temp_log_dir="."#os.path.join(settings.LOG_DIR,"temp")
