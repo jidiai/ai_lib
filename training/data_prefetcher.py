@@ -1,34 +1,20 @@
 import queue
 import threading
-import time
-from turtle import settiltangle
+from typing import List
 import ray
-import tree
-from tools.desc.task_desc import PrefetchingDesc
-from tools.utils.logger import Logger
-from tools.utils.timer import Timer,global_timer
-from tools.utils.typing import BufferDescription
-from tools.utils.typing import (
-    BufferDescription,
-    PolicyID,
-    AgentID,
-    Dict,
-    List,
-    Any,
-    Union,
-    Tuple,
-    Status,
-)
+from light_malib.utils.desc.task_desc import PrefetchingDesc
+from light_malib.utils.logger import Logger
+from light_malib.utils.timer import Timer,global_timer
 import numpy as np
-import settings
 import torch
-from tools.utils.remote import get_actor
-from tools.utils.decorator import limited_calls
+from light_malib.utils.distributed import get_actor
+from light_malib.utils.decorator import limited_calls
 
 class DataPrefetcher:
-    def __init__(self, consumers):
+    def __init__(self, cfg, consumers, data_servers):
+        self.cfg=cfg
         self.consumers=consumers
-        self.data_server=get_actor("DataFetcher","DataServer")
+        self.data_servers=data_servers
 
         self.timer=global_timer
         
@@ -36,9 +22,11 @@ class DataPrefetcher:
         self.stop_flag_lock=threading.Lock()
         # cannot start two rollout tasks
         self.semaphore=threading.Semaphore(value=1)
+        Logger.info("DataPrefetcher initialized")
     
     @limited_calls("semaphore")
-    def prefetch(self,prefetching_desc:PrefetchingDesc):
+    def prefetch(self,prefetching_descs:List[PrefetchingDesc]):
+        assert len(prefetching_descs)==len(self.data_servers)
         with self.stop_flag_lock:
             assert self.stop_flag
             self.stop_flag=False
@@ -47,42 +35,65 @@ class DataPrefetcher:
             with self.stop_flag_lock:
                 if self.stop_flag:
                     break
-            self.request_data(prefetching_desc)
+            self.request_data(prefetching_descs)
         Logger.warning("DataFetcher main_task() ends")
         
     def stop_prefetching(self):
         with self.stop_flag_lock:
             self.stop_flag=True
         
-    def request_data(self, prefetching_desc:PrefetchingDesc):
+    def request_data(self, prefetching_descs:List[PrefetchingDesc]):
         self.timer.record("sample_from_remote_start")
-        data, ok = ray.get(
-            self.data_server.sample_data.remote(prefetching_desc.table_name,prefetching_desc.batch_size)
-        )
-        if not ok:
-            return
-        else:
-            assert data is not None
+        
+        data_list=[]    
+        for data_server,prefetching_desc in zip(self.data_servers,prefetching_descs):
+            data, ok = ray.get(
+                data_server.sample.remote(prefetching_desc.table_name,prefetching_desc.batch_size)
+            )
+            if not ok:
+                return 
+            else:
+                assert isinstance(data,list) and isinstance(data[0],dict),"type of data: {}, type of data[0]: {}".format(type(data),type(data[0]))
+                data_list.append(data)
+        
+        # merge data
+        samples=[]
+        for i in range(len(data_list[0])):
+            sample={}
+            for data in data_list:
+                sample.update(data[i])
+            samples.append(sample)
         
         self.timer.time("sample_from_remote_start","sample_from_remote_end","sample_from_remote")        
         
-        base_num=int(len(data)/len(self.consumers))
+        base_num=int(len(samples)/len(self.consumers))
         nums=np.full(len(self.consumers),fill_value=base_num)
-        remainder=len(data)%len(self.consumers)
+        remainder=len(samples)%len(self.consumers)
         nums[:remainder]+=1
         
         indices=np.cumsum(nums)[:-1]
         
-        samples_list=np.split(data,indices)        
+        samples_list=np.split(samples,indices)        
         
         tasks=[]
         for consumer,samples in zip(self.consumers,samples_list):
-            samples=self.concat(samples)
+            samples=self.stack(samples)
             task=consumer.local_queue_put.remote(samples)
             tasks.append(task)
         ray.get(tasks)
-            
         
+    def stack(self,samples):        
+        ret={}
+        for k,v in samples[0].items():
+            # recursively stack
+            if isinstance(v,dict):
+                ret[k]=self.stack([sample[k] for sample in samples])
+            elif isinstance(v,np.ndarray):
+                ret[k]=np.stack([sample[k] for sample in samples])
+            else:
+                pass
+        return ret
+    
     def concat(self,samples):        
         ret={}
         for k,v in samples[0].items():
@@ -115,7 +126,7 @@ class GPUPreLoadQueueWrapper:
             else None
         )
         self.next_batch = None
-        self._prefetch_next_batch(block=True)
+        # self._prefetch_next_batch(block=True)
 
     def _move_to_device(self, data):
         if data is None:

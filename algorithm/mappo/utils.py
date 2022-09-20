@@ -2,23 +2,10 @@
 from torch import nn
 import torch
 import numpy as np
-import scipy.signal
-
 
 def init_fc_weights(m, init_method, gain=1.0):
     init_method(m.weight.data, gain=gain)
     nn.init.constant_(m.bias.data, 0)
-
-
-def huber_loss(e, d):
-    a = (abs(e) <= d).float()
-    b = (e > d).float()
-    return a * e**2 / 2 + b * d * (abs(e) - d / 2)
-
-
-def mse_loss(e):
-    return (e**2) / 2
-
 
 class PopArt(nn.Module):
     """Normalize a vector of observations - across the first norm_axes dimensions"""
@@ -64,7 +51,7 @@ class PopArt(nn.Module):
         debiased_mean_sq = self.running_mean_sq / self.debiasing_term.clamp(
             min=self.epsilon
         )
-        debiased_var = (debiased_mean_sq - debiased_mean**2).clamp(min=1e-2)
+        debiased_var = (debiased_mean_sq - debiased_mean ** 2).clamp(min=1e-2)
         return debiased_mean, debiased_var
 
     def forward(self, input_vector, train=True):
@@ -79,11 +66,11 @@ class PopArt(nn.Module):
             # subsequent batches.
             detached_input = input_vector.detach()
             batch_mean = detached_input.mean(dim=tuple(range(self.norm_axes)))
-            batch_sq_mean = (detached_input**2).mean(dim=tuple(range(self.norm_axes)))
+            batch_sq_mean = (detached_input ** 2).mean(dim=tuple(range(self.norm_axes)))
 
             if self.per_element_update:
                 batch_size = np.prod(detached_input.size()[: self.norm_axes])
-                weight = self.beta**batch_size
+                weight = self.beta ** batch_size
             else:
                 weight = self.beta
 
@@ -100,7 +87,9 @@ class PopArt(nn.Module):
 
     def denormalize(self, input_vector):
         """Transform normalized data back into original distribution"""
+        is_np=False
         if type(input_vector) == np.ndarray:
+            is_np=True
             input_vector = torch.from_numpy(input_vector)
         input_vector = input_vector.to(**self.tpdv)
 
@@ -109,8 +98,8 @@ class PopArt(nn.Module):
             input_vector * torch.sqrt(var)[(None,) * self.norm_axes]
             + mean[(None,) * self.norm_axes]
         )
-
-        out = out.cpu().numpy()
+        if is_np:
+            out = out.cpu().numpy()
 
         return out
 
@@ -172,11 +161,15 @@ class RNNLayer(nn.Module):
                 # This is much faster
                 start_idx = has_zeros[i]
                 end_idx = has_zeros[i + 1]
-                temp = (
-                    hxs
-                    * masks[start_idx].view(1, -1, 1).repeat(self._recurrent_N, 1, 1)
-                ).contiguous()
-
+                try:
+                    temp = (
+                        hxs
+                        * masks[start_idx]
+                        .view(1, -1, 1)
+                        .repeat(self._recurrent_N, 1, 1)
+                    ).contiguous()
+                except Exception as e:
+                    raise e
                 rnn_scores, hxs = self.rnn(x[start_idx:end_idx], temp)
                 outputs.append(rnn_scores)
 

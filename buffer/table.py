@@ -1,9 +1,9 @@
-from tools.utils.logger import Logger
-from tools.utils.timer import Timer
+from light_malib.utils.logger import Logger
+from light_malib.utils.timer import Timer
 import queue
 from readerwriterlock import rwlock
 import numpy as np
-from .sampler import UniformSampler,LUMRFSampler
+from .sampler import UniformSampler,LUMRFSampler,LULRFSampler
 import time
 
 class Table:
@@ -48,7 +48,8 @@ class Table:
         
         sampler_clses={
             "uniform": UniformSampler,
-            "lumrf": LUMRFSampler
+            "lumrf": LUMRFSampler,
+            "lulrf": LULRFSampler
         }
         sampler_cls=sampler_clses[sampler_type]
         self.sampler=sampler_cls(self)
@@ -155,6 +156,9 @@ class Table:
                 self.read_ctr+=1
                 self.read_num+=len(samples)
                 rlock.release()
+                
+                # TODO(jh): Support read/write rate control here
+                
                 return samples
         return None
         

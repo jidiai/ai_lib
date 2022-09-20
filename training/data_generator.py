@@ -1,11 +1,8 @@
-from collections import defaultdict
-from typing import Dict
 import torch
 import numpy as np
-from malib.algorithm.mappo.vtrace import compute_vtrace
-from tools.utils.episode import EpisodeKey
-from tools.utils.logger import Logger
-from tools.utils.timer import global_timer
+from light_malib.utils.episode import EpisodeKey
+from light_malib.utils.logger import Logger
+from light_malib.utils.timer import global_timer
 
 def simple_data_generator(data, num_mini_batch, device):
     assert len(data[EpisodeKey.CUR_OBS].shape) == 4

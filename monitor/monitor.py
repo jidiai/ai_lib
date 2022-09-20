@@ -1,8 +1,4 @@
-from tools.utils import logger
-import time
-import os
-from omegaconf import OmegaConf
-import yaml
+from light_malib.utils.logger import Logger
 from torch.utils.tensorboard import SummaryWriter
 
 class Monitor:
@@ -20,5 +16,5 @@ class Monitor:
     def add_scalar(self,tag,scalar_value,global_step,*args,**kwargs):
         self.writer.add_scalar(tag,scalar_value,global_step,*args,**kwargs)
             
-    def __del__(self):
+    def close(self):
         self.writer.close()

@@ -1,14 +1,14 @@
-from typing import Dict
+import time
 from .table import Table
-from tools.utils.logger import Logger
+from light_malib.utils.logger import Logger
 import threading
     
 class DataServer:
-    def __init__(self,cfg): 
+    def __init__(self,id,cfg): 
+        self.id=id
         self.cfg=cfg        
+        self.tables={}
         
-        self.tables:Dict[str,Table]={}
-        self.table_names=[]
         self.table_lock=threading.Lock()
         
         self.read_timeout = self.cfg.read_timeout
@@ -16,55 +16,75 @@ class DataServer:
         self.episode_capacity = self.cfg.episode_capacity
         self.sampler_type = self.cfg.sampler_type
         
-        Logger.warning("Data Server uses {} sampler".format(self.sampler_type))
-        
-    @staticmethod
-    def default_table_name(agent_id,policy_id):
-        return "{}_{}".format(agent_id,policy_id)
+        Logger.warning("{} uses {} sampler".format(self.id,self.sampler_type))
+        Logger.info("{} initialized".format(self.id))
     
-    def create_table(self,table_name): 
+    def create_table(self,table_name):
         with self.table_lock:
             self.tables[table_name]=Table(capacity=self.episode_capacity,sample_max_usage=self.sample_max_usage,sampler_type=self.sampler_type)
-            self.table_names.append(table_name)
-            Logger.info("created data table: {}".format(table_name))
+            Logger.info("{} created data table {}".format(self.id,table_name))
         
     def remove_table(self,table_name):
         with self.table_lock:
             if table_name in self.tables:
-                self.table_names.remove(table_name)
                 self.tables.pop(table_name)
-            Logger.info("removed data table: {}".format(table_name))
+            Logger.info("{} removed data table {}".format(self.id,table_name))
             
-    def get_table_stats(self,table_name):
+    def get_statistics(self,table_name):
         try:
             with self.table_lock:
                 statistics=self.tables[table_name].get_statistics()
             return statistics
         except KeyError:
-            info = "table {} is not found".format(table_name)
+            time.sleep(1)
+            info = "{}::get_table_stats: table {} is not found".format(self.id,table_name)
             Logger.warning(info)
             return {}
     
-    def save_data(self, table_name, data):
+    def save(self, table_name, data):
         try:
             with self.table_lock:
                 table:Table = self.tables[table_name]
             table.write(data)
-        except Exception:
-            Logger.warning("table {} is not found".format(table_name))
+        except KeyError:
+            time.sleep(1)
+            Logger.warning("{}::save_data: table for {} is not found".format(self.id,table_name))
     
-    def sample_data(self, table_name, batch_size, wait=False):
+    def sample(self, table_name, batch_size, wait=False):
         try:
             with self.table_lock:
                 table:Table = self.tables[table_name]
             samples = None
-            samples = table.read(batch_size,timeout=self.timeout)
+            samples = table.read(batch_size,timeout=self.read_timeout)
             if samples is not None:
                 return samples,True
             else:
                 return samples,False
-        except Exception:
+        except KeyError:
+            Logger.warning("{}::sample_data: table {} is not found".format(self.id,table_name))
+            time.sleep(1)
             samples=None
-            Logger.warning("table {} is not found".format(table_name))
             return samples,False
 
+    def load_data(self,table_name,data_path):
+        '''
+        TODO(jh): maybe support more data format?
+        data now are supposed to be stored in pickle format as a list of samples.
+        '''
+        # check extension
+        assert data_path[-4:]==".pkl"
+        
+        # get table
+        with self.table_lock:
+            table:Table = self.tables[table_name]
+        
+        # load data from disk
+        import pickle as pkl
+        with open(data_path,"rb") as f:
+            samples=pkl.load(f)
+        
+        assert len(samples)<=table.capacity,"load too much data(size{}) to fit into table(capacity:{})".format(len(samples),table.capacity)
+        
+        # write samples to table
+        table.write(samples)
+        Logger.info("Table {} load {} data from {}".format(self.id,len(samples),data_path))

@@ -1,7 +1,7 @@
 import numpy as np
 import time
 
-from tools.utils.logger import Logger
+from light_malib.utils.logger import Logger
 
 class Sampler:
     def __init__(self,table=None):
@@ -34,4 +34,19 @@ class LUMRFSampler(Sampler):
         indices=indices[_indices]
         assert len(indices)==n
         return indices
+
+class LULRFSampler(Sampler):
+    "Less Usage Least Recent (inserted) First Sampler"
+    def __init__(self, table=None):
+        super().__init__(table)
+        assert hasattr(table,"usage_ctrs")
+        assert hasattr(table,"insert_timestamps")
         
+    def sample(self,indices,n):
+        assert len(indices)>=n
+        usage_ctrs=self.table.usage_ctrs[indices]
+        timestamps=self.table.insert_timestamps[indices]
+        _indices=np.lexsort([timestamps,usage_ctrs])[:n]
+        indices=indices[_indices]
+        assert len(indices)==n
+        return indices

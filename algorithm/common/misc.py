@@ -1,17 +1,11 @@
-from typing import Dict, List, Any, Optional
-
-import math
 import torch
 import numpy as np
-
 import torch.nn.functional as F
 
 from torch.autograd import Variable
-from torch.distributions.utils import lazy_property
-from torch.distributions import utils as distr_utils
-from torch.distributions.categorical import Categorical as TorchCategorical
 
-from malib.utils.typing import DataTransferType
+from light_malib.utils.typing import Dict, Any, List, Union, DataTransferType
+from light_malib.utils.episode import Episode
 
 
 def soft_update(target, source, tau):
@@ -111,13 +105,6 @@ def gumbel_softmax(logits: DataTransferType, temperature=1.0, hard=False, explor
     return y
 
 
-def masked_logits(logits: torch.Tensor, mask: torch.Tensor):
-    logits = F.normalize(logits)
-    if mask is not None:
-        logits = torch.clamp(logits - (1.0 - mask) * 1e9, -1e9, 1e9)
-    return logits
-
-
 def masked_softmax(logits: torch.Tensor, mask: torch.Tensor):
     probs = F.softmax(logits, dim=-1) * mask
     probs = probs + (mask.sum(dim=-1, keepdim=True) == 0.0).to(dtype=torch.float32)
@@ -125,111 +112,105 @@ def masked_softmax(logits: torch.Tensor, mask: torch.Tensor):
     return probs / Z
 
 
-def monte_carlo_discounted(rewards, dones, gamma: float) -> torch.Tensor:
-    running_add = 0
-    returns = []
-
-    for step in reversed(range(len(rewards))):
-        running_add = rewards[step] + (1.0 - dones[step]) * gamma * running_add
-        returns.insert(0, running_add)
-
-    return torch.stack(returns)
-
-
-def temporal_difference(reward, next_value, done, gamma: float) -> torch.Tensor:
-    q_values = reward + (1.0 - done) * gamma * next_value
-    return q_values
-
-
-def generalized_advantage_estimation(
-    values: torch.Tensor,
-    rewards: torch.Tensor,
-    next_values: torch.Tensor,
-    dones: torch.Tensor,
-    gamma: float,
-    lam: float,
+def cumulative_td_errors(
+    start: int, end: int, offset: int, value, td_errors, ratios, gamma: float
 ):
-    gae = 0
-    adv = []
+    v = np.zeros_like(value)
+    assert end - offset > start, (start, end, offset)
+    for s in range(start, end - offset):
+        pi_of_c = 1.0
+        trace_errors = [td_errors[s]]
+        for t in range(s + 1, s + offset):
+            pi_of_c *= ratios[t - 1]
+            trace_errors.append(gamma ** (t - start) * pi_of_c * td_errors[t])
+        v[s] = value[s] + np.sum(trace_errors)
+    return v
 
-    delta = rewards + (1.0 - dones) * gamma * next_values - values
-    for step in reversed(range(len(rewards))):
-        gae = delta[step] + (1.0 - dones[step]) * gamma * lam * gae
-        adv.insert(0, gae)
 
-    return torch.stack(adv)
+def v_trace(
+    policy: "Policy", batch: Dict[str, Any], ratio_clip: float = 1e3
+) -> Dict[str, Any]:
+    """Implementation for V-trace (https://arxiv.org/abs/1802.01561)
 
+    :param policy: Policy, policy instance
+    :param batch: Dict[str, Any], batch
+    :param ratio_clip: float, ratio clipping value
+    :return: return new batch with V-trace target
+    """
 
-def vtrace(
-    values: torch.Tensor,
-    rewards: torch.Tensor,
-    next_values: torch.Tensor,
-    dones: torch.Tensor,
-    log_probs: torch.Tensor,
-    worker_logprobs: torch.Tensor,
-    gamma: float,
-    lam: float,
-) -> torch.Tensor:
-    gae = 0
-    adv = []
+    # compute importance sampling along the horizon
+    old_policy_dist = batch[Episode.ACTION_DIST]
+    old_action_dist = old_policy_dist[batch[Episode.ACTIONS]]
+    cur_dist = policy.actor()(batch[Episode.CUR_OBS])
+    cur_action_dist = cur_dist[batch[Episode.ACTIONS]]
 
-    limit = torch.FloatTensor([1.0]).to(values.device)
-    ratio = torch.min(limit, (worker_logprobs - log_probs).sum().exp())
+    # NOTE(ming): we should avoid zero division here
+    clipped_is_ratio = np.minimum(ratio_clip, cur_action_dist / old_action_dist)
+    # calculate new state value
+    state_values = batch[Episode.STATE_VALUE]
+    rewards = batch[Episode.REWARDS]
+    dones = batch[Episode.DONES]
 
-    assert rewards.shape == dones.shape == next_values.shape == values.shape, (
-        rewards.shape,
-        dones.shape,
-        next_values.shape,
-        values.shape,
+    # ignore the last one state value?
+    td_errors = np.zeros_like(rewards)
+    td_errors[:-1] = (
+        rewards[:-1] + policy.config["gamma"] * state_values[1:] - state_values[:-1]
     )
-    delta = rewards + (1.0 - dones) * gamma * next_values - values
-    delta = ratio * delta
+    terminal_state_value = policy.critic()(batch[Episode.NEXT_OBS][-1])
+    # we support infinite episode mode
+    td_errors[-1] = (
+        rewards[-1]
+        + policy.config["gamma"] * terminal_state_value * dones[-1]
+        - state_values[-1]
+    )
+    discounted_td_errors = clipped_is_ratio * td_errors
 
-    for step in reversed(range(len(rewards))):
-        gae = (1.0 - dones[step]) * gamma * lam * gae
-        gae = delta[step] + ratio * gae
-        adv.insert(0, gae)
+    batch[Episode.STATE_VALUE] = cumulative_td_errors(
+        start=0,
+        end=len(rewards),
+        offset=1,
+        value=state_values,
+        td_errors=discounted_td_errors,
+        ratios=clipped_is_ratio,
+        gamma=policy.config["gamma"],
+    )
 
-    return torch.stack(adv)
+    return batch
+
+
+def non_centered_rmsprop(
+    gradient: Union[torch.Tensor, DataTransferType],
+    delta: Union[torch.Tensor, DataTransferType],
+    alpha: float,
+    eta: float,
+    eps: float,
+):
+    """Implementation of non-centered RMSProb algorithm (# TODO(ming): add reference here)
+
+    :param gradient: Union[torch.Tensor, DataTransferType], bootstrapped gradient
+    :param delta: Union[torch.Tensor, DataTransferType]
+    :param alpha: float, moving factor
+    :param eta: flat, learning step
+    :param eps: float, control exploration
+    :return:
+    """
+
+    gradient = alpha * gradient + (1.0 - alpha) * delta ** 2
+    delta = -eta * delta / np.sqrt(gradient + eps)
+    return delta
 
 
 class GradientOps:
     @staticmethod
-    def add(source: Any, delta: Any):
-        """Apply gradients (delta) to parameters (source)"""
-
-        if isinstance(source, Dict) and isinstance(delta, Dict):
-            for k, v in delta.items():
-                if isinstance(v, Dict):
-                    source[k] = GradientOps.add(source[k], v)
-                else:  # if isinstance(v, DataTransferType):
-                    assert source[k].data.shape == v.shape, (
-                        source[k].data.shape,
-                        v.shape,
-                    )
-                    if isinstance(v, np.ndarray):
-                        source[k].data.copy_(source[k].data + v)
-                    elif isinstance(v, torch.Tensor):
-                        source[k].data.copy_(source[k].data + v.data)
-                    else:
-                        raise TypeError(
-                            "Inner type of delta should be numpy.ndarray or torch.Tensor, but `{}` detected".format(
-                                type(v)
-                            )
-                        )
-        elif isinstance(source, torch.Tensor):
-            if isinstance(delta, torch.Tensor):
-                source.data.copy_(source.data + delta.data)
-            elif isinstance(delta, np.ndarray):
-                source.data.copy_(source.data + delta)
-            else:
-                raise TypeError("Unexpected delta type: {}".format(type(delta)))
-        else:
-            raise TypeError(
-                "Source data must be a dict or torch tensor but got: {}".format(
-                    type(source)
-                )
-            )
+    def add(source: Dict, delta: Dict):
+        for k, v in delta.items():
+            if isinstance(v, Dict):
+                source[k] = GradientOps.add(source[k], v)
+            else:  # if isinstance(v, DataTransferType):
+                assert source[k].data.shape == v.shape, (source[k].data.shape, v.shape)
+                source[k].data = source[k].data + v  # v
+            # else:
+            #     raise errors.UnexpectedType(f"unexpected gradient type: {type(v)}")
         return source
 
     @staticmethod
@@ -242,15 +223,9 @@ class GradientOps:
             for k in keys:
                 res[k] = GradientOps.mean([grad[k] for grad in gradients])
             return res
-        elif isinstance(gradients[0], np.ndarray):
+        else:
             res = np.mean(gradients, axis=0)
             return res
-        elif isinstance(gradients[0], torch.Tensor):
-            raise NotImplementedError(
-                "Do not support tensor-based gradients aggragation yet."
-            )
-        else:
-            raise TypeError("Illegal data type: {}".format(type(gradients[0])))
 
     @staticmethod
     def sum(gradients: List):
@@ -269,17 +244,9 @@ class GradientOps:
             for k in keys:
                 res[k] = GradientOps.sum([grad[k] for grad in gradients])
             return res
-        elif isinstance(
-            gradients[0], np.ndarray
-        ):  # if isinstance(gradients[0], DataTransferType):
+        else:  # if isinstance(gradients[0], DataTransferType):
             res = np.sum(gradients, axis=0)
             return res
-        elif isinstance(gradients[0], torch.Tensor):
-            raise NotImplementedError(
-                "Do not support tensor-based gradients aggragation yet."
-            )
-        else:
-            raise TypeError("Illegal data type: {}".format(type(gradients[0])))
 
 
 class OUNoise:
@@ -308,105 +275,3 @@ class EPSGreedy:
     def __init__(self, action_dimension: int, threshold: float = 0.3):
         self._action_dim = action_dimension
         self._threshold = threshold
-
-
-class MaskedCategorical:
-    def __init__(self, scores, mask=None):
-        self.mask = mask
-        if mask is None:
-            self.cat_distr = TorchCategorical(F.softmax(scores, dim=-1))
-            self.n = scores.shape[0]
-            self.log_n = math.log(self.n)
-        else:
-            self.n = self.mask.sum(dim=-1)
-            self.log_n = (self.n + 1e-17).log()
-            self.cat_distr = TorchCategorical(
-                MaskedCategorical.masked_softmax(scores, self.mask)
-            )
-
-    @lazy_property
-    def probs(self):
-        return self.cat_distr.probs
-
-    @lazy_property
-    def logits(self):
-        return self.cat_distr.logits
-
-    @lazy_property
-    def entropy(self):
-        if self.mask is None:
-            return self.cat_distr.entropy() * (self.n != 1)
-        else:
-            entropy = -torch.sum(
-                self.cat_distr.logits * self.cat_distr.probs * self.mask, dim=-1
-            )
-            does_not_have_one_category = (self.n != 1.0).to(dtype=torch.float32)
-            # to make sure that the entropy is precisely zero when there is only one category
-            return entropy * does_not_have_one_category
-
-    @lazy_property
-    def normalized_entropy(self):
-        return self.entropy / (self.log_n + 1e-17)
-
-    def sample(self):
-        return self.cat_distr.sample()
-
-    def rsample(self, temperature=None, gumbel_noise=None):
-        if gumbel_noise is None:
-            with torch.no_grad():
-                uniforms = torch.empty_like(self.probs).uniform_()
-                uniforms = distr_utils.clamp_probs(uniforms)
-                gumbel_noise = -(-uniforms.log()).log()
-            # TODO(ming): This is used for debugging (to get the same samples) and is not differentiable.
-            # gumbel_noise = None
-            # _sample = self.cat_distr.sample()
-            # sample = torch.zeros_like(self.probs)
-            # sample.scatter_(-1, _sample[:, None], 1.0)
-            # return sample, gumbel_noise
-
-        elif gumbel_noise.shape != self.probs.shape:
-            raise ValueError
-
-        if temperature is None:
-            with torch.no_grad():
-                scores = self.logits + gumbel_noise
-                scores = MaskedCategorical.masked_softmax(scores, self.mask)
-                sample = torch.zeros_like(scores)
-                sample.scatter_(-1, scores.argmax(dim=-1, keepdim=True), 1.0)
-                return sample, gumbel_noise
-        else:
-            scores = (self.logits + gumbel_noise) / temperature
-            sample = MaskedCategorical.masked_softmax(scores, self.mask)
-            return sample, gumbel_noise
-
-    def log_prob(self, value):
-        if value.dtype == torch.long:
-            if self.mask is None:
-                return self.cat_distr.log_prob(value)
-            else:
-                return self.cat_distr.log_prob(value) * (self.n != 0.0).to(
-                    dtype=torch.float32
-                )
-        else:
-            max_values, mv_idxs = value.max(dim=-1)
-            relaxed = (max_values - torch.ones_like(max_values)).sum().item() != 0.0
-            if relaxed:
-                raise ValueError(
-                    "The log_prob can't be calculated for the relaxed sample!"
-                )
-            return self.cat_distr.log_prob(mv_idxs) * (self.n != 0.0).to(
-                dtype=torch.float32
-            )
-
-    @staticmethod
-    def masked_softmax(logits, mask):
-        """
-        This method will return valid probability distribution for the particular instance if its corresponding row
-        in the `mask` matrix is not a zero vector. Otherwise, a uniform distribution will be returned.
-        This is just a technical workaround that allows `Categorical` class usage.
-        If probs doesn't sum to one there will be an exception during sampling.
-        """
-        probs = F.softmax(logits, dim=-1) * mask
-        probs = probs + (mask.sum(dim=-1, keepdim=True) == 0.0).to(dtype=torch.float32)
-        Z = probs.sum(dim=-1, keepdim=True)
-        return probs / Z
