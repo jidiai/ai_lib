@@ -1,18 +1,18 @@
 import copy
-from light_malib.utils.logger import Logger
+from utils.logger import Logger
 from typing import Dict
 
 from collections import OrderedDict
-from light_malib.utils.desc.policy_desc import PolicyDesc
-from light_malib.envs.env_factory import make_envs
+from utils.desc.policy_desc import PolicyDesc
+from envs.env_factory import make_envs
 import importlib
 import numpy as np
-from ..agent.agent import Agent,Agents
-from ..utils.random import set_random_seed
-from ..utils.distributed import get_actor
+from agent.agent import Agent,Agents
+from utils.random import set_random_seed
+from utils.distributed import get_actor
 import ray
-from light_malib.utils.desc.task_desc import RolloutDesc
-from light_malib.utils.timer import global_timer
+from utils.desc.task_desc import RolloutDesc
+from utils.timer import global_timer
 import random
 
 class RolloutWorker:

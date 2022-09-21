@@ -1,4 +1,4 @@
-from light_malib.utils.episode import EpisodeKey
+from utils.episode import EpisodeKey
 
 import numpy as np
 from pettingzoo.classic import leduc_holdem_v4

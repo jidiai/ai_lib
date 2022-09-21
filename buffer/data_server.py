@@ -1,6 +1,6 @@
 import time
 from .table import Table
-from light_malib.utils.logger import Logger
+from utils.logger import Logger
 import threading
     
 class DataServer:

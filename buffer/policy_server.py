@@ -1,9 +1,9 @@
 import threading
-from light_malib.agent.agent import Agents
-from light_malib.utils.desc.policy_desc import PolicyDesc
+from agent.agent import Agents
+from utils.desc.policy_desc import PolicyDesc
 from readerwriterlock import rwlock
 
-from light_malib.utils.logger import Logger
+from utils.logger import Logger
 
 class PolicyServer:
     '''

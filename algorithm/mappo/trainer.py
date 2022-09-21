@@ -2,15 +2,15 @@
 
 import numpy as np
 from collections import defaultdict
-from light_malib.training.data_generator import (
+from training.data_generator import (
     recurrent_generator,
     simple_data_generator
 )
 from .loss import MAPPOLoss
 import torch
 import functools
-from light_malib.utils.logger import Logger
-from light_malib.utils.timer import global_timer
+from utils.logger import Logger
+from utils.timer import global_timer
 from ..return_compute import compute_return
 from ..common.trainer import Trainer
 

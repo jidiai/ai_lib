@@ -1,9 +1,9 @@
 import copy
-from light_malib.buffer import policy_server
-from light_malib.utils.desc.policy_desc import PolicyDesc
-from light_malib.utils.desc.task_desc import TrainingDesc
-from ..utils.distributed import get_actor
-from light_malib.utils.logger import Logger
+from buffer import policy_server
+from utils.desc.policy_desc import PolicyDesc
+from utils.desc.task_desc import TrainingDesc
+from utils.distributed import get_actor
+from utils.logger import Logger
 import torch
 from torch.nn.parallel import DistributedDataParallel
 import os
@@ -11,7 +11,7 @@ import ray
 from torch import distributed
 import queue
 from .data_prefetcher import GPUPreLoadQueueWrapper
-from light_malib.utils.timer import global_timer
+from utils.timer import global_timer
 
 class DistributedPolicyWrapper:
     '''

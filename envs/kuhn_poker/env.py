@@ -2,7 +2,7 @@
 See https://github.com/JBLanier/pipeline-psro/blob/master/multiplayer-rl/mprl/rl/envs/opnspl/poker_multiagent_env.py
 '''
 
-from light_malib.utils.episode import EpisodeKey
+from utils.episode import EpisodeKey
 from ..base_env import BaseEnv
 
 import numpy as np

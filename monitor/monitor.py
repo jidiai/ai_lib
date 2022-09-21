@@ -1,4 +1,4 @@
-from light_malib.utils.logger import Logger
+from utils.logger import Logger
 from torch.utils.tensorboard import SummaryWriter
 
 class Monitor:

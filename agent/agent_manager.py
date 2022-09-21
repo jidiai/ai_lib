@@ -1,9 +1,9 @@
 from typing import OrderedDict
-from light_malib.utils.desc.policy_desc import PolicyDesc
-from light_malib.utils.distributed import get_actor
+from utils.desc.policy_desc import PolicyDesc
+from utils.distributed import get_actor
 from .agent import Agent,Agents
-from light_malib.algorithm.mappo.policy import MAPPO
-from light_malib.utils.logger import Logger
+from algorithm.mappo.policy import MAPPO
+from utils.logger import Logger
 import ray
 
 class AgentManager:

@@ -1,16 +1,17 @@
-from light_malib.utils.logger import Logger
+from tools.utils.logger import Logger
 import ray
 import argparse
-from light_malib.utils.cfg import load_cfg,convert_to_easydict
-from light_malib.utils.random import set_random_seed
-from light_malib.framework.pbt_runner import PBTRunner
+from utils.cfg import load_cfg,convert_to_easydict
+from utils.random import set_random_seed
+from framework.pbt_runner import PBTRunner
 import time
 import os
 import yaml
 from omegaconf import OmegaConf
 
 import pathlib
-BASE_DIR = str(pathlib.Path(__file__).resolve().parent.parent)
+BASE_DIR = str(pathlib.Path(__file__).resolve().parent)
+print('base path = ',  BASE_DIR)
 
 def parse_args():
     parser=argparse.ArgumentParser()
@@ -71,13 +72,14 @@ def main():
     
     # copy config file
     yaml_path = os.path.join(cfg.expr_log_dir,'config.yaml')
+    yaml_path = os.path.join(BASE_DIR, yaml_path)
     with open(yaml_path, 'w') as f:
         yaml.dump(OmegaConf.to_yaml(cfg), f, sort_keys=False)
         
     cfg=convert_to_easydict(cfg)
     
-    from light_malib.monitor.monitor import Monitor
-    from light_malib.utils.distributed import get_resources
+    from monitor.monitor import Monitor
+    from utils.distributed import get_resources
     Monitor=ray.remote(**get_resources(cfg.monitor.distributed.resources))(Monitor)
     monitor=Monitor.options(name="Monitor",max_concurrency=100).remote(cfg)
     

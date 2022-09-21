@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from typing import Dict, Any, Sequence
 import torch
-from light_malib.utils.general import tensor_cast
+from utils.general import tensor_cast
 
 class LossFunc(metaclass=ABCMeta):
     """Define loss function and optimizers

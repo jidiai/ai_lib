@@ -2,13 +2,13 @@ import queue
 import threading
 from typing import List
 import ray
-from light_malib.utils.desc.task_desc import PrefetchingDesc
-from light_malib.utils.logger import Logger
-from light_malib.utils.timer import Timer,global_timer
+from utils.desc.task_desc import PrefetchingDesc
+from utils.logger import Logger
+from utils.timer import Timer,global_timer
 import numpy as np
 import torch
-from light_malib.utils.distributed import get_actor
-from light_malib.utils.decorator import limited_calls
+from utils.distributed import get_actor
+from utils.decorator import limited_calls
 
 class DataPrefetcher:
     def __init__(self, cfg, consumers, data_servers):

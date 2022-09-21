@@ -1,7 +1,7 @@
 from collections import OrderedDict
 import pprint
 from . import PolicyFactory
-from light_malib.utils.logger import Logger
+from utils.logger import Logger
 
 class Agents(OrderedDict):
     def __init__(self,agents_dict,share_policies):

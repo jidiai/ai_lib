@@ -7,17 +7,17 @@ import torch
 import numpy as np
 
 from torch import nn
-from light_malib.utils.logger import Logger
-from light_malib.utils.typing import DataTransferType, Tuple, Any, Dict, EpisodeID, List
-from light_malib.utils.episode import EpisodeKey
+from utils.logger import Logger
+from utils.typing import DataTransferType, Tuple, Any, Dict, EpisodeID, List
+from utils.episode import EpisodeKey
 
-from light_malib.algorithm.common.policy import Policy
+from algorithm.common.policy import Policy
 
 from .utils import PopArt, init_fc_weights
 import wrapt
 import tree
 import importlib
-from light_malib.utils.logger import Logger
+from utils.logger import Logger
 
 def hard_update(target, source):
     """Copy network parameters from source to target.

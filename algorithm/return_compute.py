@@ -1,8 +1,8 @@
 import torch
 import numpy as np
 
-from light_malib.utils.episode import EpisodeKey
-from light_malib.utils.logger import Logger
+from utils.episode import EpisodeKey
+from utils.logger import Logger
 
 def compute_return(policy, batch):
     return_mode=policy.custom_config["return_mode"]

@@ -1,4 +1,4 @@
-from light_malib.utils.logger import Logger
+from utils.logger import Logger
 from .utils.pretty_print import pformat_table
 import numpy as np
 

@@ -1,4 +1,4 @@
-from light_malib.utils.episode import EpisodeKey
+from utils.episode import EpisodeKey
 from ..base_env import BaseEnv
 
 try:
@@ -14,8 +14,8 @@ import numpy as np
 from .rewarder_basic import Rewarder
 from .stats_basic import StatsCaculator
 
-from light_malib.utils.timer import global_timer
-from light_malib.utils.logger import Logger
+from utils.timer import global_timer
+from utils.logger import Logger
 
 class GRFootballEnv(BaseEnv):
     def __init__(self,id,seed,cfg):

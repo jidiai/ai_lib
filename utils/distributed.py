@@ -1,6 +1,6 @@
 import time
 import ray
-from light_malib.utils.logger import Logger
+from utils.logger import Logger
 
 def get_actor(obj_name,actor_name,max_retries=10):
     actor=None

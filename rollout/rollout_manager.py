@@ -2,17 +2,17 @@ from collections import defaultdict,deque
 import os
 import threading
 import numpy as np
-from light_malib.utils.desc.policy_desc import PolicyDesc
-from light_malib.utils.logger import Logger
-from light_malib.utils.distributed import get_actor,get_resources
-from light_malib.agent.agent import Agents
+from utils.desc.policy_desc import PolicyDesc
+from utils.logger import Logger
+from utils.distributed import get_actor,get_resources
+from agent.agent import Agents
 from . import rollout_worker
 import ray
 import queue
-from light_malib.utils.desc.task_desc import RolloutDesc, RolloutEvalDesc
-from light_malib.utils.decorator import limited_calls
+from utils.desc.task_desc import RolloutDesc, RolloutEvalDesc
+from utils.decorator import limited_calls
 import traceback
-from light_malib.utils.timer import global_timer
+from utils.timer import global_timer
 
 class RolloutManager:
     def __init__(self,id,cfg,agents:Agents):

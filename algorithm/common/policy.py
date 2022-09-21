@@ -9,8 +9,8 @@ from torch._C import device
 
 import torch.nn as nn
 
-from light_malib.utils import errors
-from light_malib.utils.typing import (
+from utils import errors
+from utils.typing import (
     DataTransferType,
     ModelConfig,
     Dict,
@@ -19,8 +19,8 @@ from light_malib.utils.typing import (
     Callable,
     List,
 )
-from light_malib.utils.preprocessor import get_preprocessor, Mode
-from light_malib.utils.notations import deprecated
+from utils.preprocessor import get_preprocessor, Mode
+from utils.notations import deprecated
 
 
 class SimpleObject:

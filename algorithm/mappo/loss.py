@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import torch
-from light_malib.utils.episode import EpisodeKey
-from light_malib.algorithm.common.loss_func import LossFunc
-from light_malib.utils.logger import Logger
+from utils.episode import EpisodeKey
+from algorithm.common.loss_func import LossFunc
+from utils.logger import Logger
 
 def huber_loss(e, d):
     a = (abs(e) <= d).float()

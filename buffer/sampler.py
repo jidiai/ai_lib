@@ -1,7 +1,7 @@
 import numpy as np
 import time
 
-from light_malib.utils.logger import Logger
+from utils.logger import Logger
 
 class Sampler:
     def __init__(self,table=None):

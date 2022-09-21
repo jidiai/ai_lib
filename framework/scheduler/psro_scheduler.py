@@ -1,10 +1,10 @@
 from typing import OrderedDict
-from light_malib.agent.agent_manager import AgentManager
+from agent.agent_manager import AgentManager
 
-from light_malib.agent.policy_data.policy_data_manager import PolicyDataManager
-from light_malib.utils.logger import Logger
-from light_malib.agent import Population
-from light_malib.utils.desc.task_desc import TrainingDesc
+from agent.policy_data.policy_data_manager import PolicyDataManager
+from utils.logger import Logger
+from agent import Population
+from utils.desc.task_desc import TrainingDesc
 import numpy as np
 import importlib
 
@@ -21,7 +21,7 @@ class PSROScheduler:
         self.meta_solver_type=self.cfg.get("meta_solver","nash")
         
         Logger.warning("use meta solver type: {}".format(self.meta_solver_type))
-        solver_module=importlib.import_module("light_malib.framework.meta_solver.{}".format(self.meta_solver_type))
+        solver_module=importlib.import_module("framework.meta_solver.{}".format(self.meta_solver_type))
         self.meta_solver=solver_module.Solver()
         self._schedule=self._gen_schedule()
     

@@ -1,9 +1,9 @@
 from email import policy
 from itertools import product
 
-from light_malib.agent.agent_manager import AgentManager
+from agent.agent_manager import AgentManager
 from ..agent import Agents
-from light_malib.utils.logger import Logger
+from utils.logger import Logger
 import numpy as np
 import importlib
 from .custom_update_func.gr_football import update_func
@@ -15,7 +15,7 @@ class PolicyDataManager:
         self.max_num_policies=max_num_policies
         # TODO(jh)
         
-        module=importlib.import_module("light_malib.agent.policy_data.custom_update_func.{}".format(self.cfg.update_func))
+        module=importlib.import_module("agent.policy_data.custom_update_func.{}".format(self.cfg.update_func))
         self.update_func=module.update_func
         
         self.data={}        

@@ -7,7 +7,7 @@ from typing import List, Dict, Any, Union, Tuple, Sequence, Callable, Optional
 import gym
 import numpy as np
 
-from light_malib.utils.notations import deprecated
+from utils.notations import deprecated
 
 """ Rename and definition of basic data types which are correspond to the inputs (args, kwargs) """
 PolicyConfig = Tuple[str, Dict[str, Any]]

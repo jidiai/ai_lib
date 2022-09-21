@@ -1,12 +1,12 @@
 
-from light_malib import rollout
-from light_malib.agent.policy_data.policy_data_manager import PolicyDataManager
-from light_malib.utils.desc.task_desc import RolloutEvalDesc
-from light_malib.utils.distributed import get_actor
+import rollout
+from agent.policy_data.policy_data_manager import PolicyDataManager
+from utils.desc.task_desc import RolloutEvalDesc
+from utils.distributed import get_actor
 import ray
 import numpy as np
 
-from light_malib.utils.logger import Logger
+from utils.logger import Logger
 
 class EvaluationManager:
     def __init__(self,cfg,agent_manager,policy_data_manager):

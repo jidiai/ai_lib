@@ -2,7 +2,7 @@ from random import seed
 from .gr_football.env import GRFootballEnv
 from .kuhn_poker.env import KuhnPokerEnv
 from .connect_four.env import ConnectFourEnv
-from .leduc_poker.env import LeducPokerEnv
+# from .leduc_poker.env import LeducPokerEnv
 
 MAX_ENV_PER_WORKER=100
 

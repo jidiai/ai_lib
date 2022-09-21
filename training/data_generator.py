@@ -1,8 +1,8 @@
 import torch
 import numpy as np
-from light_malib.utils.episode import EpisodeKey
-from light_malib.utils.logger import Logger
-from light_malib.utils.timer import global_timer
+from utils.episode import EpisodeKey
+from utils.logger import Logger
+from utils.timer import global_timer
 
 def simple_data_generator(data, num_mini_batch, device):
     assert len(data[EpisodeKey.CUR_OBS].shape) == 4

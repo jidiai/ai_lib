@@ -1,6 +1,6 @@
 from collections import namedtuple
 import copy
-from light_malib.utils.logger import Logger
+from utils.logger import Logger
 import pickle as pkl
 import os
 import ray

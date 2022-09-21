@@ -1,5 +1,5 @@
-from light_malib.utils.logger import Logger
-from light_malib.utils.timer import Timer
+from utils.logger import Logger
+from utils.timer import Timer
 import queue
 from readerwriterlock import rwlock
 import numpy as np
