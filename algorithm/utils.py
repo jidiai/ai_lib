@@ -26,20 +26,11 @@ class PopArt(nn.Module):
         self.epsilon = epsilon
         self.beta = beta
         self.per_element_update = per_element_update
-        self.tpdv = dict(dtype=torch.float32, device=device)
 
-        self.running_mean = nn.Parameter(
-            torch.zeros(input_shape), requires_grad=False
-        ).to(**self.tpdv)
-        self.running_mean_sq = nn.Parameter(
-            torch.zeros(input_shape), requires_grad=False
-        ).to(**self.tpdv)
-        self.debiasing_term = nn.Parameter(torch.tensor(0.0), requires_grad=False).to(
-            **self.tpdv
-        )
-        self.forward_cnt = nn.Parameter(torch.tensor(0.0), requires_grad=False).to(
-            **self.tpdv
-        )
+        self.running_mean = nn.Parameter(torch.zeros(input_shape,dtype=torch.float32), requires_grad=False)
+        self.running_mean_sq = nn.Parameter(torch.zeros(input_shape,dtype=torch.float32), requires_grad=False)
+        self.debiasing_term = nn.Parameter(torch.tensor(0.0,dtype=torch.float32), requires_grad=False)
+        self.forward_cnt = nn.Parameter(torch.tensor(0.0,dtype=torch.float32), requires_grad=False)
 
     def reset_parameters(self):
         self.running_mean.zero_()
@@ -59,7 +50,7 @@ class PopArt(nn.Module):
         self.forward_cnt.add_(1.0)
         if type(input_vector) == np.ndarray:
             input_vector = torch.from_numpy(input_vector)
-        input_vector = input_vector.to(**self.tpdv)
+        input_vector = input_vector.to(device=self.running_mean.device)
 
         if train:
             # Detach input before adding it to running means to avoid backpropping through it on
@@ -91,7 +82,7 @@ class PopArt(nn.Module):
         if type(input_vector) == np.ndarray:
             is_np=True
             input_vector = torch.from_numpy(input_vector)
-        input_vector = input_vector.to(**self.tpdv)
+        input_vector = input_vector.to(device=self.running_mean.device)
 
         mean, var = self.running_mean_var()
         out = (

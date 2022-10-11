@@ -1,5 +1,5 @@
 import numpy as np
-from light_malib.utils.logger import Logger
+from utils.logger import Logger
 from gym.spaces import Box
 
 class FeatureEncoder:

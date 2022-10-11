@@ -1,10 +1,10 @@
 import argparse
-from light_malib.cfg import load_cfg
+from cfg import load_cfg
 from envs.env_factory import make_kuhn_poker_env
 from envs.kuhn_poker.env import KuhnPokerEnv
 import numpy as np
 
-from light_malib.utils.episode import EpisodeKey
+from utils.episode import EpisodeKey
 
 class CMDPolicy:
     def __init__(self):

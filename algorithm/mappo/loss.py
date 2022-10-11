@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+from xml.dom.domreg import registered
 import torch
 from utils.episode import EpisodeKey
 from algorithm.common.loss_func import LossFunc
 from utils.logger import Logger
+from registry import registry
 
 def huber_loss(e, d):
     a = (abs(e) <= d).float()
@@ -23,6 +25,7 @@ def basic_stats(name,tensor:torch.Tensor):
     stats["{}_std".format(name)]=to_value(tensor.std())
     return stats
 
+@registry.registered(registry.LOSS)
 class MAPPOLoss(LossFunc):
     def __init__(self):
         # TODO: set these values using custom_config

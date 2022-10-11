@@ -5,11 +5,9 @@ from collections import OrderedDict
 
 import rollout,agent,training,agent,buffer
 from agent import AgentManager
-from agent.agent import Agent, Agents
 from evaluation.evaluation_manager import EvaluationManager
 from agent.policy_data.policy_data_manager import PolicyDataManager
 from framework.scheduler.psro_scheduler import PSROScheduler
-from utils.desc.task_desc import TrainingDesc
 import ray
 import numpy as np
 from utils.distributed import get_resources
@@ -20,7 +18,7 @@ class PBTRunner:
         self.cfg=cfg
         self.framework_cfg=self.cfg.framework
         self.id=self.framework_cfg.name
-        
+
         ###### Initialize Components #####
 
         RolloutManager=ray.remote(**get_resources(cfg.rollout_manager.distributed.resources))(rollout.RolloutManager)
@@ -31,7 +29,6 @@ class PBTRunner:
         # the order of creation is important? cannot have circle reference
         # create agents
         agents=AgentManager.build_agents(self.cfg.agent_manager)
-        self.training_agent_ids=agents.training_agent_ids
 
         self.data_server=DataServer.options(
             name="DataServer",

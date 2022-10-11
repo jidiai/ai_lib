@@ -1,8 +1,5 @@
-'''
-See https://github.com/JBLanier/pipeline-psro/blob/master/multiplayer-rl/mprl/rl/envs/opnspl/poker_multiagent_env.py
-'''
-
-from utils.episode import EpisodeKey
+from light_malib.registry import registry
+from light_malib.utils.episode import EpisodeKey
 
 import numpy as np
 from pettingzoo.classic import connect_four_v3
@@ -31,6 +28,7 @@ class DefaultFeatureEncoder:
     def action_space(self):
         return Discrete(7)
 
+@registry.registered(registry.ENV,"connect_four")
 class ConnectFourEnv(BaseAECEnv):
     '''
     https://www.pettingzoo.ml/classic/connect_four

@@ -1,11 +1,11 @@
 from torch import nn
 import torch
 
-from light_malib.utils.typing import List
-from light_malib.utils.preprocessor import get_preprocessor
+from utils.typing import List
+from utils.preprocessor import get_preprocessor
 
 from ..common.model import get_model
-from .utils import RNNLayer, init_fc_weights
+from ..utils import RNNLayer, init_fc_weights
 
 
 class RNNNet(nn.Module):
@@ -51,9 +51,11 @@ class RNNNet(nn.Module):
 
     def forward(self, obs, rnn_states, masks):
         obs = torch.as_tensor(obs, dtype=torch.float32)
-        rnn_states = torch.as_tensor(rnn_states, dtype=torch.float32)
+        if rnn_states is not None:
+            rnn_states = torch.as_tensor(rnn_states, dtype=torch.float32)
         feat = self.base(obs)
         if self._use_rnn:
+            assert masks is not None
             masks = torch.as_tensor(masks, dtype=torch.float32)
             feat, rnn_states = self.rnn(feat, rnn_states, masks)
 

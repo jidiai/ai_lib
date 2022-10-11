@@ -10,7 +10,7 @@ distributed:
   auto_copy:
   nodes:
     master:
-      ip: auto
+      ip: '10.102.0.26'
     workers:      
       - ip:
 
@@ -18,6 +18,12 @@ framework:
   name: "psro"
   max_generations: 50
   meta_solver: "nash"
+  stopper:
+    type: "win_rate_stopper"
+    kwargs:
+      min_win_rate: 0.9
+      max_steps: 1000
+
 
 agent_manager:
   num_agents: 2
@@ -30,16 +36,22 @@ policy_data_manager:
   update_func: "gr_football" 
   fields:
     payoff:
+      type: "matrix"
       missing_value: -100 
     score:
+      type: "matrix"
       missing_value: -100 
     win:
+      type: "matrix"
       missing_value: -100 
     lose:
+      type: "matrix"
       missing_value: -100 
     my_goal:
+      type: "matrix"
       missing_value: -100 
     goal_diff:
+      type: "matrix"
       missing_value: -100 
         
 monitor:
@@ -61,7 +73,7 @@ rollout_manager:
       num_cpus: 1
       resources:
         - ["node:${distributed.nodes.master.ip}",0.01]
-  num_workers: 1
+  num_workers: 2
   seed: 12345
   saving_interval: 100 # the sequence of dump model's weight
   max_rollout_epoch: 10000
@@ -120,7 +132,7 @@ training_manager:
   master_addr: "127.0.0.1"
   master_port:  #"12774"
   local_queue_size: 1
-  batch_size: 2 # how many data sample from DatasetServer per time.
+  batch_size: 5 # how many data sample from DatasetServer per time.
   num_prefetchers: 1
   data_prefetcher:
     distributed:

@@ -13,6 +13,7 @@ from utils.logger import Logger
 from utils.timer import global_timer
 from ..return_compute import compute_return
 from ..common.trainer import Trainer
+from registry import registry
 
 def update_linear_schedule(optimizer, epoch, total_num_epochs, initial_lr):
     """Decreases the learning rate linearly"""
@@ -20,6 +21,7 @@ def update_linear_schedule(optimizer, epoch, total_num_epochs, initial_lr):
     for param_group in optimizer.param_groups:
         param_group["lr"] = lr
 
+@registry.registered(registry.TRAINER)
 class MAPPOTrainer(Trainer):
     def __init__(self, tid):
         super().__init__(tid)

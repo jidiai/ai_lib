@@ -4,8 +4,8 @@ import torch.nn.functional as F
 
 from torch.autograd import Variable
 
-from light_malib.utils.typing import Dict, Any, List, Union, DataTransferType
-from light_malib.utils.episode import Episode
+from utils.typing import Dict, Any, List, Union, DataTransferType
+from utils.episode import Episode
 
 
 def soft_update(target, source, tau):

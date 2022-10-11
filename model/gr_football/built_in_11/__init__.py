@@ -1,7 +1,6 @@
 import torch.nn as nn
 import torch
-from light_malib.envs.gr_football.tools import action_set as act
-from light_malib.utils.logger import Logger
+from envs.gr_football.tools import action_set as act
 import numpy as np
 from gym.spaces import Box
 

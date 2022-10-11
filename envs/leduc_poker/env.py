@@ -1,41 +1,51 @@
 from utils.episode import EpisodeKey
 
 import numpy as np
-from pettingzoo.classic import leduc_holdem_v4
 from ..base_aec_env import BaseAECEnv
+from .raw_env import LeducPokerRawEnv
+import pyspiel
+from open_spiel.python.algorithms import exploitability
+from open_spiel.python import policy as policy_lib
 from gym.spaces import Box,Discrete
+from registry import registry
 
 class DefaultFeatureEncoder:
-    def encode(self,observation,agent_id):
-        idx=int(agent_id[-1])
-        obs=observation["observation"]
-        obs=obs.flatten()
-        feature=np.zeros(len(obs)+1,dtype=np.float32)
-        feature[0]=idx
-        feature[1:]=obs
-        action_mask=observation["action_mask"]
-        return feature,action_mask
+    def __init__(self):
+        game = pyspiel.load_game('leduc_poker')
+        self._policy=policy_lib.TabularPolicy(game)
+    
+    def encode(self,state):
+        #obs=np.array([self._policy.state_index(state)],dtype=int)
+        # print(self._policy.state_index(state))
+        obs=np.array(state.observation_tensor())
+        legal_action_idices=state.legal_actions()
+        action_mask=np.zeros(3,dtype=np.float32)
+        action_mask[legal_action_idices]=1
+        return obs,action_mask
     
     @property
     def observation_space(self):
-        return Box(0.0,1.0,shape=(36+1,))
+        return Box(0.0,1.0,shape=(16,))
     
     @property
     def action_space(self):
-        return Discrete(4)
+        return Discrete(3)
 
+@registry.registered(registry.ENV,"leduc_poker")
 class LeducPokerEnv(BaseAECEnv):
     '''
-    https://www.pettingzoo.ml/classic/leduc_holdem
-    action_space: Discrete(4)
-    observation_space: Box(36) Value{0,1}
+    open_spiel:
+        observation_space Box(16)
+        action_space Discrete(3) 0-fold, 1-call, 2-raise
+    See what observation means:
+        https://github.com/deepmind/open_spiel/blob/master/open_spiel/integration_tests/playthroughs/leduc_poker_1540482260.txt
     '''
     def __init__(self,id,seed,cfg):
         self.id=id
         self.seed=seed
         self.cfg=cfg
 
-        self._env=leduc_holdem_v4.env()        
+        self._env=LeducPokerRawEnv(seed)
         self._step_ctr=0
         self._is_terminated=False
         
@@ -53,11 +63,12 @@ class LeducPokerEnv(BaseAECEnv):
         return player_id.replace("player","agent")
     
     def _get_curr_agent_data(self,agent_id):
-        observation_all, reward, done, _ = self._env.last() 
+        # NOTE state(here,observation) has full information, we should only pick observable ones.
+        observation, reward, done, _ = self._env.last() 
         
-        self._last_observation=observation_all["observation"]
+        self._last_observation=observation
         
-        observation,action_mask=self.feature_encoders[agent_id].encode(observation_all,agent_id)
+        observation,action_mask=self.feature_encoders[agent_id].encode(observation)
         
         return {
             agent_id: {
@@ -114,7 +125,7 @@ class LeducPokerEnv(BaseAECEnv):
             
         self._env.step(action)
         
-        self._is_terminated=np.all(list(self._env.dones.values()))
+        self._is_terminated=np.all(self._env.dones)
         
         self._last_action=action
     

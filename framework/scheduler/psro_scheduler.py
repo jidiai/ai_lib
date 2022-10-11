@@ -1,4 +1,5 @@
 from typing import OrderedDict
+from registry import registry
 from agent.agent_manager import AgentManager
 
 from agent.policy_data.policy_data_manager import PolicyDataManager
@@ -19,9 +20,10 @@ class PSROScheduler:
         self.population_id=population_id
         self.policy_data_manager=policy_data_manager
         self.meta_solver_type=self.cfg.get("meta_solver","nash")
-        
+        self.sync_training=self.cfg.get("sync_training",False)
+
         Logger.warning("use meta solver type: {}".format(self.meta_solver_type))
-        solver_module=importlib.import_module("framework.meta_solver.{}".format(self.meta_solver_type))
+        solver_module=importlib.import_module("light_malib.framework.meta_solver.{}".format(self.meta_solver_type))
         self.meta_solver=solver_module.Solver()
         self._schedule=self._gen_schedule()
     
@@ -52,7 +54,17 @@ class PSROScheduler:
                 policy_distributions[training_agent_id]={training_policy_id:1.0}
 
                 Logger.warning("********** Generation[{}] Agent[{}] START **********".format(generation_ctr,training_agent_id))
-                training_desc=TrainingDesc(training_agent_id,training_policy_id,policy_distributions,self.agents.share_policies)
+                
+                stopper=registry.get(registry.STOPPER,self.cfg.stopper.type)(policy_data_manager=self.policy_data_manager,**self.cfg.stopper.kwargs)
+                
+                training_desc=TrainingDesc(
+                    training_agent_id,
+                    training_policy_id,
+                    policy_distributions,
+                    self.agents.share_policies,
+                    self.sync_training,
+                    stopper
+                )
                 yield training_desc
             
     def get_task(self):

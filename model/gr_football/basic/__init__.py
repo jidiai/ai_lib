@@ -1,4 +1,4 @@
-from light_malib.algorithm.mappo.actor_critic import RNNNet
+from algorithm.common.rnn_net import RNNNet
 from . import encoder_basic
 
 Actor=RNNNet

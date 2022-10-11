@@ -1,9 +1,12 @@
-from light_malib.rollout.rollout_func_aec import rollout_func
-from light_malib.utils.desc.task_desc import RolloutDesc
-from light_malib.utils.episode import EpisodeKey
-from light_malib.envs.connect_four.env import ConnectFourEnv
-from light_malib.algorithm.mappo.policy import MAPPO
+from rollout.rollout_func_aec import rollout_func
+from utils.desc.task_desc import RolloutDesc
+from utils.episode import EpisodeKey
+from envs.connect_four.env import ConnectFourEnv
+from algorithm.mappo.policy import MAPPO
 import numpy as np
+import pathlib
+import os
+BASE_DIR = str(pathlib.Path(__file__).resolve().parent.parent.parent)
 
 class FeatureEncoder:
     def __init__(self):
@@ -34,6 +37,9 @@ class HumanPlayer:
 
 model_path_0="light_malib/trained_models/connect_four/test/PSRO_MAPPO_61/best"
 model_path_1="light_malib/trained_models/connect_four/test/PSRO_MAPPO_61/best"
+
+model_path_0 = os.path.join(BASE_DIR, model_path_0)
+model_path_1 = os.path.join(BASE_DIR, model_path_1)
 
 policy_id_0="policy_0"
 policy_id_1="policy_1"

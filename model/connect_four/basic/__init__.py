@@ -1,7 +1,6 @@
 import copy
-from light_malib.utils.logger import Logger
 from gym.spaces import Box,Discrete
-from light_malib.envs.connect_four.env import DefaultFeatureEncoder
+from envs.connect_four.env import DefaultFeatureEncoder
 import torch.nn as nn
 import torch
 import torch.nn.functional as F

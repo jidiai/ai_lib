@@ -9,8 +9,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from light_malib.utils.preprocessor import Mode, get_preprocessor
-from light_malib.utils.typing import DataTransferType, Dict, Any, List
+from utils.preprocessor import Mode, get_preprocessor
+from utils.typing import DataTransferType, Dict, Any, List
 
 
 def mlp(layers_config):

@@ -13,11 +13,12 @@ from utils.episode import EpisodeKey
 
 from algorithm.common.policy import Policy
 
-from .utils import PopArt, init_fc_weights
+from ..utils import PopArt, init_fc_weights
 import wrapt
 import tree
 import importlib
 from utils.logger import Logger
+from registry import registry
 
 def hard_update(target, source):
     """Copy network parameters from source to target.
@@ -65,7 +66,7 @@ def shape_adjusting(wrapped, instance, args, kwargs):
 
     return recover_rets
 
-
+@registry.registered(registry.POLICY)
 class MAPPO(Policy):
     def __init__(
         self,
