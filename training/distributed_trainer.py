@@ -1,7 +1,6 @@
 import copy
 from utils.desc.policy_desc import PolicyDesc
 from utils.desc.task_desc import TrainingDesc
-from ..utils.distributed import get_actor
 from utils.logger import Logger
 import torch
 from torch.nn.parallel import DistributedDataParallel

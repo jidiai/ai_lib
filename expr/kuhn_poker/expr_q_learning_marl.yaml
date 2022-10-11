@@ -1,7 +1,7 @@
 expr_group: kuhn_poker
 expr_name: marl_q_learning
 log_dir: logs
-log_name: 'marl-of_4'
+log_name: 'marl-of_2'
 seed: 123
 eval_only: False
 
@@ -243,41 +243,12 @@ populations:
               # policy_dir: trained_models/5v5/defence_1
 
           initial_policies:
-            # - policy_id: MAPPO_0
-            #   policy_dir: trained_models/5v5/imitation # the initial policy dir
-            # - policy_id: MAPPO_1
-            #   policy_dir: expr/log/gr_football/imitation_psro/2022-08-30-22-17-56/agent_0/MAPPO_1/best
-            # - policy_id: MAPPO_2
-            #   policy_dir: expr/log/gr_football/imitation_psro/2022-08-30-22-17-56/agent_0/MAPPO_2/best
-            # - policy_id: MAPPO_3
-            #   policy_dir: expr/log/gr_football/imitation_psro/2022-08-31-09-07-07/agent_0/MAPPO_1/best
-            # - policy_id: MAPPO_4
-            #   policy_dir: expr/log/gr_football/imitation_psro/2022-08-31-12-26-50/agent_0/MAPPO_4/best
-            # - policy_id: MAPPO_5
-            #   policy_dir: expr/log/gr_football/imitation_psro/2022-08-31-12-26-50/agent_0/MAPPO_5/best
-            # - policy_id: zs_one
-            #   policy_dir: trained_models/5v5_jidi/zs_one
-            # - policy_id: zs_two
-            #   policy_dir: trained_models/5v5_jidi/zs_two
-            # - policy_id: MrPasserby
-            #   policy_dir: trained_models/5v5/MrPasserby # the initial policy dir
-            # - policy_id: built_in
-            #   policy_dir: trained_models/5v5/built_in # the initial policy dir
-            # - policy_id: defence_1
-            #   policy_dir: trained_models/5v5/defence_1 # the initial policy dir
-            # - policy_id: hyperion
-            #   policy_dir: trained_models/5v5/hyperion # the initial policy dir
-            # - policy_id: imitation
-            #   policy_dir: trained_models/5v5/imitation # the initial policy dir
-            # - policy_id: defence_2
-            #   policy_dir: trained_models/5v5/defence_2 # the initial policy dir
-            # - policy_id: defence_3
-            #   policy_dir: trained_models/5v5/defence_3
-            # - policy_id: beat_defence_1
-            #   policy_dir: trained_models/5v5/beat_defence_1
-            # - policy_id: beat_counterattack3
-            #   policy_dir: trained_models/5v5/beat_counterattack3
-            # - policy_id: counter_attack3
-            #   policy_dir: trained_models/5v5/counter_attack3 # the initial policy dir
-            # - policy_id: passer_shot
-            #   policy_dir: trained_models/5v5/passer_shot
+
+        agent_1:
+
+          initial_policies:
+             - policy_id: q1
+               policy_dir: logs/kuhn_poker/test_q_learning/psro-2022-10-11-19-19-23/agent_0/agent_0_default_4/last
+             - policy_id: q2
+               policy_dir: logs/kuhn_poker/test_q_learning/psro-2022-10-11-19-19-23/agent_0/agent_0_default_2/last
+

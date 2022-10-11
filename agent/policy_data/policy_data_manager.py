@@ -19,7 +19,7 @@ class PolicyDataManager:
         # TODO(jh)
 
         module = importlib.import_module(
-            "light_malib.agent.policy_data.custom_update_func.{}".format(self.cfg.update_func))
+            "agent.policy_data.custom_update_func.{}".format(self.cfg.update_func))
         self.update_func = module.update_func
 
         self.data = {}

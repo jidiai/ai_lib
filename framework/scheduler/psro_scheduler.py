@@ -23,7 +23,7 @@ class PSROScheduler:
         self.sync_training=self.cfg.get("sync_training",False)
 
         Logger.warning("use meta solver type: {}".format(self.meta_solver_type))
-        solver_module=importlib.import_module("light_malib.framework.meta_solver.{}".format(self.meta_solver_type))
+        solver_module=importlib.import_module("framework.meta_solver.{}".format(self.meta_solver_type))
         self.meta_solver=solver_module.Solver()
         self._schedule=self._gen_schedule()
     

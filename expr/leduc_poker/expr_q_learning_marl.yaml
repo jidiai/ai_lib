@@ -1,7 +1,7 @@
 expr_group: leduc_poker
 expr_name: marl_q_learning
 log_dir: logs
-log_name: 'Mix-3k_[1/3,1/3,1/3]'
+log_name: 'Marl'
 seed: 123
 eval_only: False
 
@@ -23,7 +23,7 @@ framework:
     kwargs:
       min_win_rate: 0.95
       # min_win_rate: 0.9
-      max_steps: 10000
+      max_steps: 1000
 
 agent_manager:
   num_agents: 2
@@ -256,11 +256,9 @@ populations:
 #             - policy_id: q4
 #               policy_dir: logs/leduc_poker/test_q_learning/rollout_1000-2022-10-09-17-41-54/agent_0/agent_0_default_4/last
              - policy_id: q1
-               policy_dir: logs/leduc_poker/test_q_learning/rollout_1k-2022-10-04-00-01-26/agent_0/agent_0_default_30/last
+               policy_dir: logs/leduc_poker/test_q_learning/rollout_1000-2022-10-11-18-36-03/agent_0/agent_0_default_3/last
              - policy_id: q2
-               policy_dir: logs/leduc_poker/test_q_learning/rollout_1k-2022-10-04-00-01-26/agent_0/agent_0_default_35/last
-             - policy_id: q3
-               policy_dir: logs/leduc_poker/test_q_learning/rollout_1k-2022-10-04-00-01-26/agent_0/agent_0_default_40/last
+               policy_dir: logs/leduc_poker/test_q_learning/rollout_1000-2022-10-11-18-36-03/agent_0/agent_0_default_9/last
 #             - policy_id: test_1
 #               policy_dir: logs/leduc_poker/marl_q_learning/Mix-2022-10-10-20-49-59/agent_0/agent_0_default_0/last
 #             - policy_id: test_baseline

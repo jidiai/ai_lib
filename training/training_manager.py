@@ -1,11 +1,11 @@
 import threading
 
 from utils.naming import default_table_name
-from ..utils.desc.task_desc import PrefetchingDesc, RolloutDesc, TrainingDesc
-from ..utils.distributed import get_actor, get_resources
+from utils.desc.task_desc import PrefetchingDesc, RolloutDesc, TrainingDesc
+from utils.distributed import get_actor, get_resources
 from . import distributed_trainer
 import ray
-from ..utils.decorator import limited_calls
+from utils.decorator import limited_calls
 from . import data_prefetcher
 import numpy as np
 from utils.logger import Logger

@@ -1,5 +1,5 @@
-from light_malib.registry import registry
-from light_malib.utils.episode import EpisodeKey
+from registry import registry
+from utils.episode import EpisodeKey
 
 import numpy as np
 from pettingzoo.classic import connect_four_v3

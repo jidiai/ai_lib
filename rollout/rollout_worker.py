@@ -6,9 +6,8 @@ from utils.desc.policy_desc import PolicyDesc
 from envs.env_factory import make_envs
 import importlib
 import numpy as np
-from ..agent.agent import Agent, Agents
-from ..utils.random import set_random_seed
-from ..utils.distributed import get_actor
+from agent.agent import Agent, Agents
+from utils.distributed import get_actor
 import ray
 from utils.desc.task_desc import RolloutDesc
 from utils.timer import global_timer
@@ -97,7 +96,7 @@ class RolloutWorker:
         self.data_server = get_actor(self.id, "DataServer")
         self.envs: Dict = make_envs(self.id, self.seed, self.cfg.envs)
 
-        module = importlib.import_module("light_malib.rollout.{}".format(self.cfg.rollout_func_name))
+        module = importlib.import_module("rollout.{}".format(self.cfg.rollout_func_name))
         self.rollout_func = module.rollout_func
 
         self.mix_opponent = cfg.get('mix_opponent', False)

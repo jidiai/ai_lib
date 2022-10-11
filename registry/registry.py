@@ -1,7 +1,7 @@
 from collections import defaultdict
 import pprint
 from unicodedata import category
-from light_malib.utils.logger import Logger
+from utils.logger import Logger
 from functools import wraps
 
 class Registry:

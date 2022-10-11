@@ -100,7 +100,7 @@ rollout_manager:
     sample_length: 1000
     padding_length: # of not use in gr_football
     rollout_func_name: "rollout_func_aec"
-    mix_opponent: True
+    mix_opponent: False
     envs:
       - cls: "leduc_poker"
         id_prefix: "leduc_poker"

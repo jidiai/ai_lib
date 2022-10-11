@@ -5,14 +5,17 @@ class EpisodeKey:
     NEXT_OBS = "next_observation"
     ACTION = "action"
     ACTION_MASK = "action_mask"
+    NEXT_ACTION_MASK = "next_action_mask"
     REWARD = "reward"
     DONE = "done"
     # XXX(ziyu): Change to 'logits' for numerical issues.
     ACTION_DIST = "action_logits"
+    ACTION_PROB = "action_prob"
+    ACTION_PROBS = "action_probs"
     # XXX(ming): seems useless
     INFO = "infos"
-    
-    ACTIVE_MASK="active_mask"
+
+    ACTIVE_MASK = "active_mask"
 
     # optional
     STATE_VALUE = "state_value_estimation"
@@ -20,7 +23,7 @@ class EpisodeKey:
     CUR_STATE = "state"  # current global state
     NEXT_STATE = "next_state"  # next global state
     LAST_REWARD = "last_reward"
-    RETURN="return"
+    RETURN = "return"
 
     # post process
     ACC_REWARD = "accumulate_reward"
@@ -31,3 +34,7 @@ class EpisodeKey:
     RNN_STATE = "rnn_state"
     ACTOR_RNN_STATE = "ACTOR_RNN_STATE"
     CRITIC_RNN_STATE = "CRITIC_RNN_STATE"
+
+    # expert
+    EXPERT_OBS = "expert_obs"
+    EXPERT_ACTION = "expert_action"

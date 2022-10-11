@@ -22,7 +22,7 @@ class MARLScheduler:
         self.sync_training=self.cfg.get("sync_training",False)
 
         Logger.warning("use meta solver type: {}".format(self.meta_solver_type))
-        solver_module=importlib.import_module("light_malib.framework.meta_solver.{}".format(self.meta_solver_type))
+        solver_module=importlib.import_module("framework.meta_solver.{}".format(self.meta_solver_type))
         self.meta_solver=solver_module.Solver()
         self._schedule=self._gen_schedule()
 
@@ -41,7 +41,7 @@ class MARLScheduler:
 
             policy_distributions = {}
             agent_0_dist = zip(['agent_0_default_0'], [1])
-            agent_1_dist = zip(['q1', 'q2', 'q3'], [1/3,1/3,1/3])
+            agent_1_dist = zip(['q1', 'q2'], [0.5,0.5])
             policy_distributions['agent_0'] = OrderedDict(agent_0_dist)
             policy_distributions['agent_1'] = OrderedDict(agent_1_dist)
 

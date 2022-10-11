@@ -3,7 +3,7 @@ import ray
 import argparse
 from utils.cfg import load_cfg, convert_to_easydict
 from utils.random import set_random_seed
-from framework.pbt_runner import PBTRunner
+from framework.marl_runner import MARLRunner
 import time
 import os
 import yaml
@@ -12,6 +12,7 @@ from omegaconf import OmegaConf
 import pathlib
 
 BASE_DIR = str(pathlib.Path(__file__).resolve().parent)
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -83,7 +84,7 @@ def main():
     Monitor = ray.remote(**get_resources(cfg.monitor.distributed.resources))(Monitor)
     monitor = Monitor.options(name="Monitor", max_concurrency=100).remote(cfg)
 
-    runner = PBTRunner(cfg)
+    runner = MARLRunner(cfg)
 
     try:
         runner.run()

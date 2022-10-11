@@ -81,7 +81,7 @@ class MAPPO(Policy):
         model_type = model_config.get("model", "gr_football.basic") # TODO(jh): legacy issue
 
         Logger.warning("use model type: {}".format(model_type))
-        model=importlib.import_module("light_malib.model.{}".format(model_type))
+        model=importlib.import_module("model.{}".format(model_type))
         self.share_backbone=model.share_backbone
         assert not self.share_backbone,"jh: not supported now, but easy to implement"
         self.feature_encoder=model.FeatureEncoder()

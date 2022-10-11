@@ -1,7 +1,7 @@
 from collections import OrderedDict
-from light_malib.utils.distributed import get_actor
-from light_malib.utils.episode import EpisodeKey
-from light_malib.utils.logger import Logger
+from utils.distributed import get_actor
+from utils.episode import EpisodeKey
+from utils.logger import Logger
 from .utils.pretty_print import pformat_table
 import numpy as np
 import pyspiel
@@ -9,7 +9,7 @@ from open_spiel.python import algorithms
 from open_spiel.python import policy as policy_lib
 import ray
 from open_spiel.python.algorithms.psro_v2.utils import aggregate_policies
-from light_malib.framework.meta_solver.nash import Solver as NashSolver
+from framework.meta_solver.nash import Solver as NashSolver
 
 def update_func(policy_data_manager,eval_results, **kwargs):
     assert policy_data_manager.agents.share_policies,"jh: assert symmetry"
