@@ -23,8 +23,8 @@ python3 -m pip install -e .
 
 ## Supported Learing Paradims
 - [x] **BC**: serves for behavior cloning
-- [x] **SARL**: serves for single-agent reinforcement learning
-- [ ] **MARL**: serves for multi-agent reinforcement learning
+- [ ] **SARL**: serves for single-agent reinforcement learning
+- [x] **MARL**: serves for multi-agent reinforcement learning
 - [ ] **Self-play**: general empirical game theory learning
 - [x] **PSRO**: policy-space response oracle
 - [ ] **League Training**
@@ -51,4 +51,4 @@ python3 -m pip install -e .
 3. add benchmark environmens
 4. add SARL framework
 5. add PSRO, MARL benchmark graphs
-6. 
+6. **specify transformation from trained policy to ready-for-submission policy**
