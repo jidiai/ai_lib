@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, Future
 from collections import deque, defaultdict
 from typing import Iterable
 
-from tools.rpc.ExperimentManager.base_client import BaseClient
+# from tools.rpc.ExperimentManager.base_client import BaseClient
 from tools.utils.configs.config import EXPERIMENT_MANAGER_CONFIG as CONFIG
 from tools.utils.typing import Any, Dict, Tuple, Union, EventReportStatus
 
