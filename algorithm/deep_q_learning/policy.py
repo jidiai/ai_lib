@@ -89,7 +89,7 @@ class DeepQLearning(nn.Module):
 
         model_type = model_config["model"]
         Logger.warning("use model type: {}".format(model_type))
-        model=importlib.import_module("light_malib.model.{}".format(model_type))
+        model=importlib.import_module("model.{}".format(model_type))
 
         self.encoder=model.Encoder()
 

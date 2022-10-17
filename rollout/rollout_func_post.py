@@ -85,7 +85,7 @@ def rollout_func(
     #     print(f'epoch = {current_rollout_epoch}, policy with radnom exploration {policy.random_exploration}')
     
     if not hasattr(env,"post_rewarder"):
-        from light_malib.misc.gr_football.irl.post_rewarder import PostRewarder
+        from misc.gr_football.irl.post_rewarder import PostRewarder
         env.post_rewarder=PostRewarder(path="expr_log/log/gr_football_rewarder/just_test/2022-09-25-23-36-17/rewarder_10.pt")
         
     sample_length=kwargs.get("sample_length",rollout_length)

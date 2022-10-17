@@ -11,7 +11,7 @@ import pickle as pkl
 import json
 import numpy as np
 
-from light_malib.utils.episode import EpisodeKey
+from utils.episode import EpisodeKey
 from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import Pool
 

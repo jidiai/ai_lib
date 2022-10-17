@@ -3,18 +3,18 @@ Implement PSRO framework.
 '''
 from collections import OrderedDict
 
-from light_malib import rollout,agent,training,agent,buffer
-from light_malib.agent import AgentManager
-from light_malib.agent.agent import Agent, Agents
-from light_malib.evaluation.evaluation_manager import EvaluationManager
-from light_malib.agent.policy_data.policy_data_manager import PolicyDataManager
-from light_malib.framework.scheduler.psro_scheduler import PSROScheduler
-from light_malib.utils.desc.task_desc import TrainingDesc
+import rollout,agent,training,agent,buffer
+from agent import AgentManager
+from agent.agent import Agent, Agents
+from evaluation.evaluation_manager import EvaluationManager
+from agent.policy_data.policy_data_manager import PolicyDataManager
+from framework.scheduler.psro_scheduler import PSROScheduler
+from utils.desc.task_desc import TrainingDesc
 import ray
 import numpy as np
-from light_malib.utils.distributed import get_resources
-from light_malib.utils.logger import Logger
-from light_malib.utils.naming import EXPERT_DATA_TABLE_NAME
+from utils.distributed import get_resources
+from utils.logger import Logger
+from utils.naming import EXPERT_DATA_TABLE_NAME
 
 class BCRunner:
     def __init__(self,cfg):
