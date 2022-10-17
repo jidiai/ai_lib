@@ -2,6 +2,10 @@ from algorithm.q_learning.loss import QLearningLoss
 from algorithm.q_learning.trainer import QLearningTrainer
 from algorithm.q_learning.policy import QLearning
 
+from algorithm.deep_q_learning.loss import DeepQLearningLoss
+from algorithm.deep_q_learning.trainer import DeepQLearningTrainer
+from algorithm.deep_q_learning.policy import DeepQLearning
+
 from algorithm.mappo.loss import MAPPOLoss
 from algorithm.mappo.trainer import MAPPOTrainer
 from algorithm.mappo.policy import MAPPO

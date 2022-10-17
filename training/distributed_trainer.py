@@ -27,6 +27,10 @@ class DistributedPolicyWrapper:
             actor = self.policy.actor
             self.actor = DistributedDataParallel(actor, device_ids=[0])
 
+        if hasattr(self.policy,"target_critic") and len(list(self.policy.target_critic.parameters()))>0:
+            target_critic=self.policy.target_critic
+            self.target_critic=DistributedDataParallel(target_critic,device_ids=[0])
+
         if hasattr(self.policy, "critic") and len(list(self.policy.critic.parameters())) > 0:
             critic = self.policy.critic
             self.critic = DistributedDataParallel(critic, device_ids=[0])
