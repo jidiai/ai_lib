@@ -41,7 +41,7 @@ python3 -m pip install -e .
 ## Supported Baseline Algorithms
 - [x] **PPO**
 - [x] **table-q learning**
-
+- [x] **DQN**
 
 
 
