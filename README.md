@@ -25,7 +25,7 @@ python3 -m pip install -e .
 - [x] **BC**: serves for behavior cloning
 - [ ] **SARL**: serves for single-agent reinforcement learning
 - [x] **MARL**: serves for multi-agent reinforcement learning
-- [ ] **Self-play**: general empirical game theory learning
+- [x] **Self-play**: general empirical game theory learning
 - [x] **PSRO**: policy-space response oracle
 - [ ] **League Training**
 
