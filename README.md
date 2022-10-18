@@ -43,6 +43,12 @@ python3 -m pip install -e .
 - [x] **table-q learning**
 - [x] **DQN**
 
+## Supported Benchmarking
+- [x] **table-q learning in Kuhn Poker**
+- [x] **table-q learning in Leduc Poker**
+- [x] **PPO in GRFootball with Bot opponent**
+
+
 
 
 # TODO
