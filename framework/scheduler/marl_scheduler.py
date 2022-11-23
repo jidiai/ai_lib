@@ -40,10 +40,10 @@ class MARLScheduler:
 
 
             policy_distributions = {}
-            agent_0_dist = zip(['agent_0_default_0'], [1])
-            agent_1_dist = zip(['q1', 'q2'], [0.5,0.5])
+            agent_0_dist = zip(['agent_0_default_0'], [1])      #TODO(yan): configurate in expr.cfg
+            # agent_1_dist = zip(['q1', 'q2'], [0.5,0.5])
             policy_distributions['agent_0'] = OrderedDict(agent_0_dist)
-            policy_distributions['agent_1'] = OrderedDict(agent_1_dist)
+            # policy_distributions['agent_1'] = OrderedDict(agent_1_dist)
 
             stopper = registry.get(registry.STOPPER, self.cfg.stopper.type)(policy_data_manager=self.policy_data_manager,
                                                                             **self.cfg.stopper.kwargs)

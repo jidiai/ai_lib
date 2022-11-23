@@ -167,26 +167,32 @@ class RolloutManager:
 
         stopper = rollout_desc.stopper
 
-        if rollout_desc.type == 'rollout':
-            self.policy_distribution_record.append(rollout_desc.policy_distributions['agent_1'])
-            N = len(self.policy_distribution_record[-1])
-            pid_list = list(self.policy_distribution_record[-1].keys())
-            if len(self.policy_distribution_record) < N:  # TODO(yan): MARL case specific, need to fix this later
-                # FIxme(yan): error not reported here
-                p_prob = list(self.policy_distribution_record[-1].values())
-                matrix = np.array([p_prob])
-                ray.get(
-                    self.monitor.add_array.remote('MARL/Policy distribution', matrix, pid_list, ['agent_0'], 0, 'Blues',
-                                                  show_text=False))
+        if rollout_desc.type == 'rollout':          #TODO(yan): monitoring for SARL
+            try:
+                self.policy_distribution_record.append(rollout_desc.policy_distributions['agent_1'])
+                N = len(self.policy_distribution_record[-1])
+                pid_list = list(self.policy_distribution_record[-1].keys())
+                if len(self.policy_distribution_record) < N:  # TODO(yan): MARL case specific, need to fix this later
+                    # FIxme(yan): error not reported here
+                    p_prob = list(self.policy_distribution_record[-1].values())
+                    matrix = np.array([p_prob])
+                    ray.get(
+                        self.monitor.add_array.remote('MARL/Policy distribution', matrix, pid_list, ['agent_0'], 0, 'Blues',
+                                                      show_text=False))
 
-            else:
-                matrix = np.zeros((N, N))
-                for n in range(N):
-                    p_prob = list(self.policy_distribution_record[n].values())
-                    matrix[:n + 1, n] = np.array(p_prob)
-                ray.get(self.monitor.add_array.remote("PSRO/Nash_Equilibrium/Policy distribution", matrix,
-                                                      [f'Gen {i}' for i in range(1, len(pid_list) + 1)], pid_list,
-                                                      matrix.shape[0], 'Blues', show_text=False))
+                else:
+                    matrix = np.zeros((N, N))
+                    for n in range(N):
+                        p_prob = list(self.policy_distribution_record[n].values())
+                        matrix[:n + 1, n] = np.array(p_prob)
+                    ray.get(self.monitor.add_array.remote("PSRO/Nash_Equilibrium/Policy distribution", matrix,
+                                                          [f'Gen {i}' for i in range(1, len(pid_list) + 1)], pid_list,
+                                                          matrix.shape[0], 'Blues', show_text=False))
+            except Exception as e:
+                Logger.error(traceback.format_exc())
+                Logger.warning("No PSRO/MARL monitoring")
+
+
 
         # TODO use stopper
         try:
@@ -283,7 +289,7 @@ class RolloutManager:
                 rollout_metrics_mean = self.rollout_metrics.get_means(metric_names=["reward", "win"])
                 reward = rollout_metrics_mean["reward"]
                 win = rollout_metrics_mean["win"]
-                if reward >= best_reward:
+                if reward > best_reward:
                     Logger.warning(f"save the best model(average reward:{reward},average win:{win})")
                     best_reward = reward
                     policy_desc = self.pull_policy(self.agent_id, self.policy_id)

@@ -109,10 +109,10 @@ class RolloutWorker:
 
         if rollout_desc.type == 'evaluation':
             mix_oppo = False
-            assert eval is True
+            assert eval, print('eval= ', eval)
         elif rollout_desc.type == 'rollout':
             mix_oppo = self.mix_opponent
-            assert eval is False
+            assert not eval, print('eval= ', eval)
         # print(f'type = {rollout_desc.type}, rolloutDesc = {rollout_desc}')
 
         if self.agents.share_policies:
@@ -131,6 +131,8 @@ class RolloutWorker:
 
         else:
             policy_ids = self.sample_policies(policy_distributions)
+            # print(f'policy distribution = {policy_distributions}, polict uds = {policy_ids}')
+
             # print('policy dist = ', policy_distributions)
             # print('policy ids = ', policy_ids)
             global_timer.time("rollout_start", "sample_end", "sample")

@@ -1,6 +1,7 @@
 """
 Implement SARL/MARL
 """
+import traceback
 
 import rollout, training, buffer
 from agent import AgentManager
@@ -83,7 +84,10 @@ class MARLRunner:
                     self.evaluation_manager.eval(framework='psro')
                     break
                 Logger.info("training_desc: {}".format(training_desc))
-                training_task_ref=self.training_manager.train.remote(training_desc)
+                try:
+                    training_task_ref=self.training_manager.train.remote(training_desc)
+                except:
+                    print(traceback.format_exc())
                 ray.get(training_task_ref)
                 self.scheduler.submit_result(None)
             Logger.info("MARLRunning {} ended".format(self.id))

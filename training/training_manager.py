@@ -10,6 +10,7 @@ from . import data_prefetcher
 import numpy as np
 from utils.logger import Logger
 from utils.timer import global_timer
+import traceback
 
 
 class TrainingManager:
@@ -123,20 +124,32 @@ class TrainingManager:
             training_steps += 1
 
             global_timer.record("optimize_start")
-            statistics_list = ray.get(
-                [
-                    trainer.optimize.remote(
-                    ) for trainer in self.trainers
-                ]
-            )
+            try:
+                statistics_list = ray.get(
+                    [
+                        trainer.optimize.remote(
+                        ) for trainer in self.trainers
+                    ]
+                )
+
+            except Exception as e:
+                Logger.error(traceback.format_exc())
+            #     raise e
+
             global_timer.time("optimize_start", "optimize_end", "optimize")
 
             # push new policy
-            if training_steps % self.cfg.update_interval == 0:
-                global_timer.record("push_policy_start")
-                ray.get(self.trainers[0].push_policy.remote(training_steps))
-                global_timer.time("push_policy_start", "push_policy_end", "push_policy")
-            global_timer.time("train_step_start", "train_step_end", "train_step")
+            try:
+                if training_steps % self.cfg.update_interval == 0:
+                    global_timer.record("push_policy_start")
+                    ray.get(self.trainers[0].push_policy.remote(training_steps))
+                    global_timer.time("push_policy_start", "push_policy_end", "push_policy")
+                global_timer.time("train_step_start", "train_step_end", "train_step")
+            except Exception as e:
+                # save model
+                Logger.error(traceback.format_exc())
+                raise e
+
 
             # reduce
             training_statistics = self.reduce_statistics([statistics[0] for statistics in statistics_list])

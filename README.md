@@ -23,14 +23,14 @@ python3 -m pip install -e .
 
 ## Supported Learing Paradims
 - [x] **BC**: serves for behavior cloning
-- [ ] **SARL**: serves for single-agent reinforcement learning
+- [x] **SARL**: serves for single-agent reinforcement learning
 - [x] **MARL**: serves for multi-agent reinforcement learning
 - [x] **Self-play**: general empirical game theory learning
 - [x] **PSRO**: policy-space response oracle
 - [ ] **League Training**
 
 ## Supported Training environments
-- [ ] **Gym Envs**
+- [x] **Gym Envs**
 - [ ] **Pettingzoo Envs**
 - [x] **GRFootball**
 - [x] **Open-spiel Kuhn Poker**

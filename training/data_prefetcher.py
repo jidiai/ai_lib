@@ -1,5 +1,6 @@
 import queue
 import threading
+import traceback
 from typing import List
 import ray
 from utils.desc.task_desc import PrefetchingDesc
@@ -26,17 +27,20 @@ class DataPrefetcher:
 
     @limited_calls("semaphore")
     def prefetch(self, prefetching_descs: List[PrefetchingDesc]):
-        assert len(prefetching_descs) == len(self.data_servers)
-        with self.stop_flag_lock:
-            assert self.stop_flag
-            self.stop_flag = False
-
-        while True:
+        try:
+            assert len(prefetching_descs) == len(self.data_servers)
             with self.stop_flag_lock:
-                if self.stop_flag:
-                    break
-            self.request_data(prefetching_descs)
-        Logger.warning("DataFetcher main_task() ends")
+                assert self.stop_flag
+                self.stop_flag = False
+
+            while True:
+                with self.stop_flag_lock:
+                    if self.stop_flag:
+                        break
+                self.request_data(prefetching_descs)
+            Logger.warning("DataFetcher main_task() ends")
+        except:
+            print(traceback.format_exc())
 
     def stop_prefetching(self):
         with self.stop_flag_lock:
@@ -95,7 +99,7 @@ class DataPrefetcher:
             elif isinstance(v, list):
                 ret[k] = [self.stack([sample[k][i] for sample in samples]) for i in range(len(v))]
             else:
-                raise NotImplementedError
+                raise NotImplementedError(f'v = {v}, k={k}, ret = {[sample[k] for sample in samples]}')
         return ret
 
     def concat(self, samples):

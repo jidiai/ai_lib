@@ -6,6 +6,14 @@ from utils.timer import global_timer
 
 
 def simple_data_generator(data, num_mini_batch, device, shuffle=False):
+    if len(data[EpisodeKey.CUR_OBS].shape) == 3:            #gym
+        data[EpisodeKey.CUR_OBS] = data[EpisodeKey.CUR_OBS].unsqueeze(-2)
+        data[EpisodeKey.ACTION] = data[EpisodeKey.ACTION].unsqueeze(-2)
+        data[EpisodeKey.ACTION_MASK] = data[EpisodeKey.ACTION_MASK].unsqueeze(-2)
+    elif len(data[EpisodeKey.CUR_OBS].shape) == 2:
+        for k,v in data.items():
+            data[k] = v.unsqueeze(-2).unsqueeze(-2)
+
     assert len(data[EpisodeKey.CUR_OBS].shape) == 4, "{}".format({k: v.shape for k, v in data.items()})
     len_traj, n_rollout_threads, n_agent, _ = data[EpisodeKey.CUR_OBS].shape
     batch_size = len_traj * n_rollout_threads  # * n_agent
@@ -21,8 +29,13 @@ def simple_data_generator(data, num_mini_batch, device, shuffle=False):
             global_timer.time("data_copy_start", "data_copy_end", "data_copy")
             batch[k] = batch[k].reshape(batch_size, *data[k].shape[2:])
         except Exception:
-            Logger.error("k: {}".format(k))
-            raise Exception
+            Logger.error("k: {}, shape = {}".format(k, batch[k].shape))
+            for i,j in data.items():
+                print(f'data = {i}, shape = {j.shape}')
+            raise Exception("k: {}, shape = {}, len_traj = {}, n_rollout_threads={}".format(k,
+                                                                                         batch[k].shape,
+                                                                                         len_traj,
+                                                                                         n_rollout_threads))
     # jh: special optimization
     if num_mini_batch == 1:
         for k in batch:

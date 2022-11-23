@@ -11,7 +11,7 @@ import queue
 from .data_prefetcher import GPUPreLoadQueueWrapper
 from utils.timer import global_timer
 from registry import registry
-
+import traceback
 
 class DistributedPolicyWrapper:
     '''
@@ -158,7 +158,12 @@ class DistributedTrainer:
     def optimize(self, batch=None):
         global_timer.record("trainer_data_start")
         while batch is None:
-            batch = self.local_queue_get()
+            try:
+                batch = self.local_queue_get()
+            except Exception as e:
+                Logger.error(traceback.format_exc())
+                raise e
+
         global_timer.time("trainer_data_start", "trainer_data_end", "trainer_data")
         global_timer.record("trainer_optimize_start")
         training_info = self.trainer.optimize(batch)
