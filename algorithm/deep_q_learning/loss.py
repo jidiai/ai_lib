@@ -111,6 +111,8 @@ class DeepQLearningLoss(LossFunc):
             # denormalize
             # if hasattr(self,"value_normalizer"):
             #     next_q_values=self.value_normalizer.denormalize(next_q_values)
+        # breakpoint()
+        # rewards = (rewards-rewards.mean())/(rewards.std()+1e-10)
 
         targets=rewards+(1-dones)*self.gamma*torch.max(next_q_values,dim=-1,keepdim=True)[0]
 

@@ -30,7 +30,8 @@ python3 -m pip install -e .
 - [ ] **League Training**
 
 ## Supported Training environments
-- [x] **Gym Envs**
+- [x] **Discrete Gym Envs**
+- [ ] **Continuous Gym Envs**
 - [ ] **Pettingzoo Envs**
 - [x] **GRFootball**
 - [x] **Open-spiel Kuhn Poker**
@@ -42,6 +43,8 @@ python3 -m pip install -e .
 - [x] **PPO**
 - [x] **table-q learning**
 - [x] **DQN**
+- [ ] **DDPG**
+- [ ] **SAC**
 
 ## Supported Benchmarking
 - [x] **table-q learning in Kuhn Poker**
@@ -55,6 +58,6 @@ python3 -m pip install -e .
 1. selective installation on environmental dependencies
 2. add baseline envs
 3. add benchmark environmens
-4. add SARL framework
-5. add PSRO, MARL benchmark graphs
+4. ~~add SARL framework~~
+5. ~~add PSRO, MARL benchmark graphs~~
 6. **specify transformation from trained policy to ready-for-submission policy**

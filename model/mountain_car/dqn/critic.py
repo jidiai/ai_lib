@@ -30,7 +30,7 @@ class Critic(nn.Module):
         # torch.nn.init.uniform_(self.q_table,a=0,b=0.001)
         in_dim=observation_space.shape[0]
         out_dim=action_space.n
-        hidden_size=256
+        hidden_size=64
 
         self.q_net=nn.Sequential(
             nn.Linear(in_dim,hidden_size),

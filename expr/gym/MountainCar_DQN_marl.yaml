@@ -200,7 +200,7 @@ populations:
         use_q_head: False
         ppo_epoch: 15
         num_mini_batch: 2  # the number of mini-batches
-        max_grad_norm: 0.2
+        max_grad_norm: 0.1
         
         return_mode: new_gae
         gae:

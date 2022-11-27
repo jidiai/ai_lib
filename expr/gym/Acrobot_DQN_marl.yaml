@@ -1,4 +1,4 @@
-expr_group: cartpole
+expr_group: acrobot
 expr_name: marl_dqn
 log_dir: logs
 log_name: 'Marl'
@@ -23,7 +23,7 @@ framework:
     kwargs:
       min_win_rate: 0.95
       # min_win_rate: 0.9
-      max_steps: 1500
+      max_steps: 5000
 
 agent_manager:
   num_agents: 1
@@ -78,7 +78,7 @@ rollout_manager:
   saving_interval: 100 # the sequence of dump model's weight
   batch_size: ${rollout_manager.num_workers}
   eval_batch_size: 100
-  eval_freq: 50 # epochs
+  eval_freq: 10 # epochs
   min_samples: ${training_manager.batch_size}
   rollout_metric_cfgs:
     reward:
@@ -93,9 +93,9 @@ rollout_manager:
     distributed:
       resources:
         num_cpus: 1
-    rollout_length: 200
-    eval_rollout_length: 200
-    sample_length: 200
+    rollout_length: 500
+    eval_rollout_length: 500
+    sample_length: 500
     padding_length: # of not use in gr_football
     rollout_func_name: "rollout_func_seg"
     mix_opponent: False
@@ -167,7 +167,7 @@ populations:
     algorithm:
       name: "DeepQLearning"
       model_config:
-        model: "cartpole.dqn"
+        model: "acrobot.dqn"
         initialization:
           use_orthogonal: True
           gain: 1.
@@ -185,7 +185,7 @@ populations:
           layers:
             - units: 64
               activation: ReLU
-            - units: 64
+            - units: 32
               activation: ReLU
           output:
             activation: False

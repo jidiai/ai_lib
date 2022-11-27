@@ -31,7 +31,7 @@ class Critic(nn.Module):
 
         in_dim=observation_space.shape[0]
         out_dim=action_space.n
-        hidden_size=256
+        hidden_size=128
 
         self.q_net=nn.Sequential(
             nn.Linear(in_dim,hidden_size),

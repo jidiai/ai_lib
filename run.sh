@@ -8,5 +8,5 @@ export PYTHONPATH=$SCRIPT_DIR
 #python main_pbt.py --config expr/kuhn_poker/expr_q_learning_psro.yaml
 #python main_marl.py --config expr/kuhn_poker/expr_q_learning_marl.yaml
 #python main_marl.py --config expr/gym/CartPole_DQN_marl.yaml
-python main_marl.py --config expr/gym/MountainCar_DQN_marl.yaml
-
+#python main_marl.py --config expr/gym/MountainCar_DQN_marl.yaml
+python main_marl.py --config expr/gym/Acrobot_DQN_marl.yaml
