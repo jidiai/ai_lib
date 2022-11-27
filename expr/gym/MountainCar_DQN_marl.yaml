@@ -1,8 +1,8 @@
-expr_group: leduc_poker
-expr_name: test_q_learning
+expr_group: mountain-car
+expr_name: marl_dqn
 log_dir: logs
-log_name: 'rollout_1000'
-seed: 0
+log_name: 'Marl'
+seed: 123
 eval_only: False
 
 distributed:
@@ -16,26 +16,24 @@ distributed:
       - ip:
 
 framework:
-  name: "psro"
-  max_generations: 40
-  meta_solver: "nash"
+  name: "marl"
   sync_training: True
   stopper:
-    type: "poker_oracle_exploitablitiy_stopper"
+    type: "win_rate_stopper"
     kwargs:
-      min_reward_thresh_percent: 0.95
+      min_win_rate: 0.95
       # min_win_rate: 0.9
-      max_steps: 1000
+      max_steps: 30000
 
 agent_manager:
-  num_agents: 2
+  num_agents: 1
   share_policies: True
 
 evaluation_manager:
-  num_eval_rollouts: 100
+  num_eval_rollouts: 30
 
 policy_data_manager:
-  update_func: "leduc_poker" 
+  update_func: "gym"
   fields:
     payoff:
       type: "matrix"
@@ -80,7 +78,7 @@ rollout_manager:
   saving_interval: 100 # the sequence of dump model's weight
   batch_size: ${rollout_manager.num_workers}
   eval_batch_size: 100
-  eval_freq: 10 # epochs
+  eval_freq: 50 # epochs
   min_samples: ${training_manager.batch_size}
   rollout_metric_cfgs:
     reward:
@@ -95,15 +93,17 @@ rollout_manager:
     distributed:
       resources:
         num_cpus: 1
-    rollout_length: 3001
-    eval_rollout_length: 3001
-    sample_length: 1000
+    rollout_length: 200
+    eval_rollout_length: 200
+    sample_length: 200
     padding_length: # of not use in gr_football
-    rollout_func_name: "rollout_func_aec"
+    rollout_func_name: "rollout_func_seg"
     mix_opponent: False
     envs:
-      - cls: "leduc_poker"
-        id_prefix: "leduc_poker"
+      - cls: "gym"
+        id_prefix: "gym"
+        env_id: "MountainCar-v0"
+
 
 training_manager:
   distributed:
@@ -115,7 +115,7 @@ training_manager:
   master_addr: "127.0.0.1"
   master_port:  #"12774"
   local_queue_size: 1
-  batch_size: 256 # how many data sample from DatasetServer per time.
+  batch_size: 128 # how many data sample from DatasetServer per time.
   num_prefetchers: 1
   data_prefetcher:
     distributed:
@@ -133,8 +133,8 @@ training_manager:
         resources:
           - ["node:${distributed.nodes.master.ip}",0.01]
     optimizer: "Adam"
-    actor_lr: 1e-2
-    critic_lr: 1e-2
+    actor_lr: 1e-3
+    critic_lr: 5e-4
     opti_eps: 1.e-5
     weight_decay: 0.05
     lr_decay: False            #update_linear_schedule
@@ -147,7 +147,7 @@ data_server:
       resources:
         - ["node:${distributed.nodes.master.ip}",0.01]
   table_cfg:
-    capacity: 10000
+    capacity: 1000
     sampler_type: "uniform"
     sample_max_usage: 1000 # this might also be problematic when sync training...
     rate_limiter_cfg:
@@ -165,31 +165,23 @@ policy_server:
 populations:
   - population_id: default # population_id
     algorithm:
-      name: "QLearning"
+      name: "DeepQLearning"
       model_config:
-        model: "leduc_poker.tabular_q"
+        model: "mountain_car.dqn"
         initialization:
           use_orthogonal: True
           gain: 1.
         actor:
           network: mlp
           layers:
-            - units: 256
-              activation: ReLU
-            - units: 128
-              activation: ReLU
-            - units: 64
+            - units: 32
               activation: ReLU
           output:
             activation: False
         critic:
           network: mlp
           layers:
-            - units: 256
-              activation: ReLU
-            - units: 128
-              activation: ReLU
-            - units: 64
+            - units: 32
               activation: ReLU
           output:
             activation: False
@@ -199,15 +191,16 @@ populations:
         explore_cfg:
           mode: "epsilon_greedy"
           # epsilon: 0.5
-          max_epsilon: 1.0
-          min_epsilon: 0.1
+          max_epsilon: 0.2
+          min_epsilon: 0.01
           total_decay_steps: ${framework.stopper.kwargs.max_steps}
 
-        gamma: 1.0
+        gamma: 0.99
         use_cuda: False  # enable cuda or not
         use_q_head: False
-        ppo_epoch: 5
-        num_mini_batch: 4  # the number of mini-batches
+        ppo_epoch: 15
+        num_mini_batch: 2  # the number of mini-batches
+        max_grad_norm: 0.2
         
         return_mode: new_gae
         gae:
@@ -230,14 +223,17 @@ populations:
 
         use_modified_mappo: False
 
+        target_update_freq: 100
+        target_update_lr: 1
+
       policy_init_cfg:
         agent_0: # agent_id
           new_policy_ctr_start: -1
           init_cfg:
             - condition: "==0" # condition if True in order
               strategy: random # now support pretrained, inherit_last, random
-              # policy_id: imitation
-              # policy_dir: trained_models/5v5/imitation # the initial policy dir
+#              policy_id: test_1
+#              policy_dir: logs/leduc_poker/marl_q_learning/Mix-2022-10-10-20-49-59/agent_0/agent_0_default_0/last # the initial policy dir
 
             - condition: "default" # default case.
               strategy: random # now support pretrained, inherit_last, random
@@ -245,41 +241,3 @@ populations:
               # policy_dir: trained_models/5v5/defence_1
 
           initial_policies:
-            # - policy_id: MAPPO_0
-            #   policy_dir: trained_models/5v5/imitation # the initial policy dir
-            # - policy_id: MAPPO_1
-            #   policy_dir: expr/log/gr_football/imitation_psro/2022-08-30-22-17-56/agent_0/MAPPO_1/best
-            # - policy_id: MAPPO_2
-            #   policy_dir: expr/log/gr_football/imitation_psro/2022-08-30-22-17-56/agent_0/MAPPO_2/best
-            # - policy_id: MAPPO_3
-            #   policy_dir: expr/log/gr_football/imitation_psro/2022-08-31-09-07-07/agent_0/MAPPO_1/best
-            # - policy_id: MAPPO_4
-            #   policy_dir: expr/log/gr_football/imitation_psro/2022-08-31-12-26-50/agent_0/MAPPO_4/best
-            # - policy_id: MAPPO_5
-            #   policy_dir: expr/log/gr_football/imitation_psro/2022-08-31-12-26-50/agent_0/MAPPO_5/best
-            # - policy_id: zs_one
-            #   policy_dir: trained_models/5v5_jidi/zs_one
-            # - policy_id: zs_two
-            #   policy_dir: trained_models/5v5_jidi/zs_two
-            # - policy_id: MrPasserby
-            #   policy_dir: trained_models/5v5/MrPasserby # the initial policy dir
-            # - policy_id: built_in
-            #   policy_dir: trained_models/5v5/built_in # the initial policy dir
-            # - policy_id: defence_1
-            #   policy_dir: trained_models/5v5/defence_1 # the initial policy dir
-            # - policy_id: hyperion
-            #   policy_dir: trained_models/5v5/hyperion # the initial policy dir
-            # - policy_id: imitation
-            #   policy_dir: trained_models/5v5/imitation # the initial policy dir
-            # - policy_id: defence_2
-            #   policy_dir: trained_models/5v5/defence_2 # the initial policy dir
-            # - policy_id: defence_3
-            #   policy_dir: trained_models/5v5/defence_3
-            # - policy_id: beat_defence_1
-            #   policy_dir: trained_models/5v5/beat_defence_1
-            # - policy_id: beat_counterattack3
-            #   policy_dir: trained_models/5v5/beat_counterattack3
-            # - policy_id: counter_attack3
-            #   policy_dir: trained_models/5v5/counter_attack3 # the initial policy dir
-            # - policy_id: passer_shot
-            #   policy_dir: trained_models/5v5/passer_shot

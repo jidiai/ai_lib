@@ -97,14 +97,18 @@ def rollout_func(
 
     policy_ids = OrderedDict()
     feature_encoders = OrderedDict()
+    rewarders = OrderedDict()
+
     for agent_id, (policy_id, policy) in behavior_policies.items():
         feature_encoders[agent_id] = policy.feature_encoder
         policy_ids[agent_id] = policy_id
+        rewarders[agent_id] = policy.rewarder
 
     custom_reset_config = {
         "feature_encoders": feature_encoders,
         "main_agent_id": rollout_desc.agent_id,
-        "rollout_length": rollout_length
+        "rollout_length": rollout_length,
+        'rewarders': rewarders
     }
     # {agent_id:{field:value}}
     global_timer.record("env_step_start")

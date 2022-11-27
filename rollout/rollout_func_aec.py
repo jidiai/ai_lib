@@ -118,6 +118,8 @@ def rollout_func(
     if render:
         env.render()
 
+    # breakpoint()
+
     rnn_states = {
         agent_id: policies[agent_id].get_initial_state(batch_size=env.num_players[agent_id])
         for agent_id in env.agent_ids

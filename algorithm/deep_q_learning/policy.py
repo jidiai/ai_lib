@@ -92,6 +92,7 @@ class DeepQLearning(nn.Module):
         model=importlib.import_module("model.{}".format(model_type))
 
         self.encoder=model.Encoder()
+        self._rewarder=model.Rewarder()
 
         # TODO(jh): extension to multi-agent cooperative case
         # self.env_agent_id = kwargs["env_agent_id"]
@@ -153,6 +154,10 @@ class DeepQLearning(nn.Module):
     @property
     def feature_encoder(self): # legacy
         return self.encoder
+
+    @property
+    def rewarder(self):
+        return self._rewarder
 
     def get_initial_state(self, batch_size):
         if hasattr(self.critic,"get_initial_state"):

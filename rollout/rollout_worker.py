@@ -14,6 +14,7 @@ from utils.timer import global_timer
 import random
 import torch
 from utils.episode import EpisodeKey
+from utils.random import set_random_seed
 
 
 def to_tensor(arr):

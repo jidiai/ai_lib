@@ -53,6 +53,10 @@ class AgentManager:
                 agent_initial_policies = agent_policy_init_cfg.get("initial_policies", None)
                 if agent_initial_policies is None:
                     continue
+                oppo_dist = agent_policy_init_cfg.get('initial_policies_distribution', None)
+                if oppo_dist is not None:
+                    self.oppo_dist = oppo_dist
+                    # breakpoint()
                 for policy_cfg in agent_initial_policies:
                     policy_id = policy_cfg["policy_id"]
                     policy_dir = policy_cfg["policy_dir"]

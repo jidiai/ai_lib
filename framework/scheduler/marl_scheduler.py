@@ -41,6 +41,10 @@ class MARLScheduler:
 
             policy_distributions = {}
             agent_0_dist = zip(['agent_0_default_0'], [1])      #TODO(yan): configurate in expr.cfg
+            # if 'agent_1' in agent_id2policy_ids:
+            #     agent_1_dist = zip(agent_id2policy_ids['agent_1'], eval(self.agent_manager.oppo_dist))
+            #     policy_distributions['agent_1'] = OrderedDict(agent_1_dist)
+
             # agent_1_dist = zip(['q1', 'q2'], [0.5,0.5])
             policy_distributions['agent_0'] = OrderedDict(agent_0_dist)
             # policy_distributions['agent_1'] = OrderedDict(agent_1_dist)

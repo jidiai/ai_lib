@@ -23,6 +23,14 @@ class DefaultGymFeatureEncoder:
     def action_space(self):
         return self._env.action_space
 
+
+class DefaultGymRewarder:
+    def __init__(self):
+        pass
+    def r(self, raw_rewards, **kwargs):
+        return np.array([raw_rewards])
+
+
 @registry.registered(registry.ENV, "gym")
 class GymEnv(BaseAECEnv):
     def __init__(self, id, seed, cfg):
@@ -31,6 +39,7 @@ class GymEnv(BaseAECEnv):
         self.cfg = cfg
 
         self._env = gym.make(cfg['env_id'])
+        self._env.seed(seed)
         self._step_ctr = 0
         self._is_termomated=False
 
@@ -41,6 +50,11 @@ class GymEnv(BaseAECEnv):
         self.feature_encoders = {
             "agent_0": DefaultGymFeatureEncoder
         }
+
+        self.rewarder= DefaultGymRewarder()
+        # {
+        #     'agent_0': DefaultGymRewarder
+        # }
 
         self._last_record = None
 
@@ -75,6 +89,8 @@ class GymEnv(BaseAECEnv):
     def reset(self, custom_reset_config=None):
         if custom_reset_config is not None and "feature_encoders" in custom_reset_config:
             self.feature_encoders=custom_reset_config["feature_encoders"]
+        if custom_reset_config is not None and 'rewarder' in custom_reset_config:
+            self.rewarder=custom_reset_config['rewarders']['agent_0']
 
         self._step_ctr=0
         self._is_terminated=False
@@ -131,8 +147,18 @@ class GymEnv(BaseAECEnv):
         else:
             action=int(action)
 
-        observation, rewards, done, info= self._env.step(action)
-        rewards = np.array([rewards])
+        observation, _reward, done, info= self._env.step(action)
+
+        rewards = self.rewarder.r(_reward, obs=observation)
+        # if observation[0] > -0.5:
+        #     r = observation[0] + 0.5 - 1
+        #     if observation[0] > 0.5:
+        #         r = 300
+        # else:
+        #     r = -1.
+        # rewards = np.array([r])
+
+        # rewards = np.array([rewards])
         self._is_terminated=done
         self.update_episode_stats(rewards)
 

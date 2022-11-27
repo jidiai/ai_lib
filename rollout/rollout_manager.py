@@ -80,10 +80,15 @@ class RolloutManager:
             stopper=None,
             type='evaluation' if eval else 'rollout'
         )] * batch_size
-        rollout_results = self.worker_pool.map_unordered(
-            lambda worker, rollout_desc: worker.rollout.remote(rollout_desc, eval, rollout_epoch),
-            values=rollout_descs
-        )
+        try:
+            rollout_results = self.worker_pool.map_unordered(
+                lambda worker, rollout_desc: worker.rollout.remote(rollout_desc, eval, rollout_epoch),
+                values=rollout_descs
+            )
+        except Exception as e:
+            Logger.error(traceback.format_exc())
+            raise e
+
         return rollout_results
 
     def _rollout_loop(self, rollout_desc: RolloutDesc):

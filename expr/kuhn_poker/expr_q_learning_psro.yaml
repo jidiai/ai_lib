@@ -11,7 +11,7 @@ distributed:
   auto_copy:
   nodes:
     master:
-      ip: '10.0.114.59'
+      ip: 'auto'
     workers:      
       - ip:
 

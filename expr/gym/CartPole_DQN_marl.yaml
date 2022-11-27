@@ -11,7 +11,7 @@ distributed:
   auto_copy:
   nodes:
     master:
-      ip: '192.168.3.20'
+      ip: 'auto'
     workers:      
       - ip:
 
@@ -23,7 +23,7 @@ framework:
     kwargs:
       min_win_rate: 0.95
       # min_win_rate: 0.9
-      max_steps: 2000
+      max_steps: 1500
 
 agent_manager:
   num_agents: 1
@@ -147,7 +147,7 @@ data_server:
       resources:
         - ["node:${distributed.nodes.master.ip}",0.01]
   table_cfg:
-    capacity: 10000
+    capacity: 1000
     sampler_type: "uniform"
     sample_max_usage: 1000 # this might also be problematic when sync training...
     rate_limiter_cfg:

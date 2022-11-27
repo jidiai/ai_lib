@@ -11,7 +11,7 @@ distributed:
   auto_copy:
   nodes:
     master:
-      ip: '10.0.114.59'
+      ip: 'auto'
     workers:      
       - ip:
 
@@ -263,4 +263,6 @@ populations:
 #               policy_dir: logs/leduc_poker/marl_q_learning/Mix-2022-10-10-20-49-59/agent_0/agent_0_default_0/last
 #             - policy_id: test_baseline
 #               policy_dir: logs/leduc_poker/marl_q_learning/baseline-2022-10-10-20-45-11/agent_0/agent_0_default_0/last
+
+          initial_policies_distribution: '0.5,0.5,0'
 

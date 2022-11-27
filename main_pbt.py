@@ -48,13 +48,13 @@ def main():
     cfg = load_cfg(args.config)
 
     set_random_seed(cfg.seed)
-
+    cluster_start_info = start_cluster()
     assert cfg.distributed.nodes.master.ip is not None
     if cfg.distributed.nodes.master.ip == "auto":
-        ip = get_local_ip_address()
+        ip = ray.get_runtime_context().worker.node_ip_address
         cfg.distributed.nodes.master.ip = ip
         Logger.warning("Automatically set master ip to local ip address: {}".format(ip))
-    cluster_start_info = start_cluster()
+    # cluster_start_info = start_cluster()
 
     # check cfg
     # check gpu number here
