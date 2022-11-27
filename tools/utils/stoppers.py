@@ -1,6 +1,7 @@
 from tools.utils.typing import Status, MetricType, MetricEntry, Dict, List
 import numpy as np
 
+
 class Stopper:
     def __init__(self, config: Dict, tasks: List = None):
         """Create a stopper instance with metric fields. This fields should cover
@@ -76,14 +77,18 @@ class GFootRolloutStopper(Stopper):
         self._min_step = self._config.get("min_step", 200)
         self._threshold = self._config.get("threshold", 0.03)
         self._min_win_rate = self._config.get("min_win_rate", 0.03)
-        self._stop_when_reach_min_win = self._config.get('stop_when_reach_min_win', False)
+        self._stop_when_reach_min_win = self._config.get(
+            "stop_when_reach_min_win", False
+        )
         # assert (
         #     self._min_step >= 100
         # ), f"config min_step must >= 100 but now {self._min_step}."
 
         self._past_win_rate = []
 
-    def __call__(self, results: Dict[str, Dict], global_step: int) -> bool:     #we need win stats
+    def __call__(
+        self, results: Dict[str, Dict], global_step: int
+    ) -> bool:  # we need win stats
         if global_step == 0:
             return False
 
@@ -92,7 +97,7 @@ class GFootRolloutStopper(Stopper):
         elif global_step >= self._max_step:
             return True
         else:
-            current_win = results['custom_metrics/team_0/win_mean']  # mean win rate
+            current_win = results["custom_metrics/team_0/win_mean"]  # mean win rate
             self._past_win_rate.append(current_win)
 
             past_100_wins = self._past_win_rate[-100:]
@@ -106,9 +111,10 @@ class GFootRolloutStopper(Stopper):
                     )
                     return True
 
-
-            if smooth_2_wins[-1] > 0.5 \
-                and (smooth_2_wins[-1] - smooth_2_wins[-10]) < self._threshold:
+            if (
+                smooth_2_wins[-1] > 0.5
+                and (smooth_2_wins[-1] - smooth_2_wins[-10]) < self._threshold
+            ):
                 # and (smooth_2_wins[-1] - smooth_2_wins[-10]) > self._threshold:
                 print(
                     f">>>>>>epoch:{global_step}, "

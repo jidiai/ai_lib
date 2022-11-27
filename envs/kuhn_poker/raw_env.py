@@ -13,7 +13,9 @@ class KuhnPokerRawEnv:
         # so we actually use np.random to simulate env moves
         self.seed(seed)
 
-        self._game = pyspiel.load_game("kuhn_poker", )
+        self._game = pyspiel.load_game(
+            "kuhn_poker",
+        )
         self.state = None
         self.dones = None
         self.curr_player_idx = None

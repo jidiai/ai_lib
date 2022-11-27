@@ -12,23 +12,31 @@ import numpy as np
 
 W = -100  # wall
 G = 100  # goal
-GRID_LAYOUT = np.array([
-    [W, W, W, W, W, W, W, W, W, W, W, W],
-    [W, W, 0, W, W, W, W, W, W, 0, W, W],
-    [W, 0, 0, 0, 0, 0, 0, 0, 0, G, 0, W],
-    [W, 0, 0, 0, W, W, W, W, 0, 0, 0, W],
-    [W, 0, 0, 0, W, W, W, W, 0, 0, 0, W],
-    [W, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, W],
-    [W, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, W],
-    [W, W, 0, 0, 0, 0, 0, 0, 0, 0, W, W],
-    [W, W, W, W, W, W, W, W, W, W, W, W]
-])
+GRID_LAYOUT = np.array(
+    [
+        [W, W, W, W, W, W, W, W, W, W, W, W],
+        [W, W, 0, W, W, W, W, W, W, 0, W, W],
+        [W, 0, 0, 0, 0, 0, 0, 0, 0, G, 0, W],
+        [W, 0, 0, 0, W, W, W, W, 0, 0, 0, W],
+        [W, 0, 0, 0, W, W, W, W, 0, 0, 0, W],
+        [W, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, W],
+        [W, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, W],
+        [W, W, 0, 0, 0, 0, 0, 0, 0, 0, W, W],
+        [W, W, W, W, W, W, W, W, W, W, W, W],
+    ]
+)
 
 
 class GridWorld(Game):
     def __init__(self, conf):
-        super().__init__(conf['n_player'], conf['is_obs_continuous'], conf['is_act_continuous'],
-                         conf['game_name'], conf['agent_nums'], conf['obs_type'])
+        super().__init__(
+            conf["n_player"],
+            conf["is_obs_continuous"],
+            conf["is_act_continuous"],
+            conf["game_name"],
+            conf["agent_nums"],
+            conf["obs_type"],
+        )
         self.env_core = Grid()
 
         self.load_action_space(conf)
@@ -47,7 +55,11 @@ class GridWorld(Game):
 
     def load_action_space(self, conf):
         if "act_box" in conf:
-            input_action = json.loads(conf["act_box"]) if isinstance(conf["act_box"], str) else conf["act_box"]
+            input_action = (
+                json.loads(conf["act_box"])
+                if isinstance(conf["act_box"], str)
+                else conf["act_box"]
+            )
             # print(input_action)
             if "discrete_n" not in input_action:
                 raise Exception("act_box in discrete case must have field discrete_n")
@@ -61,7 +73,7 @@ class GridWorld(Game):
         info_after = {}
         # print("action in step ", action)
         reward, discount, obs = self.env_core.step(action)
-        info_after['discount'] = discount
+        info_after["discount"] = discount
         if isinstance(reward, np.ndarray):
             reward = reward.tolist()[0]
         reward = self.get_reward(reward)
@@ -77,13 +89,19 @@ class GridWorld(Game):
     def is_valid_action(self, joint_action):
 
         if len(joint_action) != self.n_player:
-            raise Exception("Input joint action dimension should be {}, not {}".format(
-                self.n_player, len(joint_action)))
+            raise Exception(
+                "Input joint action dimension should be {}, not {}".format(
+                    self.n_player, len(joint_action)
+                )
+            )
 
         for i in range(self.n_player):
             if len(joint_action[i][0]) != self.joint_action_space[i][0].n:
-                raise Exception("The input action dimension for player {} should be {}, not {}".format(
-                    i, self.joint_action_space[i][0].n, len(joint_action[i][0])))
+                raise Exception(
+                    "The input action dimension for player {} should be {}, not {}".format(
+                        i, self.joint_action_space[i][0].n, len(joint_action[i][0])
+                    )
+                )
 
     def get_reward(self, reward):
         r = [0] * self.n_player
@@ -93,7 +111,7 @@ class GridWorld(Game):
             self.n_return[i] += r[i]
         return r
 
-    def step_before_info(self, info=''):
+    def step_before_info(self, info=""):
         return info
 
     def is_terminal(self):
@@ -107,7 +125,7 @@ class GridWorld(Game):
         return action_space
 
     def check_win(self):
-        return '0'
+        return "0"
 
     def reset(self):
         observation = self.env_core.reset()
@@ -137,7 +155,6 @@ class GridWorld(Game):
 
 
 class Grid(object):
-
     def __init__(self, noisy=False):
         # -1: wall
         # 0: empty, episode continues
@@ -193,11 +210,11 @@ class Grid(object):
             discount = 0.9
             new_state = (y, x)
         elif self._layout[new_y, new_x] == 0:  # empty cell
-            reward = -1.
+            reward = -1.0
             discount = 0.9
         else:  # a goal
             self._done = True
-            discount = 0.
+            discount = 0.0
             new_state = self._start_state
 
         if self._noisy:

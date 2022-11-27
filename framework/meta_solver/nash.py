@@ -9,7 +9,10 @@ class Solver(MetaSolver):
 
     def compute(self, payoff):
         assert len(payoff.shape) == 2 and np.all(
-            payoff + payoff.T < 1e-6), "only support two-player zero-sum symetric games now.\n payoff:{}".format(payoff)
+            payoff + payoff.T < 1e-6
+        ), "only support two-player zero-sum symetric games now.\n payoff:{}".format(
+            payoff
+        )
         eqs = self.compute_nash(payoff)
         return eqs
 

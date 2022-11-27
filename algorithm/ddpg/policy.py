@@ -21,6 +21,7 @@ import importlib
 from utils.logger import Logger
 from registry import registry
 
+
 def hard_update(target, source):
     """Copy network parameters from source to target.
 
@@ -33,6 +34,7 @@ def hard_update(target, source):
 
     for target_param, param in zip(target.parameters(), source.parameters()):
         target_param.data.copy_(param.data)
+
 
 @wrapt.decorator
 def shape_adjusting(wrapped, instance, args, kwargs):
@@ -67,6 +69,7 @@ def shape_adjusting(wrapped, instance, args, kwargs):
 
     return recover_rets
 
+
 @registry.registered(registry.POLICY)
 class DDPG(Policy):
     def __init__(
@@ -81,23 +84,23 @@ class DDPG(Policy):
         del observation_space
         del action_space
 
-        self.registered_name=registered_name
-        assert self.registered_name=="DDPG"
-        self.model_config=model_config
-        self.custom_config=custom_config
+        self.registered_name = registered_name
+        assert self.registered_name == "DDPG"
+        self.model_config = model_config
+        self.custom_config = custom_config
 
         super().__init__()
 
         model_type = model_config["model"]
         Logger.warning("use model type: {}".format(model_type))
-        model=importlib.import_module("model.{}".format(model_type))
+        model = importlib.import_module("model.{}".format(model_type))
 
-        self.encoder=model.Encoder()
-        self._rewarder=model.Rewarder()
+        self.encoder = model.Encoder()
+        self._rewarder = model.Rewarder()
 
-        self.observation_space=self.encoder.observation_space
-        self.action_space=self.encoder.action_space
-        assert isinstance(self.action_space,Box),str(self.action_space)
+        self.observation_space = self.encoder.observation_space
+        self.action_space = self.encoder.action_space
+        assert isinstance(self.action_space, Box), str(self.action_space)
 
         self.actor = model.Actor(
             self.model_config["actor"],
@@ -141,7 +144,7 @@ class DDPG(Policy):
         }
 
     @property
-    def feature_encoder(self): # legacy
+    def feature_encoder(self):  # legacy
         return self.encoder
 
     @property
@@ -149,7 +152,7 @@ class DDPG(Policy):
         return self._rewarder
 
     def get_initial_state(self, batch_size):
-        if hasattr(self.critic,"get_initial_state"):
+        if hasattr(self.critic, "get_initial_state"):
             return {
                 EpisodeKey.CRITIC_RNN_STATE: self.critic.get_initial_state(batch_size)
             }
@@ -162,43 +165,51 @@ class DDPG(Policy):
         self_copy.device = device
         return self_copy
 
-
     @shape_adjusting
     def compute_action(self, **kwargs):
-        step=kwargs.get("step",0)
-        to_numpy=kwargs.get("to_numpy",True)
+        step = kwargs.get("step", 0)
+        to_numpy = kwargs.get("to_numpy", True)
         with torch.no_grad():
-            obs=kwargs[EpisodeKey.CUR_OBS]
-            action_masks=kwargs[EpisodeKey.ACTION_MASK]
-            actions=self.actor(**{EpisodeKey.CUR_OBS:obs,EpisodeKey.ACTION_MASK:action_masks})
+            obs = kwargs[EpisodeKey.CUR_OBS]
+            action_masks = kwargs[EpisodeKey.ACTION_MASK]
+            actions = self.actor(
+                **{EpisodeKey.CUR_OBS: obs, EpisodeKey.ACTION_MASK: action_masks}
+            )
         if to_numpy:
-            actions=actions.cpu().numpy()
-        return {EpisodeKey.ACTION:actions}
-
+            actions = actions.cpu().numpy()
+        return {EpisodeKey.ACTION: actions}
 
     @shape_adjusting
     def value_function(self, **kwargs):
-        to_numpy=kwargs.get("to_numpy",True)
-        use_target_critic=kwargs.get("use_target_critic",False)
+        to_numpy = kwargs.get("to_numpy", True)
+        use_target_critic = kwargs.get("use_target_critic", False)
         if use_target_critic:
-            critic=self.critic
+            critic = self.critic
         else:
-            critic=self.target_critic
+            critic = self.target_critic
         with torch.no_grad():
-            obs=kwargs[EpisodeKey.CUR_OBS]
-            action_masks=kwargs[EpisodeKey.ACTION_MASK]
-            q_values=critic(**{EpisodeKey.CUR_OBS:obs,EpisodeKey.ACTION_MASK:action_masks})
+            obs = kwargs[EpisodeKey.CUR_OBS]
+            action_masks = kwargs[EpisodeKey.ACTION_MASK]
+            q_values = critic(
+                **{EpisodeKey.CUR_OBS: obs, EpisodeKey.ACTION_MASK: action_masks}
+            )
             # denormalize
             # if hasattr(self,"value_normalizer"):
             #     q_values=self.value_normalizer.denormalize(q_values)
             if to_numpy:
-                q_values=q_values.cpu().numpy()
-        return {EpisodeKey.STATE_ACTION_VALUE: q_values,
-                EpisodeKey.ACTION_MASK: action_masks}
+                q_values = q_values.cpu().numpy()
+        return {
+            EpisodeKey.STATE_ACTION_VALUE: q_values,
+            EpisodeKey.ACTION_MASK: action_masks,
+        }
 
     def dump(self, dump_dir):
-        torch.save(self.critic.state_dict(), os.path.join(dump_dir, "critic_state_dict.pt"))
-        torch.save(self.actor.state_dict(), os.path.join(dump_dir, "actor_state_dict.pt"))
+        torch.save(
+            self.critic.state_dict(), os.path.join(dump_dir, "critic_state_dict.pt")
+        )
+        torch.save(
+            self.actor.state_dict(), os.path.join(dump_dir, "actor_state_dict.pt")
+        )
         pickle.dump(self.description, open(os.path.join(dump_dir, "desc.pkl"), "wb"))
 
     @staticmethod
@@ -215,11 +226,13 @@ class DDPG(Policy):
             **kwargs,
         )
 
-        critic_path=os.path.join(dump_dir,"critic_state_dict.pt")
+        critic_path = os.path.join(dump_dir, "critic_state_dict.pt")
         if os.path.exists(critic_path):
-            critic_state_dict = torch.load(os.path.join(dump_dir, "critic_state_dict.pt"), policy.device)
+            critic_state_dict = torch.load(
+                os.path.join(dump_dir, "critic_state_dict.pt"), policy.device
+            )
             policy.critic.load_state_dict(critic_state_dict)
-            policy.target_critic=deepcopy(policy.critic)
+            policy.target_critic = deepcopy(policy.critic)
         return policy
 
     # def compute_actions_by_target_actor(

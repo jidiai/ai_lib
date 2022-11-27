@@ -6,15 +6,17 @@ from utils.timer import global_timer
 
 
 def simple_data_generator(data, num_mini_batch, device, shuffle=False):
-    if len(data[EpisodeKey.CUR_OBS].shape) == 3:            #gym
+    if len(data[EpisodeKey.CUR_OBS].shape) == 3:  # gym
         data[EpisodeKey.CUR_OBS] = data[EpisodeKey.CUR_OBS].unsqueeze(-2)
         data[EpisodeKey.ACTION] = data[EpisodeKey.ACTION].unsqueeze(-2)
         data[EpisodeKey.ACTION_MASK] = data[EpisodeKey.ACTION_MASK].unsqueeze(-2)
     elif len(data[EpisodeKey.CUR_OBS].shape) == 2:
-        for k,v in data.items():
+        for k, v in data.items():
             data[k] = v.unsqueeze(-2).unsqueeze(-2)
 
-    assert len(data[EpisodeKey.CUR_OBS].shape) == 4, "{}".format({k: v.shape for k, v in data.items()})
+    assert len(data[EpisodeKey.CUR_OBS].shape) == 4, "{}".format(
+        {k: v.shape for k, v in data.items()}
+    )
     len_traj, n_rollout_threads, n_agent, _ = data[EpisodeKey.CUR_OBS].shape
     batch_size = len_traj * n_rollout_threads  # * n_agent
 
@@ -30,12 +32,13 @@ def simple_data_generator(data, num_mini_batch, device, shuffle=False):
             batch[k] = batch[k].reshape(batch_size, *data[k].shape[2:])
         except Exception:
             Logger.error("k: {}, shape = {}".format(k, batch[k].shape))
-            for i,j in data.items():
-                print(f'data = {i}, shape = {j.shape}')
-            raise Exception("k: {}, shape = {}, len_traj = {}, n_rollout_threads={}".format(k,
-                                                                                         batch[k].shape,
-                                                                                         len_traj,
-                                                                                         n_rollout_threads))
+            for i, j in data.items():
+                print(f"data = {i}, shape = {j.shape}")
+            raise Exception(
+                "k: {}, shape = {}, len_traj = {}, n_rollout_threads={}".format(
+                    k, batch[k].shape, len_traj, n_rollout_threads
+                )
+            )
     # jh: special optimization
     if num_mini_batch == 1:
         for k in batch:
@@ -56,7 +59,7 @@ def simple_data_generator(data, num_mini_batch, device, shuffle=False):
     if shuffle:
         rand = torch.randperm(batch_size)
         sampler = [
-            rand[i * mini_batch_size: (i + 1) * mini_batch_size]
+            rand[i * mini_batch_size : (i + 1) * mini_batch_size]
             for i in range(num_mini_batch)
         ]
     else:
@@ -77,7 +80,9 @@ def simple_data_generator(data, num_mini_batch, device, shuffle=False):
 def recurrent_generator(data, num_mini_batch, rnn_data_chunk_length, device):
     batch = {k: d for k, d in data.items()}
     # batch_size,seq_length,n_agent(,n_feats*)
-    assert len(batch[EpisodeKey.CUR_OBS].shape) == 4, "{}".format({k: v.shape for k, v in data.items()})
+    assert len(batch[EpisodeKey.CUR_OBS].shape) == 4, "{}".format(
+        {k: v.shape for k, v in data.items()}
+    )
 
     batch_size, seq_length, n_agent = batch[EpisodeKey.CUR_OBS].shape[:3]
     new_seq_length = seq_length - seq_length % rnn_data_chunk_length
@@ -85,10 +90,14 @@ def recurrent_generator(data, num_mini_batch, rnn_data_chunk_length, device):
     mini_batch_size = int(np.ceil(data_chunks / num_mini_batch))
 
     def _cast(x):
-        assert x.shape[0] == batch_size and x.shape[1] == seq_length and x.shape[2] == n_agent
+        assert (
+            x.shape[0] == batch_size
+            and x.shape[1] == seq_length
+            and x.shape[2] == n_agent
+        )
         # TODO WARNING ONCE jh: for simplicity, discard last several frames
         x = x[:, :new_seq_length, ...]
-        # -> data_chunks,rnn_data_chunk_length,n_agent(,n_feats*),see below 
+        # -> data_chunks,rnn_data_chunk_length,n_agent(,n_feats*),see below
         x = x.reshape(data_chunks, rnn_data_chunk_length, *x.shape[2:])
         return x
 
@@ -111,7 +120,7 @@ def recurrent_generator(data, num_mini_batch, rnn_data_chunk_length, device):
 
     rand = torch.randperm(data_chunks)
     sampler = [
-        rand[i * mini_batch_size: (i + 1) * mini_batch_size]
+        rand[i * mini_batch_size : (i + 1) * mini_batch_size]
         for i in range(num_mini_batch)
     ]
     for indices in sampler:

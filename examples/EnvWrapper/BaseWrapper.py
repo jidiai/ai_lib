@@ -1,5 +1,6 @@
 import abc
 
+
 class BaseWrapper(metaclass=abc.ABCMeta):
     def __init__(self, env=None):
         self.env = env
@@ -13,9 +14,9 @@ class BaseWrapper(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def reset(self):
-        '''
+        """
         reset返回的态势与step的情况一致，要求reset时一定返回重置时环境的状态情况
-        '''
+        """
         raise NotImplementedError
 
     def seed(self):

@@ -1,12 +1,13 @@
 import numpy as np
 from gym.spaces import Box
 
+
 class FeatureEncoder:
     def __init__(self):
         self.active = -1
         self.player_pos_x, self.player_pos_y = 0, 0
-        self.action_n=19
-        self.use_action_gramma=False
+        self.action_n = 19
+        self.use_action_gramma = False
 
     def get_feature_dims(self):
         dims = {
@@ -19,21 +20,21 @@ class FeatureEncoder:
         }
         return dims
 
-    def encode(self,states):
-        feats=[]
+    def encode(self, states):
+        feats = []
         for state in states:
-            feat=self.encode_each(state)
+            feat = self.encode_each(state)
             feats.append(feat)
         return feats
-    
+
     @property
     def observation_space(self):
-        return Box(low=-1000,high=1000,shape=[133])
+        return Box(low=-1000, high=1000, shape=[133])
 
     def encode_each(self, state):
-        obs=state.obs
-        his_actions=state.action_list
-        
+        obs = state.obs
+        his_actions = state.action_list
+
         player_num = obs["active"]
 
         player_pos_x, player_pos_y = obs["left_team"][player_num]
@@ -70,10 +71,10 @@ class FeatureEncoder:
             ball_far = 1.0
         else:
             ball_far = 0.0
-        
-        avail = self.get_available_actions(obs,ball_distance,his_actions)
-        #Logger.log(logging.INFO,"avail: {} his_actions: {}".format(avail,his_actions))
-        #print("avail: {}".format(avail))
+
+        avail = self.get_available_actions(obs, ball_distance, his_actions)
+        # Logger.log(logging.INFO,"avail: {} his_actions: {}".format(avail,his_actions))
+        # print("avail: {}".format(avail))
         # avail = self._get_avail_new(obs, ball_distance, action_num)
         # avail = self._get_avail(obs, ball_distance)
         player_state = np.concatenate(
@@ -155,13 +156,16 @@ class FeatureEncoder:
             "right_closest": right_closest_state,
             "avail": avail,
         }
-        
+
         feats = np.hstack(
-            [np.array(state_dict[k], dtype=np.float32).flatten() for k in sorted(state_dict)]
+            [
+                np.array(state_dict[k], dtype=np.float32).flatten()
+                for k in sorted(state_dict)
+            ]
         )
 
         return feats
-        
+
     def _get_avail(self, obs, ball_distance):
         avail = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
         (
@@ -243,8 +247,8 @@ class FeatureEncoder:
 
     def _get_avail_new(self, obs, ball_distance, action_n):
         # avail = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-        assert (action_n == 19 or action_n == 20)       #we dont support full action set
-        avail = [1]*action_n
+        assert action_n == 19 or action_n == 20  # we dont support full action set
+        avail = [1] * action_n
 
         (
             NO_OP,
@@ -329,19 +333,19 @@ class FeatureEncoder:
 
         if obs["game_mode"] == 2 and ball_x < -0.7:  # Our GoalKick
             # avail = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            avail = [1] + [0]*(action_n-1)
+            avail = [1] + [0] * (action_n - 1)
             avail[LONG_PASS], avail[HIGH_PASS], avail[SHORT_PASS] = 1, 1, 1
             return np.array(avail)
 
         elif obs["game_mode"] == 4 and ball_x > 0.9:  # Our CornerKick
             # avail = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            avail = [1] + [0]*(action_n-1)
+            avail = [1] + [0] * (action_n - 1)
             avail[LONG_PASS], avail[HIGH_PASS], avail[SHORT_PASS] = 1, 1, 1
             return np.array(avail)
 
         elif obs["game_mode"] == 6 and ball_x > 0.6:  # Our PenaltyKick
             # avail = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-            avail = [1] + [0]*(action_n-1)
+            avail = [1] + [0] * (action_n - 1)
             avail[SHOT] = 1
             return np.array(avail)
 
@@ -378,7 +382,7 @@ class FeatureEncoder:
         result[role_num] = 1.0
         return np.array(result)
 
-    def _get_available_actions_gramma(self, his_actions,action_n):
+    def _get_available_actions_gramma(self, his_actions, action_n):
         (
             NO_OP,
             LEFT,
@@ -401,71 +405,82 @@ class FeatureEncoder:
             RELEASE_DRIBBLE,
         ) = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18)
         avail = np.zeros(action_n)
-        avail[13:]=1
+        avail[13:] = 1
 
-        directions=[LEFT,TOP_LEFT,TOP,TOP_RIGHT,RIGHT,BOTTOM_RIGHT,BOTTOM_LEFT,BOTTOM]
-        if len(his_actions)==0:
-            self.set_on(avail,directions)
+        directions = [
+            LEFT,
+            TOP_LEFT,
+            TOP,
+            TOP_RIGHT,
+            RIGHT,
+            BOTTOM_RIGHT,
+            BOTTOM_LEFT,
+            BOTTOM,
+        ]
+        if len(his_actions) == 0:
+            self.set_on(avail, directions)
         else:
-            last_action=his_actions[-1]
+            last_action = his_actions[-1]
             # directions
             if last_action in directions:
-                self.set_on(avail,self._get_smooth_directions(his_actions)+[RELEASE_MOVE])
-            elif last_action in [LONG_PASS,SHOT,HIGH_PASS,SHORT_PASS,SLIDE]:
-                self.set_on(avail,directions+[last_action])
+                self.set_on(
+                    avail, self._get_smooth_directions(his_actions) + [RELEASE_MOVE]
+                )
+            elif last_action in [LONG_PASS, SHOT, HIGH_PASS, SHORT_PASS, SLIDE]:
+                self.set_on(avail, directions + [last_action])
             # we regard release move as an end of a series of commands
             else:
-                avail=np.ones(action_n)
-                avail[0]=0
-                
-        ret=np.array(avail)
+                avail = np.ones(action_n)
+                avail[0] = 0
+
+        ret = np.array(avail)
         return ret
 
-    def get_available_actions(self,obs,ball_distance,his_actions):
+    def get_available_actions(self, obs, ball_distance, his_actions):
         # todo further restrict it by automata
-        avail1=self._get_avail_new(obs, ball_distance, self.action_n)
+        avail1 = self._get_avail_new(obs, ball_distance, self.action_n)
         if self.use_action_gramma:
-            avail2=self._get_available_actions_gramma(his_actions,self.action_n)
-            avail=np.minimum(avail1,avail2)   
-            if np.sum(avail)==0:
+            avail2 = self._get_available_actions_gramma(his_actions, self.action_n)
+            avail = np.minimum(avail1, avail2)
+            if np.sum(avail) == 0:
                 # logger.warn("no available actions!")
-                avail=avail1
+                avail = avail1
         else:
-            avail=avail1
-        return avail        
-    
-    def set_on(self,avail,args):
-        avail[args]=1
-            
-    def set_off(self,avail,args):
-        avail[args]=0
-    
-    def _get_smooth_directions(self,his_actions):
+            avail = avail1
+        return avail
+
+    def set_on(self, avail, args):
+        avail[args] = 1
+
+    def set_off(self, avail, args):
+        avail[args] = 0
+
+    def _get_smooth_directions(self, his_actions):
         (
-        NO_OP,
-        LEFT,
-        TOP_LEFT,
-        TOP,
-        TOP_RIGHT,
-        RIGHT,
-        BOTTOM_RIGHT,
-        BOTTOM,
-        BOTTOM_LEFT,
-        LONG_PASS,
-        HIGH_PASS,
-        SHORT_PASS,
-        SHOT,
-        SPRINT,
-        RELEASE_MOVE,
-        RELEASE_SPRINT,
-        SLIDE,
-        DRIBBLE,
-        RELEASE_DRIBBLE,
+            NO_OP,
+            LEFT,
+            TOP_LEFT,
+            TOP,
+            TOP_RIGHT,
+            RIGHT,
+            BOTTOM_RIGHT,
+            BOTTOM,
+            BOTTOM_LEFT,
+            LONG_PASS,
+            HIGH_PASS,
+            SHORT_PASS,
+            SHOT,
+            SPRINT,
+            RELEASE_MOVE,
+            RELEASE_SPRINT,
+            SLIDE,
+            DRIBBLE,
+            RELEASE_DRIBBLE,
         ) = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18)
-        last_action=his_actions[-1]
-        #last2_action=his_actions[-2]
-        assert last_action>=1 and last_action<=8
+        last_action = his_actions[-1]
+        # last2_action=his_actions[-2]
+        assert last_action >= 1 and last_action <= 8
         # thenext direction is allow to be 90 degrees away,totally 5 actions
-        s=(last_action+5)%8
-        avail_ids=np.arange(s,s+5)%8+1
+        s = (last_action + 5) % 8
+        avail_ids = np.arange(s, s + 5) % 8 + 1
         return list(avail_ids)

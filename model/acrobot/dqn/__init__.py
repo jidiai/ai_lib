@@ -4,8 +4,10 @@ from .encoder import Encoder
 
 import numpy as np
 
+
 class Rewarder:
     def __init__(self):
         pass
+
     def r(self, raw_rewards, **kwargs):
         return np.array([raw_rewards])

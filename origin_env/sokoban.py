@@ -1,5 +1,5 @@
 # -*- coding:utf-8  -*-
-# 作者：zruizhi   
+# 作者：zruizhi
 # 创建时间： 2020/7/30 17:24 下午
 # 描述：
 from env.simulators.gridgame import GridGame
@@ -16,7 +16,7 @@ levels = {
         [1, 2, 0, 3, 4, 1, 1, 1],
         [1, 1, 1, 1, 3, 1, 0, 0],
         [0, 0, 0, 1, 2, 1, 0, 0],
-        [0, 0, 0, 1, 1, 1, 0, 0]
+        [0, 0, 0, 1, 1, 1, 0, 0],
     ],
     2: [
         [0, 0, 1, 1, 1, 1, 0, 0],
@@ -26,19 +26,21 @@ levels = {
         [1, 1, 0, 3, 4, 0, 1, 1],
         [1, 0, 0, 1, 3, 3, 0, 1],
         [1, 0, 0, 0, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1]
-    ]
+        [1, 1, 1, 1, 1, 1, 1, 1],
+    ],
 }
 
 
 class Sokoban(GridGame, GridObservation):
     def __init__(self, conf):
-        colors = conf.get('colors', [(255, 255, 255), (0, 0, 0), (255, 69, 0), (222, 184, 135)])
+        colors = conf.get(
+            "colors", [(255, 255, 255), (0, 0, 0), (255, 69, 0), (222, 184, 135)]
+        )
         super().__init__(conf, colors)
         # 0：没有 1：围墙 2：目标点 3：箱子 4-n_player+3：人物
         self.n_cell_type = self.n_player + 3
         self.step_cnt = 1
-        level = int(conf['level'])
+        level = int(conf["level"])
         self.map = levels[level]
 
         # 方向[0, 1, 2, 3]分别表示[上，下，左，右]
@@ -49,7 +51,7 @@ class Sokoban(GridGame, GridObservation):
         self.players = []
         self.current_state = self.init_state
         self.all_observes = self.get_all_observes()
-        self.won = {'total boxes': len(self.boxes)}
+        self.won = {"total boxes": len(self.boxes)}
         self.success_box_each_step = 0
         self.input_dimension = self.board_width * self.board_height
         self.action_dim = self.get_action_dim()
@@ -71,7 +73,7 @@ class Sokoban(GridGame, GridObservation):
             for t in self.targets:
                 if box.row == t[0] and box.col == t[1]:
                     cnt += 1
-        self.won['success boxes'] = cnt
+        self.won["success boxes"] = cnt
         return cnt
 
     def set_action_space(self):
@@ -89,26 +91,35 @@ class Sokoban(GridGame, GridObservation):
                 elif self.map[i][j] == 2:
                     self.targets.append([i, j])
                 elif self.map[i][j] == 3:
-                    box_obj = GameObject('b' + str(b_cnt), i, j, 0)
+                    box_obj = GameObject("b" + str(b_cnt), i, j, 0)
                     self.boxes.append(box_obj)
                     b_cnt += 1
                 else:
-                    for p in range(4, self.n_cell_type+1):
+                    for p in range(4, self.n_cell_type + 1):
                         if self.map[i][j] == p:
                             player = GameObject(p, i, j, 0)
                             self.players.append(player)
         # self.players.sort(key=lambda pl: pl.object_id)
-        current_state = [[[0] * self.cell_dim for _ in range(self.board_width)] for _ in range(self.board_height)]
+        current_state = [
+            [[0] * self.cell_dim for _ in range(self.board_width)]
+            for _ in range(self.board_height)
+        ]
         for i in range(len(self.map)):
             for j in range(len(self.map[0])):
                 current_state[i][j][0] = self.map[i][j]
-        self.init_info = {"walls": self.walls, "targets": self.targets,
-                          "players_position": [[p.row, p.col] for p in self.players],
-                          "boxes_position": [[b.row, b.col] for b in self.boxes]}
+        self.init_info = {
+            "walls": self.walls,
+            "targets": self.targets,
+            "players_position": [[p.row, p.col] for p in self.players],
+            "boxes_position": [[b.row, b.col] for b in self.boxes],
+        }
         return current_state
 
     def update_state(self):
-        next_state = [[[0] * self.cell_dim for _ in range(self.board_width)] for _ in range(self.board_height)]
+        next_state = [
+            [[0] * self.cell_dim for _ in range(self.board_width)]
+            for _ in range(self.board_height)
+        ]
 
         for pos in self.walls:
             next_state[pos[0]][pos[1]][0] = 1
@@ -149,7 +160,7 @@ class Sokoban(GridGame, GridObservation):
                 nxt_process = []
                 for i in range(len(unprocessed_players)):
                     p = unprocessed_players[i]
-                    act_idx = p.object_id-4
+                    act_idx = p.object_id - 4
                     p.direction = joint_action[act_idx][0].index(1)
                     # print("%d direction" % p.object_id, self.actions_name[p.direction])
 
@@ -160,7 +171,9 @@ class Sokoban(GridGame, GridObservation):
                     p2 = p.get_next_two_pos()
 
                     # 位置已被其他玩家或者箱子占领
-                    if p1 in occupied_pos or (self.current_state[p1[0]][p1[1]][0] == 3 and p2 in occupied_pos):
+                    if p1 in occupied_pos or (
+                        self.current_state[p1[0]][p1[1]][0] == 3 and p2 in occupied_pos
+                    ):
                         continue
                     # 位置不合法
                     if self.is_valid_pos(p1, p2) == 0:
@@ -194,8 +207,10 @@ class Sokoban(GridGame, GridObservation):
             self.step_cnt += 1
 
             players = sorted(self.players, key=lambda pl: pl.object_id)
-            info_after = {"players_position": [[p.row, p.col] for p in players],
-                          "boxes_position": [[b.row, b.col] for b in self.boxes]}
+            info_after = {
+                "players_position": [[p.row, p.col] for p in players],
+                "boxes_position": [[b.row, b.col] for b in self.boxes],
+            }
             self.all_observes = self.get_all_observes()
 
             return self.all_observes, info_after
@@ -204,8 +219,12 @@ class Sokoban(GridGame, GridObservation):
         return current_state
 
     def get_dict_observation(self, player_id):
-        key_info = {"state_map": self.current_state, "player_idx": player_id, 'board_width': self.board_width,
-                    'board_height': self.board_height}
+        key_info = {
+            "state_map": self.current_state,
+            "player_idx": player_id,
+            "board_width": self.board_width,
+            "board_height": self.board_height,
+        }
 
         return key_info
 
@@ -285,7 +304,7 @@ class Sokoban(GridGame, GridObservation):
         return action_dim
 
 
-class GameObject():
+class GameObject:
     def __init__(self, object_id, row, col, direction):
         self.object_id = object_id
         self.row = row
@@ -317,11 +336,3 @@ class GameObject():
         next_two_pos = self.get_next_pos(next_pos[0], next_pos[1])
 
         return next_two_pos
-
-
-
-
-
-
-
-

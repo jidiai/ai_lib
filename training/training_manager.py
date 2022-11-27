@@ -22,10 +22,12 @@ class TrainingManager:
         self.policy_server = get_actor(self.id, "PolicyServer")
         self.monitor = get_actor(self.id, "Monitor")
 
-        DistributedTrainer = ray.remote(**get_resources(cfg.trainer.distributed.resources))(
-            distributed_trainer.DistributedTrainer)
-        DataPrefetcher = ray.remote(**get_resources(cfg.data_prefetcher.distributed.resources))(
-            data_prefetcher.DataPrefetcher)
+        DistributedTrainer = ray.remote(
+            **get_resources(cfg.trainer.distributed.resources)
+        )(distributed_trainer.DistributedTrainer)
+        DataPrefetcher = ray.remote(
+            **get_resources(cfg.data_prefetcher.distributed.resources)
+        )(data_prefetcher.DataPrefetcher)
 
         if self.cfg.master_port is None:
             self.cfg.master_port = str(int(np.random.randint(10000, 20000)))
@@ -40,16 +42,13 @@ class TrainingManager:
                 master_ifname=self.cfg.get("master_ifname", None),
                 gpu_preload=self.cfg.gpu_preload,  # TODO(jh): debug
                 local_queue_size=self.cfg.local_queue_size,
-                policy_server=self.policy_server
-            ) for idx in range(self.cfg.num_trainers)
+                policy_server=self.policy_server,
+            )
+            for idx in range(self.cfg.num_trainers)
         ]
         self.prefetchers = [
             DataPrefetcher.options(max_concurrency=10).remote(
-                self.cfg.data_prefetcher,
-                self.trainers,
-                [
-                    self.data_server
-                ]
+                self.cfg.data_prefetcher, self.trainers, [self.data_server]
             )
             for i in range(self.cfg.num_prefetchers)
         ]
@@ -83,7 +82,11 @@ class TrainingManager:
             self.stopped_flag = False
 
         # create table
-        table_name = default_table_name(training_desc.agent_id, training_desc.policy_id, training_desc.share_policies)
+        table_name = default_table_name(
+            training_desc.agent_id,
+            training_desc.policy_id,
+            training_desc.share_policies,
+        )
         ray.get(self.data_server.create_table.remote(table_name))
 
         rollout_desc = RolloutDesc(
@@ -93,23 +96,19 @@ class TrainingManager:
             training_desc.share_policies,
             training_desc.sync,
             training_desc.stopper,
-            type='rollout',
+            type="rollout",
         )
         rollout_task_ref = self.rollout_manger.rollout.remote(rollout_desc)
 
         training_desc.kwargs["cfg"] = self.cfg.trainer
-        ray.get([
-            trainer.reset.remote(
-                training_desc
-            ) for trainer in self.trainers
-        ])
+        ray.get([trainer.reset.remote(training_desc) for trainer in self.trainers])
 
-        prefetching_desc = PrefetchingDesc(
-            table_name,
-            self.cfg.batch_size
-        )
+        prefetching_desc = PrefetchingDesc(table_name, self.cfg.batch_size)
         prefetching_descs = [prefetching_desc]
-        prefetching_task_refs = [prefetcher.prefetch.remote(prefetching_descs) for prefetcher in self.prefetchers]
+        prefetching_task_refs = [
+            prefetcher.prefetch.remote(prefetching_descs)
+            for prefetcher in self.prefetchers
+        ]
 
         if self.cfg.gpu_preload:
             ray.get([trainer.local_queue_init.remote() for trainer in self.trainers])
@@ -126,10 +125,7 @@ class TrainingManager:
             global_timer.record("optimize_start")
             try:
                 statistics_list = ray.get(
-                    [
-                        trainer.optimize.remote(
-                        ) for trainer in self.trainers
-                    ]
+                    [trainer.optimize.remote() for trainer in self.trainers]
                 )
 
             except Exception as e:
@@ -143,28 +139,52 @@ class TrainingManager:
                 if training_steps % self.cfg.update_interval == 0:
                     global_timer.record("push_policy_start")
                     ray.get(self.trainers[0].push_policy.remote(training_steps))
-                    global_timer.time("push_policy_start", "push_policy_end", "push_policy")
+                    global_timer.time(
+                        "push_policy_start", "push_policy_end", "push_policy"
+                    )
                 global_timer.time("train_step_start", "train_step_end", "train_step")
             except Exception as e:
                 # save model
                 Logger.error(traceback.format_exc())
                 raise e
 
-
             # reduce
-            training_statistics = self.reduce_statistics([statistics[0] for statistics in statistics_list])
-            timer_statistics = self.reduce_statistics([statistics[1] for statistics in statistics_list])
+            training_statistics = self.reduce_statistics(
+                [statistics[0] for statistics in statistics_list]
+            )
+            timer_statistics = self.reduce_statistics(
+                [statistics[1] for statistics in statistics_list]
+            )
             timer_statistics.update(global_timer.elapses)
-            data_server_statistics = ray.get(self.data_server.get_statistics.remote(table_name))
+            data_server_statistics = ray.get(
+                self.data_server.get_statistics.remote(table_name)
+            )
 
             # log
-            main_tag = "Training/{}/{}/".format(rollout_desc.agent_id, rollout_desc.policy_id)
-            ray.get(self.monitor.add_multiple_scalars.remote(main_tag, training_statistics, global_step=training_steps))
-            main_tag = "TrainingTimer/{}/{}/".format(rollout_desc.agent_id, rollout_desc.policy_id)
-            ray.get(self.monitor.add_multiple_scalars.remote(main_tag, timer_statistics, global_step=training_steps))
-            main_tag = "DataServer/{}/{}/".format(rollout_desc.agent_id, rollout_desc.policy_id)
+            main_tag = "Training/{}/{}/".format(
+                rollout_desc.agent_id, rollout_desc.policy_id
+            )
             ray.get(
-                self.monitor.add_multiple_scalars.remote(main_tag, data_server_statistics, global_step=training_steps))
+                self.monitor.add_multiple_scalars.remote(
+                    main_tag, training_statistics, global_step=training_steps
+                )
+            )
+            main_tag = "TrainingTimer/{}/{}/".format(
+                rollout_desc.agent_id, rollout_desc.policy_id
+            )
+            ray.get(
+                self.monitor.add_multiple_scalars.remote(
+                    main_tag, timer_statistics, global_step=training_steps
+                )
+            )
+            main_tag = "DataServer/{}/{}/".format(
+                rollout_desc.agent_id, rollout_desc.policy_id
+            )
+            ray.get(
+                self.monitor.add_multiple_scalars.remote(
+                    main_tag, data_server_statistics, global_step=training_steps
+                )
+            )
 
             global_timer.clear()
 
@@ -177,7 +197,9 @@ class TrainingManager:
         self.total_training_steps += training_steps
 
         # signal prefetchers to stop prefetching
-        ray.get([prefetcher.stop_prefetching.remote() for prefetcher in self.prefetchers])
+        ray.get(
+            [prefetcher.stop_prefetching.remote() for prefetcher in self.prefetchers]
+        )
         # wait for prefetching tasks to completely stop
         ray.get(prefetching_task_refs)
 

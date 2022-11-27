@@ -1,9 +1,11 @@
 from EnvWrapper.BaseWrapper import BaseWrapper
 from pathlib import Path
 import sys
+
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
 from env.chooseenv import make
+
 env = make("gridworld")
 
 
@@ -19,9 +21,9 @@ class gridworld(BaseWrapper):
         return int(self.env.input_dimension)
 
     def step(self, action, train=True):
-        '''
+        """
         return: next_state, reward, done, _, _
-        '''
+        """
 
         next_state, reward, done, _, info = self.env.step(action)
         reward = reward[0]
@@ -36,4 +38,3 @@ class gridworld(BaseWrapper):
 
     def set_seed(self, seed=None):
         pass
-

@@ -16,11 +16,12 @@ from tools.utils.aggregators import Aggregator
 from .logger import LoggerFactory
 import settings
 
-Logger=LoggerFactory.build_logger() # For global usage, initialized in 
+Logger = LoggerFactory.build_logger()  # For global usage, initialized in
 # temp_log_dir="."#os.path.join(settings.LOG_DIR,"temp")
 # os.makedirs(temp_log_dir,exist_ok=True)
 # temp_log_filepath=os.path.join(temp_log_dir,"temp.log")
 # Logger=LoggerFactory.add_file_handler(Logger,filepath=temp_log_filepath)
+
 
 class Log:
     init = False

@@ -25,8 +25,14 @@ from pettingzoo.mpe import simple_world_comm_v2
 
 class MPE_Jidi(Game, DictObservation):
     def __init__(self, conf):
-        super(MPE_Jidi, self).__init__(conf['n_player'], conf['is_obs_continuous'], conf['is_act_continuous'],
-                                     conf['game_name'], conf['agent_nums'], conf['obs_type'])
+        super(MPE_Jidi, self).__init__(
+            conf["n_player"],
+            conf["is_obs_continuous"],
+            conf["is_act_continuous"],
+            conf["game_name"],
+            conf["agent_nums"],
+            conf["obs_type"],
+        )
         self.seed = None
         self.done = False
         self.dones = {}
@@ -37,28 +43,51 @@ class MPE_Jidi(Game, DictObservation):
         action_continues = self.is_act_continuous
         self.env_core = None
         if env_name == "simple":
-            self.env_core = simple_v2.parallel_env(max_cycles=25, continuous_actions=action_continues)
+            self.env_core = simple_v2.parallel_env(
+                max_cycles=25, continuous_actions=action_continues
+            )
         elif env_name == "simple_adversary":
-            self.env_core = simple_adversary_v2.parallel_env(N=2, max_cycles=25, continuous_actions=action_continues)
+            self.env_core = simple_adversary_v2.parallel_env(
+                N=2, max_cycles=25, continuous_actions=action_continues
+            )
         elif env_name == "simple_crypto":
-            self.env_core = simple_crypto_v2.parallel_env(max_cycles=25, continuous_actions=action_continues)
+            self.env_core = simple_crypto_v2.parallel_env(
+                max_cycles=25, continuous_actions=action_continues
+            )
         elif env_name == "simple_push":
-            self.env_core = simple_push_v2.parallel_env(max_cycles=25, continuous_actions=action_continues)
+            self.env_core = simple_push_v2.parallel_env(
+                max_cycles=25, continuous_actions=action_continues
+            )
         elif env_name == "simple_reference":
-            self.env_core = simple_reference_v2.parallel_env(local_ratio=0.5, max_cycles=25,
-                                                             continuous_actions=action_continues)
+            self.env_core = simple_reference_v2.parallel_env(
+                local_ratio=0.5, max_cycles=25, continuous_actions=action_continues
+            )
         elif env_name == "simple_speaker_listener":
-            self.env_core = simple_speaker_listener_v3.parallel_env(max_cycles=25, continuous_actions=action_continues)
+            self.env_core = simple_speaker_listener_v3.parallel_env(
+                max_cycles=25, continuous_actions=action_continues
+            )
         elif env_name == "simple_spread":
-            self.env_core = simple_spread_v2.parallel_env(N=3, local_ratio=0.5, max_cycles=25,
-                                                          continuous_actions=action_continues)
+            self.env_core = simple_spread_v2.parallel_env(
+                N=3, local_ratio=0.5, max_cycles=25, continuous_actions=action_continues
+            )
         elif env_name == "simple_tag":
-            self.env_core = simple_tag_v2.parallel_env(num_good=1, num_adversaries=3, num_obstacles=2, max_cycles=25,
-                                                       continuous_actions=action_continues)
+            self.env_core = simple_tag_v2.parallel_env(
+                num_good=1,
+                num_adversaries=3,
+                num_obstacles=2,
+                max_cycles=25,
+                continuous_actions=action_continues,
+            )
         elif env_name == "simple_world_comm":
-            self.env_core = simple_world_comm_v2.parallel_env(num_good=2, num_adversaries=4, num_obstacles=1,
-                                                              num_food=2, max_cycles=25, num_forests=2,
-                                                              continuous_actions=action_continues)
+            self.env_core = simple_world_comm_v2.parallel_env(
+                num_good=2,
+                num_adversaries=4,
+                num_obstacles=1,
+                num_food=2,
+                max_cycles=25,
+                num_forests=2,
+                continuous_actions=action_continues,
+            )
 
         if self.env_core is None:
             raise Exception("MPE_Jidi env_core is None!")
@@ -68,7 +97,9 @@ class MPE_Jidi(Game, DictObservation):
         self.n_return = [0] * self.n_player
         self.step_cnt = 0
         self.done = False
-        self.player_id_map, self.player_id_reverse_map = self.get_player_id_map(self.env_core.action_spaces.keys())
+        self.player_id_map, self.player_id_reverse_map = self.get_player_id_map(
+            self.env_core.action_spaces.keys()
+        )
 
         # set up action spaces
         self.new_action_spaces = self.load_action_space()
@@ -99,7 +130,7 @@ class MPE_Jidi(Game, DictObservation):
         info_before = self.step_before_info()
         joint_action_decode = self.decode(joint_action)
         obs, reward, self.dones, info_after = self.env_core.step(joint_action_decode)
-        info_after = ''
+        info_after = ""
         self.current_state = obs
         self.all_observes = self.get_all_observes()
         # print("debug all observes ", type(self.all_observes[0]["obs"]))
@@ -111,8 +142,11 @@ class MPE_Jidi(Game, DictObservation):
     def is_valid_action(self, joint_action):
 
         if len(joint_action) != self.n_player:
-            raise Exception("Input joint action dimension should be {}, not {}.".format(
-                self.n_player, len(joint_action)))
+            raise Exception(
+                "Input joint action dimension should be {}, not {}.".format(
+                    self.n_player, len(joint_action)
+                )
+            )
 
         for i in range(self.n_player):
             player_name = self.player_id_reverse_map[i]
@@ -120,16 +154,31 @@ class MPE_Jidi(Game, DictObservation):
                 continue
             if not self.is_act_continuous:
                 if len(joint_action[i][0]) != self.joint_action_space[i][0].n:
-                    raise Exception("The input action dimension for player {}, {} should be {}, not {}.".format(
-                        i, player_name, self.joint_action_space[i][0].n, len(joint_action[i][0])))
+                    raise Exception(
+                        "The input action dimension for player {}, {} should be {}, not {}.".format(
+                            i,
+                            player_name,
+                            self.joint_action_space[i][0].n,
+                            len(joint_action[i][0]),
+                        )
+                    )
                 if not (1 in joint_action[i][0]):
                     raise Exception("The input should be an one-hot vector!")
             else:
-                if np.array(joint_action[i][0]).shape != self.joint_action_space[i][0].shape:
-                    raise Exception("The input action dimension for player {}, {} should be {}, not {}.".format(
-                        i, player_name, self.joint_action_space[i][0].shape, np.array(joint_action[i][0]).shape))
+                if (
+                    np.array(joint_action[i][0]).shape
+                    != self.joint_action_space[i][0].shape
+                ):
+                    raise Exception(
+                        "The input action dimension for player {}, {} should be {}, not {}.".format(
+                            i,
+                            player_name,
+                            self.joint_action_space[i][0].shape,
+                            np.array(joint_action[i][0]).shape,
+                        )
+                    )
 
-    def step_before_info(self, info=''):
+    def step_before_info(self, info=""):
         return info
 
     def is_terminal(self):
@@ -155,8 +204,9 @@ class MPE_Jidi(Game, DictObservation):
             if not self.is_act_continuous:
                 new_action_spaces[changed_key] = Discrete(action_space.n)
             else:
-                new_action_spaces[changed_key] = Box(action_space.low, action_space.high,
-                                                     action_space.shape, np.float32)
+                new_action_spaces[changed_key] = Box(
+                    action_space.low, action_space.high, action_space.shape, np.float32
+                )
 
         return new_action_spaces
 
@@ -168,8 +218,8 @@ class MPE_Jidi(Game, DictObservation):
         if len(self.agent_nums) == 1:
             return self.won
 
-        left = sum(self.n_return[0:self.agent_nums[0]])
-        right = sum(self.n_return[self.agent_nums[0]:])
+        left = sum(self.n_return[0 : self.agent_nums[0]])
+        right = sum(self.n_return[self.agent_nums[0] :])
 
         if left > right:
             return "0"
@@ -222,7 +272,11 @@ class MPE_Jidi(Game, DictObservation):
         for i in range(self.n_player):
             player_name = self.player_id_reverse_map[i]
             each_obs = copy.deepcopy(self.current_state[player_name])
-            each = {"obs": each_obs, "controlled_player_index": i, "controlled_player_name": player_name}
+            each = {
+                "obs": each_obs,
+                "controlled_player_index": i,
+                "controlled_player_name": player_name,
+            }
             all_observes.append(each)
         return all_observes
 

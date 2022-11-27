@@ -8,10 +8,8 @@ from utils.logger import Logger
 from registry import registry
 
 
-
 @registry.registered(registry.LOSS)
 class DDPGLoss(LossFunc):
     def __init__(self):
         # TODO: set these values using custom_config
         super().__init__()
-

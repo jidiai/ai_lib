@@ -4,6 +4,7 @@
 
 import numpy as np
 
+
 class classic_CartPole_v0_wrapper(object):
     def __init__(self, env):
         self.env = env
@@ -15,7 +16,7 @@ class classic_CartPole_v0_wrapper(object):
         return self.env.input_dimension.shape[0]
 
     def action(self, a):
-        print('a', a)
+        print("a", a)
         a = [a]
         joint_action_ = []
         for n in range(self.env.n_player):

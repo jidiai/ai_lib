@@ -17,10 +17,7 @@ def rename_field(data, field, new_field):
 
 def select_fields(data, fields):
     rets = {
-        agent_id: {
-            field: agent_data[field]
-            for field in fields if field in agent_data
-        }
+        agent_id: {field: agent_data[field] for field in fields if field in agent_data}
         for agent_id, agent_data in data.items()
     }
     return rets
@@ -51,7 +48,7 @@ def stack_step_data(step_data_list, bootstrap_data, padding_length=None):
     length_to_pad = padding_length - len(step_data_list)
     active_masks = np.zeros((padding_length, 1, 1), dtype=float)
     assert EpisodeKey.ACTIVE_MASK not in step_data_list[0]
-    active_masks[:len(step_data_list)] = 1
+    active_masks[: len(step_data_list)] = 1
     episode_data[EpisodeKey.ACTIVE_MASK] = active_masks
     for field in step_data_list[0]:
         data_list = [step_data[field] for step_data in step_data_list]
@@ -66,13 +63,13 @@ def stack_step_data(step_data_list, bootstrap_data, padding_length=None):
 
 
 def rollout_func(
-        eval: bool,
-        rollout_worker,
-        rollout_desc: RolloutDesc,
-        env: BaseAECEnv,
-        behavior_policies,
-        data_server,
-        **kwargs
+    eval: bool,
+    rollout_worker,
+    rollout_desc: RolloutDesc,
+    env: BaseAECEnv,
+    behavior_policies,
+    data_server,
+    **kwargs
 ):
     """
     TODO(jh): modify document
@@ -102,15 +99,10 @@ def rollout_func(
         policy_ids[agent_id] = policy_id
         policies[agent_id] = policy
 
-    custom_reset_config = {
-        "feature_encoders": feature_encoders
-    }
+    custom_reset_config = {"feature_encoders": feature_encoders}
 
     # {agent_id:{field:value}}
-    step_data = {
-        agent_id: {}
-        for agent_id in behavior_policies
-    }
+    step_data = {agent_id: {} for agent_id in behavior_policies}
 
     global_timer.record("env_step_start")
     env.reset(custom_reset_config)
@@ -121,7 +113,9 @@ def rollout_func(
     # breakpoint()
 
     rnn_states = {
-        agent_id: policies[agent_id].get_initial_state(batch_size=env.num_players[agent_id])
+        agent_id: policies[agent_id].get_initial_state(
+            batch_size=env.num_players[agent_id]
+        )
         for agent_id in env.agent_ids
     }
 
@@ -147,9 +141,11 @@ def rollout_func(
             global_timer.record("inference_start")
             policy_outputs = {}
             assert rollout_epoch is not None
-            policy_outputs[agent_id] = policy.compute_action(**policy_inputs[agent_id],
-                                                             explore=(not eval and agent_id == main_agent_id),
-                                                             step=rollout_epoch)
+            policy_outputs[agent_id] = policy.compute_action(
+                **policy_inputs[agent_id],
+                explore=(not eval and agent_id == main_agent_id),
+                step=rollout_epoch
+            )
             global_timer.time("inference_start", "inference_end", "inference")
             actions = {agent_id: policy_outputs[agent_id][EpisodeKey.ACTION]}
         else:
@@ -170,13 +166,25 @@ def rollout_func(
 
         if not eval:
             if main_agent_id == agent_id:
-                step_data = union(policy_inputs, select_fields(policy_outputs,
-                                                               [EpisodeKey.ACTION, EpisodeKey.ACTION_DIST,
-                                                                EpisodeKey.STATE_VALUE]))
+                step_data = union(
+                    policy_inputs,
+                    select_fields(
+                        policy_outputs,
+                        [
+                            EpisodeKey.ACTION,
+                            EpisodeKey.ACTION_DIST,
+                            EpisodeKey.STATE_VALUE,
+                        ],
+                    ),
+                )
                 # NOTE(jh): we need the next reward and done to compute return.
                 if len(step_data_list) > 0:
-                    step_data_list[-1][EpisodeKey.REWARD] = step_data[main_agent_id][EpisodeKey.REWARD]
-                    step_data_list[-1][EpisodeKey.DONE] = step_data[main_agent_id][EpisodeKey.DONE]
+                    step_data_list[-1][EpisodeKey.REWARD] = step_data[main_agent_id][
+                        EpisodeKey.REWARD
+                    ]
+                    step_data_list[-1][EpisodeKey.DONE] = step_data[main_agent_id][
+                        EpisodeKey.DONE
+                    ]
                 # append new data
                 step_data_list.append(step_data[main_agent_id])
                 # NOTE(jh): we need the next reward and done to compute return. Force them to be None here.
@@ -184,8 +192,13 @@ def rollout_func(
                 step_data_list[-1][EpisodeKey.DONE] = None
 
                 # update rnn states
-        rnn_states = union(rnn_states,
-                           select_fields(policy_outputs, [EpisodeKey.ACTOR_RNN_STATE, EpisodeKey.CRITIC_RNN_STATE]))
+        rnn_states = union(
+            rnn_states,
+            select_fields(
+                policy_outputs,
+                [EpisodeKey.ACTOR_RNN_STATE, EpisodeKey.CRITIC_RNN_STATE],
+            ),
+        )
 
     if not eval:
         # bootstrap_data=select_fields(
@@ -206,17 +219,29 @@ def rollout_func(
             # we need a newaxis to indicate length of step 1
             transition = {
                 EpisodeKey.CUR_OBS: episode[step][EpisodeKey.CUR_OBS][np.newaxis, ...],
-                EpisodeKey.ACTION_MASK: episode[step][EpisodeKey.ACTION_MASK][np.newaxis, ...],
+                EpisodeKey.ACTION_MASK: episode[step][EpisodeKey.ACTION_MASK][
+                    np.newaxis, ...
+                ],
                 EpisodeKey.ACTION: episode[step][EpisodeKey.ACTION][np.newaxis, ...],
                 EpisodeKey.REWARD: episode[step][EpisodeKey.REWARD][np.newaxis, ...],
                 EpisodeKey.DONE: episode[step][EpisodeKey.DONE][np.newaxis, ...],
-                EpisodeKey.NEXT_OBS: episode[step + 1][EpisodeKey.CUR_OBS][np.newaxis, ...],
-                EpisodeKey.NEXT_ACTION_MASK: episode[step + 1][EpisodeKey.ACTION_MASK][np.newaxis, ...]
+                EpisodeKey.NEXT_OBS: episode[step + 1][EpisodeKey.CUR_OBS][
+                    np.newaxis, ...
+                ],
+                EpisodeKey.NEXT_ACTION_MASK: episode[step + 1][EpisodeKey.ACTION_MASK][
+                    np.newaxis, ...
+                ],
             }
             transitions.append(transition)
         data_server.save.remote(
-            default_table_name(rollout_desc.agent_id, rollout_desc.policy_id, rollout_desc.share_policies), transitions)
+            default_table_name(
+                rollout_desc.agent_id,
+                rollout_desc.policy_id,
+                rollout_desc.share_policies,
+            ),
+            transitions,
+        )
 
     stats = env.get_episode_stats()
 
-    return {"main_agent_id": main_agent_id, 'policy_ids': policy_ids, "stats": stats}
+    return {"main_agent_id": main_agent_id, "policy_ids": policy_ids, "stats": stats}

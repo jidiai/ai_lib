@@ -41,12 +41,12 @@ class Episode:
         self.env_id = env_id
 
         self.agent_entry = defaultdict(lambda: {aid: [] for aid in self.policy_mapping})
-        
-    def slice(self,s_idx=None,e_idx=None):
-        episode=Episode(self.policy_mapping,self.env_id) 
-        for k,v in self.agent_entry.items():
-            for aid,data in v.items():
-                episode.agent_entry[k][aid]=data[s_idx:e_idx]
+
+    def slice(self, s_idx=None, e_idx=None):
+        episode = Episode(self.policy_mapping, self.env_id)
+        for k, v in self.agent_entry.items():
+            for aid, data in v.items():
+                episode.agent_entry[k][aid] = data[s_idx:e_idx]
         return episode
 
     def __getitem__(self, __k: str) -> Dict[AgentID, List]:
@@ -79,8 +79,6 @@ class Episode:
                     else:
                         res[agent_id][ek] = tmp
         return res
-    
-
 
 
 class NewEpisodeDict(defaultdict):
@@ -106,12 +104,12 @@ class NewEpisodeDict(defaultdict):
                 assert aid in agent_slot, agent_slot
                 for aid, _v in v.items():
                     agent_slot[aid].append(_v)
-                    
-    def record_step_data(self,step_data: Dict[str, Dict[EnvID, Dict[AgentID, Any]]]):
+
+    def record_step_data(self, step_data: Dict[str, Dict[EnvID, Dict[AgentID, Any]]]):
         for field, envs_dict in step_data.items():
             for env_id, agents_dict in envs_dict.items():
                 for agent_id, v in agents_dict.items():
-                    agent_slot=self[env_id][field]
+                    agent_slot = self[env_id][field]
                     agent_slot[agent_id].append(v)
 
     def to_numpy(

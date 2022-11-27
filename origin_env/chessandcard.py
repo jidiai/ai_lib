@@ -12,8 +12,14 @@ from utils.discrete import Discrete
 
 class ChessAndCard(Game, DictObservation):
     def __init__(self, conf, seed=None):
-        super(ChessAndCard, self).__init__(conf['n_player'], conf['is_obs_continuous'], conf['is_act_continuous'],
-                                           conf['game_name'], conf['agent_nums'], conf['obs_type'])
+        super(ChessAndCard, self).__init__(
+            conf["n_player"],
+            conf["is_obs_continuous"],
+            conf["is_act_continuous"],
+            conf["game_name"],
+            conf["agent_nums"],
+            conf["obs_type"],
+        )
         self.seed = None
         self.done = False
         self.dones = {}
@@ -30,7 +36,11 @@ class ChessAndCard(Game, DictObservation):
         if self.env_core is None:
             raise Exception("ChessAndCard env_core is None!")
 
-        self.episode_count = 30 if self.game_name in ['texas_holdem_no_limit_v3', 'texas_holdem_v3'] else 1
+        self.episode_count = (
+            30
+            if self.game_name in ["texas_holdem_no_limit_v3", "texas_holdem_v3"]
+            else 1
+        )
         self.won = {}
         self.n_return = [0] * self.n_player
         self.step_cnt = 0
@@ -39,7 +49,9 @@ class ChessAndCard(Game, DictObservation):
         self.seed = seed
         self.env_core.seed(self.seed)
         self.env_core.reset()
-        self.player_id_map, self.player_id_reverse_map = self.get_player_id_map(self.env_core.agents)
+        self.player_id_map, self.player_id_reverse_map = self.get_player_id_map(
+            self.env_core.agents
+        )
 
         # set up action spaces
         self.new_action_spaces = self.load_action_space()
@@ -100,24 +112,37 @@ class ChessAndCard(Game, DictObservation):
     def is_valid_action(self, joint_action):
 
         if len(joint_action) != self.n_player:
-            raise Exception("Input joint action dimension should be {}, not {}.".format(
-                self.n_player, len(joint_action)))
+            raise Exception(
+                "Input joint action dimension should be {}, not {}.".format(
+                    self.n_player, len(joint_action)
+                )
+            )
 
         current_player_id = self.player_id_map[self.env_core.agent_selection]
-        if (self.env_core.agent_selection in self.env_core.agents) and \
-                (not self.env_core.dones[self.env_core.agent_selection]):
-            if joint_action[current_player_id] is None or joint_action[current_player_id][0] is None:
-                raise Exception("Action of current player is needed. Current player is {}, {}".format(
-                    current_player_id, self.env_core.agent_selection))
+        if (self.env_core.agent_selection in self.env_core.agents) and (
+            not self.env_core.dones[self.env_core.agent_selection]
+        ):
+            if (
+                joint_action[current_player_id] is None
+                or joint_action[current_player_id][0] is None
+            ):
+                raise Exception(
+                    "Action of current player is needed. Current player is {}, {}".format(
+                        current_player_id, self.env_core.agent_selection
+                    )
+                )
 
         for i in range(self.n_player):
             if joint_action[i] is None or joint_action[i][0] is None:
                 continue
             if len(joint_action[i][0]) != self.joint_action_space[i][0].n:
-                raise Exception("The input action dimension for player {} should be {}, not {}.".format(
-                    i, self.joint_action_space[i][0].n, len(joint_action[i][0])))
+                raise Exception(
+                    "The input action dimension for player {} should be {}, not {}.".format(
+                        i, self.joint_action_space[i][0].n, len(joint_action[i][0])
+                    )
+                )
 
-    def step_before_info(self, info=''):
+    def step_before_info(self, info=""):
         return info
 
     def is_terminal(self):
@@ -153,7 +178,7 @@ class ChessAndCard(Game, DictObservation):
 
     def check_win(self):
         if self.all_equals(self.n_return):
-            return '-1'
+            return "-1"
 
         index = []
         max_n = max(self.n_return)
@@ -167,11 +192,16 @@ class ChessAndCard(Game, DictObservation):
             return str(index)
 
     def decode(self, joint_action):
-        if self.env_core.agent_selection not in self.env_core.agents or \
-                self.env_core.dones[self.env_core.agent_selection]:
+        if (
+            self.env_core.agent_selection not in self.env_core.agents
+            or self.env_core.dones[self.env_core.agent_selection]
+        ):
             return None
         current_player_id = self.player_id_map[self.env_core.agent_selection]
-        if joint_action[current_player_id] is None or joint_action[current_player_id][0] is None:
+        if (
+            joint_action[current_player_id] is None
+            or joint_action[current_player_id][0] is None
+        ):
             return None
         joint_action_decode = joint_action[current_player_id][0].index(1)
         return joint_action_decode
@@ -203,19 +233,35 @@ class ChessAndCard(Game, DictObservation):
         for i in range(self.n_player):
             player_name = self.player_id_reverse_map[i]
             each_obs = copy.deepcopy(self.current_state)
-            if self.game_name in ['texas_holdem_no_limit_v3', 'texas_holdem_v3', 'leduc_holdem_v3']:
+            if self.game_name in [
+                "texas_holdem_no_limit_v3",
+                "texas_holdem_v3",
+                "leduc_holdem_v3",
+            ]:
                 if self.player_id_map[self.env_core.agent_selection] == i:
-                    each = {"obs": each_obs, "is_new_episode": is_new_episode,
-                            "current_move_player": self.env_core.agent_selection,
-                            "controlled_player_index": i, "controlled_player_name": player_name}
-                else:
-                    each = {"obs": None, "is_new_episode": is_new_episode,
-                            "current_move_player": self.env_core.agent_selection,
-                            "controlled_player_index": i, "controlled_player_name": player_name}
-            else:
-                each = {"obs": each_obs, "is_new_episode": is_new_episode,
+                    each = {
+                        "obs": each_obs,
+                        "is_new_episode": is_new_episode,
                         "current_move_player": self.env_core.agent_selection,
-                        "controlled_player_index": i, "controlled_player_name": player_name}
+                        "controlled_player_index": i,
+                        "controlled_player_name": player_name,
+                    }
+                else:
+                    each = {
+                        "obs": None,
+                        "is_new_episode": is_new_episode,
+                        "current_move_player": self.env_core.agent_selection,
+                        "controlled_player_index": i,
+                        "controlled_player_name": player_name,
+                    }
+            else:
+                each = {
+                    "obs": each_obs,
+                    "is_new_episode": is_new_episode,
+                    "current_move_player": self.env_core.agent_selection,
+                    "controlled_player_index": i,
+                    "controlled_player_name": player_name,
+                }
             all_observes.append(each)
 
         return all_observes
@@ -224,18 +270,20 @@ class ChessAndCard(Game, DictObservation):
         return len(set(list_to_compare)) == 1
 
     def get_info_after(self):
-        info_after = ''
-        if self.game_name in ['texas_holdem_no_limit_v3', 'texas_holdem_v3']:
+        info_after = ""
+        if self.game_name in ["texas_holdem_no_limit_v3", "texas_holdem_v3"]:
             info_after = {}
             for i in range(self.n_player):
-                temp_info = copy.deepcopy(self.env_core.env.env.env.env.game.get_state(i))
-                if self.game_name in ['texas_holdem_no_limit_v3']:
-                    for action_index, action in enumerate(temp_info['legal_actions']):
-                        temp_info['legal_actions'][action_index] = str(action)
-                    temp_info['stage'] = str(temp_info['stage'])
+                temp_info = copy.deepcopy(
+                    self.env_core.env.env.env.env.game.get_state(i)
+                )
+                if self.game_name in ["texas_holdem_no_limit_v3"]:
+                    for action_index, action in enumerate(temp_info["legal_actions"]):
+                        temp_info["legal_actions"][action_index] = str(action)
+                    temp_info["stage"] = str(temp_info["stage"])
                 info_after[self.player_id_reverse_map[i]] = temp_info
 
-        if self.game_name in ['leduc_holdem_v3']:
+        if self.game_name in ["leduc_holdem_v3"]:
             info_after = {}
             for i in range(self.n_player):
                 temp_info = self.env_core.env.env.env.env.env.game.get_state(i)

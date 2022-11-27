@@ -1,6 +1,7 @@
 import importlib
 from pathlib import Path
 import sys
+
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
 from agents.baseagent import Baseagent
@@ -27,22 +28,19 @@ class SingleRLAgent(Baseagent):
         self.agent.append(self.algo)
 
     def action_from_algo_to_env(self, joint_action):
-        '''
+        """
         :param joint_action:
         :return: wrapped joint action: one-hot
-        '''
+        """
 
         joint_action_ = []
         for a in range(self.args.n_player):
             action_a = joint_action["action"]
-            if not self.args.action_continuous:   #discrete action space
+            if not self.args.action_continuous:  # discrete action space
                 each = [0] * self.args.action_space
                 each[action_a] = 1
                 joint_action_.append(each)
             else:
-                joint_action_.append(action_a)   #continuous action space
+                joint_action_.append(action_a)  # continuous action space
 
         return joint_action_
-
-
-

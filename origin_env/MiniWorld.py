@@ -14,8 +14,14 @@ import gym_miniworld
 
 class MiniWorld(Game, VectorObservation):
     def __init__(self, conf):
-        super().__init__(conf['n_player'], conf['is_obs_continuous'], conf['is_act_continuous'],
-                         conf['game_name'], conf['agent_nums'], conf['obs_type'])
+        super().__init__(
+            conf["n_player"],
+            conf["is_obs_continuous"],
+            conf["is_act_continuous"],
+            conf["game_name"],
+            conf["agent_nums"],
+            conf["obs_type"],
+        )
         self.done = False
         self.step_cnt = 0
         self.max_step = int(conf["max_step"])
@@ -36,28 +42,46 @@ class MiniWorld(Game, VectorObservation):
         self.action_dim = self.get_action_dim()
         self.input_dimension = self.env_core.observation_space
 
-        self.ob_space = [self.env_core.observation_space for _ in range(self.n_player)]#60* 80 *3
+        self.ob_space = [
+            self.env_core.observation_space for _ in range(self.n_player)
+        ]  # 60* 80 *3
         self.ob_vector_shape = [self.env_core.observation_space.shape] * self.n_player
-        self.ob_vector_range = [self.env_core.observation_space.low,
-                                self.env_core.observation_space.high] * self.n_player#???
+        self.ob_vector_range = [
+            self.env_core.observation_space.low,
+            self.env_core.observation_space.high,
+        ] * self.n_player  # ???
         self.init_info = None
 
     def load_action_space(self, conf):
         if "act_box" in conf:
-            input_action = json.loads(conf["act_box"]) if isinstance(conf["act_box"], str) else conf["act_box"]
+            input_action = (
+                json.loads(conf["act_box"])
+                if isinstance(conf["act_box"], str)
+                else conf["act_box"]
+            )
             # print(input_action)
             if self.is_act_continuous:
-                if ("high" not in input_action) or ("low" not in input_action) or ("shape" not in input_action):
-                    raise Exception("act_box in continuous case must have fields low, high, shape")
+                if (
+                    ("high" not in input_action)
+                    or ("low" not in input_action)
+                    or ("shape" not in input_action)
+                ):
+                    raise Exception(
+                        "act_box in continuous case must have fields low, high, shape"
+                    )
                 shape = tuple(input_action["shape"])
-                self.env_core.action_space = Box(input_action["low"], input_action["high"], shape, np.float32)
+                self.env_core.action_space = Box(
+                    input_action["low"], input_action["high"], shape, np.float32
+                )
             else:
                 if "discrete_n" not in input_action:
-                    raise Exception("act_box in discrete case must have field discrete_n")
+                    raise Exception(
+                        "act_box in discrete case must have field discrete_n"
+                    )
                 discrete_n = int(input_action["discrete_n"])
                 self.env_core.action_space = Discrete(discrete_n)
 
-    def get_next_state(self, action):#action=0/1/2
+    def get_next_state(self, action):  # action=0/1/2
         observation, reward, done, info = self.env_core.step(action)
 
         return observation, reward, done, info
@@ -66,7 +90,9 @@ class MiniWorld(Game, VectorObservation):
         if self.is_act_continuous:
             action_space = [[self.env_core.action_space] for _ in range(self.n_player)]
         else:
-            action_space = [[self.env_core.action_space] for _ in range(self.n_player)]#discrete(3)
+            action_space = [
+                [self.env_core.action_space] for _ in range(self.n_player)
+            ]  # discrete(3)
         return action_space
 
     def step(self, joint_action):
@@ -99,11 +125,11 @@ class MiniWorld(Game, VectorObservation):
     def decode(self, joint_action):
 
         if not self.is_act_continuous:
-            return joint_action[0][0].index(1)#？？
+            return joint_action[0][0].index(1)  # ？？
         else:
             return joint_action[0]
 
-    def step_before_info(self, info=''):
+    def step_before_info(self, info=""):
         return info
 
     def parse_info(self, info):

@@ -15,7 +15,6 @@ class Actor(nn.Module):
         self.l2 = nn.Linear(self.hidden_size, self.hidden_size)
         self.l3 = nn.Linear(self.hidden_size, action_dim)
 
-
     def forward(self, x):
         x = F.relu(self.l1(x))
         x = F.relu(self.l2(x))

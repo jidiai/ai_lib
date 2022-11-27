@@ -9,6 +9,7 @@ from networks.actor_critic import ActorCritic
 import os
 from pathlib import Path
 import sys
+
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
 from common.buffer import Replay_buffer as buffer
@@ -17,7 +18,7 @@ eps = np.finfo(np.float32).eps.item()
 
 
 def get_trajectory_property():
-    return ["action", 'log_prob', 'value']
+    return ["action", "log_prob", "value"]
 
 
 class AC(object):
@@ -64,11 +65,7 @@ class AC(object):
             probs, value = self.policy(state)
             m = Categorical(probs)
             action = torch.argmax(probs)
-        return {
-            "action": action.item(),
-            "log_prob": m.log_prob(action),
-            "value": value
-        }
+        return {"action": action.item(), "log_prob": m.log_prob(action), "value": value}
 
     def learn(self):
         self.rewards = self.memory.item_buffers["rewards"].data
@@ -103,7 +100,7 @@ class AC(object):
         del self.save_value[:]
 
     def save(self, save_path, episode):
-        base_path = os.path.join(save_path, 'trained_model')
+        base_path = os.path.join(save_path, "trained_model")
         if not os.path.exists(base_path):
             os.makedirs(base_path)
 

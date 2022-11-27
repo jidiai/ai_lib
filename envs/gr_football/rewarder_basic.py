@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 
+
 class Rewarder:
     def __init__(self, reward_config) -> None:
         self.player_last_hold_ball = -1
@@ -22,9 +23,9 @@ class Rewarder:
         'designated', 'active', 'sticky_actions'
         """
 
-        obs=state.obs
-        prev_obs=state.prev_obs
-        action=state.action
+        obs = state.obs
+        prev_obs = state.prev_obs
+        action = state.action
 
         # return self.offense_r_encoder.r(obs, prev_obs, action, id) \
         #        + self.defense_r_encoder.r(obs, prev_obs, action, id) \
@@ -34,36 +35,30 @@ class Rewarder:
         if obs["ball_owned_team"] == 0:
             self.player_last_hold_ball = obs["ball_owned_player"]
 
-        if obs['ball_owned_team'] != -1:
-            self.last_ball_owned_team = obs['ball_owned_team']
+        if obs["ball_owned_team"] != -1:
+            self.last_ball_owned_team = obs["ball_owned_team"]
 
-
-
-        if self.reward_config is None:      #default reward shaping
+        if self.reward_config is None:  # default reward shaping
             raise NotImplementedError
             reward = (
-                    5 * win_reward(obs)
-                    + 5.0 * preprocess_score(obs, rew, self.player_last_hold_ball)
-                    + 0.03 * ball_position_reward(obs, self.player_last_hold_ball)
-                    + yellow_reward(prev_obs, obs)
-                    - 0.003 * min_dist_reward(obs)
+                5 * win_reward(obs)
+                + 5.0 * preprocess_score(obs, rew, self.player_last_hold_ball)
+                + 0.03 * ball_position_reward(obs, self.player_last_hold_ball)
+                + yellow_reward(prev_obs, obs)
+                - 0.003 * min_dist_reward(obs)
             )
 
         else:
 
-
-
-            active_player = obs['active']
+            active_player = obs["active"]
 
             if self.cumulative_shot_reward is None:
-                self.cumulative_shot_reward = [0] * len(obs['left_team_roles'])
+                self.cumulative_shot_reward = [0] * len(obs["left_team_roles"])
 
-            shot_reward = [0] * len(obs['left_team_roles'])
-
-
+            shot_reward = [0] * len(obs["left_team_roles"])
 
             if prev_obs["score"][1] < obs["score"][1]:
-                self.cumulative_shot_reward = [0] * len(obs['left_team_roles'])
+                self.cumulative_shot_reward = [0] * len(obs["left_team_roles"])
             elif prev_obs["score"][0] < obs["score"][0]:
                 shot_reward[active_player] = self.cumulative_shot_reward[active_player]
                 self.cumulative_shot_reward[active_player] = 0
@@ -71,46 +66,52 @@ class Rewarder:
                 if action == 12:
                     self.cumulative_shot_reward[active_player] += 1
 
-
-            single_shot_reward = [0]*len(obs["left_team_roles"])
+            single_shot_reward = [0] * len(obs["left_team_roles"])
             if action == 12:
                 single_shot_reward[obs["active"]] += 1
-            
+
             reward = (
                 self.reward_config["win_reward"] * win_reward(obs)
-                + self.reward_config["preprocess_score"] * preprocess_score(obs,rew, self.player_last_hold_ball)
-                + self.reward_config["ball_position_reward"] * ball_position_reward(obs, self.player_last_hold_ball)
+                + self.reward_config["preprocess_score"]
+                * preprocess_score(obs, rew, self.player_last_hold_ball)
+                + self.reward_config["ball_position_reward"]
+                * ball_position_reward(obs, self.player_last_hold_ball)
                 + self.reward_config["yellow_reward"] * yellow_reward(prev_obs, obs)
-                - self.reward_config["min_dist_reward"] * min_dist_individual_reward(obs)
+                - self.reward_config["min_dist_reward"]
+                * min_dist_individual_reward(obs)
                 + self.reward_config["goal_reward"] * goal_reward(prev_obs, obs)
-                + self.reward_config["lost_ball_reward"] * lost_ball_reward(prev_obs, obs, self.player_last_hold_ball)
-                + self.reward_config["player_move_reward"] * player_move_reward(prev_obs, obs)
+                + self.reward_config["lost_ball_reward"]
+                * lost_ball_reward(prev_obs, obs, self.player_last_hold_ball)
+                + self.reward_config["player_move_reward"]
+                * player_move_reward(prev_obs, obs)
                 + self.reward_config["dist_goal_to_line"] * dist_goal_to_line(obs)
                 + self.reward_config["shot_reward"] * single_shot_reward[obs["active"]]
-                + self.reward_config['role_based_r'] * role_based_r(prev_obs, obs)
-                + self.reward_config['pure_goal'] * pure_goal(prev_obs, obs)
-                + self.reward_config['pure_lose_goal'] * pure_lose_goal(prev_obs, obs)
+                + self.reward_config["role_based_r"] * role_based_r(prev_obs, obs)
+                + self.reward_config["pure_goal"] * pure_goal(prev_obs, obs)
+                + self.reward_config["pure_lose_goal"] * pure_lose_goal(prev_obs, obs)
                 # + 10 * shot_reward[active_player]
             )
 
-            adaptive_attack_defence = self.reward_config.get('adaptive_attack_defence', 0)
+            adaptive_attack_defence = self.reward_config.get(
+                "adaptive_attack_defence", 0
+            )
             if adaptive_attack_defence:
-                if obs['score'][0] >= obs['score'][1] + 2:
+                if obs["score"][0] >= obs["score"][1] + 2:
                     if reward > 0:
                         reward *= 0.5
-                elif obs['score'][0] >= obs['score'][1] + 4:
+                elif obs["score"][0] >= obs["score"][1] + 4:
                     if reward > 0:
                         reward *= 0.2
-                elif obs['score'][0] >= obs['score'][1] + 5:
+                elif obs["score"][0] >= obs["score"][1] + 5:
                     if reward > 0:
                         reward = min(reward, 0)
-                elif obs['score'][0] <= obs['score'][1] - 2:
+                elif obs["score"][0] <= obs["score"][1] - 2:
                     if reward < 0:
                         reward *= 0.5
-                elif obs['score'][0] <= obs['score'][1] - 4:
+                elif obs["score"][0] <= obs["score"][1] - 4:
                     if reward < 0:
                         reward *= 0.2
-                elif obs['score'][0] <= obs['score'][1] - 5:
+                elif obs["score"][0] <= obs["score"][1] - 5:
                     if reward < 0:
                         reward = max(reward, 0)
             # return calc_skilled_attack_reward(rew, prev_obs, obs) + shot_reward[obs['active']]
@@ -121,7 +122,6 @@ class Rewarder:
             # else:
             #     shot_reward_c = 0
 
-
         return reward
 
 
@@ -129,7 +129,7 @@ def role_based_r(pre_obs, obs):
     team_goal_weight = {0: 0.2, 1: 0.2, 2: 0.5, 3: 0.5, 5: 0.7, 6: 1, 7: 1, 9: 1}
     team_lose_weight = {0: 1, 1: 1, 2: 0.7, 3: 0.7, 5: 0.5, 6: 0.2, 7: 0.2, 9: 0.2}
 
-    current_role = obs['left_team_roles'][obs['active']]
+    current_role = obs["left_team_roles"][obs["active"]]
 
     r = 0
 
@@ -138,8 +138,8 @@ def role_based_r(pre_obs, obs):
     if opponent_score_after > opponent_score_pre:
         r -= team_lose_weight[current_role]
 
-    current_score_pre = pre_obs['score'][0]
-    current_score_after = obs['score'][0]
+    current_score_pre = pre_obs["score"][0]
+    current_score_after = obs["score"][0]
     if current_score_after > current_score_pre:
         r += team_goal_weight[current_role]
 
@@ -149,11 +149,12 @@ def role_based_r(pre_obs, obs):
 
 def pure_goal(pre_obs, obs):
     r = 0
-    current_score_pre = pre_obs['score'][0]
-    current_score_after = obs['score'][0]
+    current_score_pre = pre_obs["score"][0]
+    current_score_after = obs["score"][0]
     if current_score_after > current_score_pre:
         r += 1.0
     return r
+
 
 def pure_lose_goal(pre_obs, obs):
     penalty = 0.0
@@ -163,7 +164,6 @@ def pure_lose_goal(pre_obs, obs):
         penalty -= 1.0
 
     return penalty
-
 
 
 class attack_r:
@@ -186,15 +186,16 @@ class attack_r:
 
         self.check_offside = False
 
-
     def r(self, obs, prev_obs, action, id):
 
         if "team_1" in id:
             return 0
 
-        lost_ball_r = self.lost_possession(obs, prev_obs, current_player=obs['active'])
+        lost_ball_r = self.lost_possession(obs, prev_obs, current_player=obs["active"])
         pass_r = self.pass_reward(obs, action)
-        shot_r = self.shot_reward(obs, prev_obs, current_player=obs['active'], player_action=action)
+        shot_r = self.shot_reward(
+            obs, prev_obs, current_player=obs["active"], player_action=action
+        )
 
         return lost_ball_r + pass_r + shot_r
 
@@ -204,8 +205,10 @@ class attack_r:
         offside, shot gets blocked by opponent goalkeeper
         """
         r = 0
-        if prev_obs['score'][0] < obs['score'][0]:
-            self.lost_ball_recording = False       #change of ball ownership due to ours goal
+        if prev_obs["score"][0] < obs["score"][0]:
+            self.lost_ball_recording = (
+                False  # change of ball ownership due to ours goal
+            )
             return r
 
         # if obs['game_mode'] == 3:                     #change mainly dur to we offside, here we penalise offside move
@@ -213,34 +216,35 @@ class attack_r:
         #     return r
 
         if self.lost_ball_recording:
-            if obs['ball_owned_team'] == -1:
+            if obs["ball_owned_team"] == -1:
                 pass
-            elif obs['ball_owned_team'] == 0:       #back to our team
+            elif obs["ball_owned_team"] == 0:  # back to our team
                 self.lost_ball_recording = False
-                #can add reward here
-            else:                                   #opponent own it
-                if self.last_hold_player == 0:      #our goalkeeper lose the ball
+                # can add reward here
+            else:  # opponent own it
+                if self.last_hold_player == 0:  # our goalkeeper lose the ball
                     self.lost_ball_recording = False
 
-                if obs['active'] == self.last_hold_player:
+                if obs["active"] == self.last_hold_player:
                     self.lost_ball_recording = False
                     r = self.lost_ball_penalty
 
-        if prev_obs['ball_owned_team'] == 0 and obs['ball_owned_team'] == 1:
-            if current_player == prev_obs['ball_owned_player']:  # current player is the last holding player
+        if prev_obs["ball_owned_team"] == 0 and obs["ball_owned_team"] == 1:
+            if (
+                current_player == prev_obs["ball_owned_player"]
+            ):  # current player is the last holding player
                 r = self.lost_ball_penalty
 
-        elif prev_obs['ball_owned_team'] == 0 and obs['ball_owned_team'] == -1:
+        elif prev_obs["ball_owned_team"] == 0 and obs["ball_owned_team"] == -1:
             self.lost_ball_recording = True
-            self.last_hold_player = prev_obs['ball_owned_player']
-
+            self.last_hold_player = prev_obs["ball_owned_player"]
 
         return r
 
     def pass_reward(self, obs, player_action):
         r = 0
         for i, p in enumerate(self.passing_flag):
-            if p:       #if passing
+            if p:  # if passing
                 # if ball_owned_team == 0:
                 #     if obs['ball_owned_player'] == current_player:
                 #         pass
@@ -256,24 +260,26 @@ class attack_r:
                 #         r += self.bad_pass_penalty
                 #         self.passing_flag[i] = False
 
-                if obs['ball_owned_team'] == 0 and obs['active'] == i:
+                if obs["ball_owned_team"] == 0 and obs["active"] == i:
                     pass
                 else:
-                    if obs['ball_owned_team'] == 0 and obs['ball_owned_player'] != i:
+                    if obs["ball_owned_team"] == 0 and obs["ball_owned_player"] != i:
                         self.passing_flag[i] = False
-                        #good pass reward?
-                    elif obs['ball_owned_team'] == -1:
+                        # good pass reward?
+                    elif obs["ball_owned_team"] == -1:
                         pass
-                    elif obs['ball_owned_team'] == 1 and obs['active'] == i:
+                    elif obs["ball_owned_team"] == 1 and obs["active"] == i:
                         r += self.bad_pass_penalty
                         self.passing_flag[i] = False
 
         if player_action == 9 or player_action == 10 or player_action == 11:
-            if (obs['ball_owned_team'] == 0
-                    and not self.passing_flag[obs['active']]
-                    and (obs['active'] == obs['ball_owned_player'])):
+            if (
+                obs["ball_owned_team"] == 0
+                and not self.passing_flag[obs["active"]]
+                and (obs["active"] == obs["ball_owned_player"])
+            ):
 
-                self.passing_flag[obs['active']] = True
+                self.passing_flag[obs["active"]] = True
 
         return r
 
@@ -283,19 +289,21 @@ class attack_r:
         """
 
         if self.pass_reward_list is None:
-            self.pass_reward_list = [0] * len(obs['left_team_roles'])
-        pass_reward = [0] * len(obs['left_team_roles'])
+            self.pass_reward_list = [0] * len(obs["left_team_roles"])
+        pass_reward = [0] * len(obs["left_team_roles"])
 
-        if prev_obs["score"][1] < obs["score"][1]:  # opponent goal, clear the pass reward
-            self.pass_reward_list = [0] * len(obs['left_team_roles'])
+        if (
+            prev_obs["score"][1] < obs["score"][1]
+        ):  # opponent goal, clear the pass reward
+            self.pass_reward_list = [0] * len(obs["left_team_roles"])
         elif prev_obs["score"][0] < obs["score"][0]:
-            pass_reward[obs['active']] = self.pass_reward_list[obs['active']]
-            self.pass_reward_list[obs['active']] = 0
+            pass_reward[obs["active"]] = self.pass_reward_list[obs["active"]]
+            self.pass_reward_list[obs["active"]] = 0
         else:
             if action == 9 or action == 10 or action == 11:
                 self.pass_reward_list[obs["active"]] += 1
 
-        return pass_reward[obs['active']]
+        return pass_reward[obs["active"]]
 
     def shot_reward(self, obs, prev_obs, current_player, player_action):
         """
@@ -304,12 +312,12 @@ class attack_r:
 
         r = 0
         if self.cumulative_shot_reward is None:
-            self.cumulative_shot_reward = [0] * len(obs['left_team_roles'])
+            self.cumulative_shot_reward = [0] * len(obs["left_team_roles"])
 
-        shot_reward = [0] * len(obs['left_team_roles'])
+        shot_reward = [0] * len(obs["left_team_roles"])
 
         if prev_obs["score"][1] < obs["score"][1]:
-            self.cumulative_shot_reward = [0] * len(obs['left_team_roles'])
+            self.cumulative_shot_reward = [0] * len(obs["left_team_roles"])
         elif prev_obs["score"][0] < obs["score"][0]:
             shot_reward[current_player] = self.cumulative_shot_reward[current_player]
             self.cumulative_shot_reward[current_player] = 0
@@ -321,42 +329,40 @@ class attack_r:
 
         r += shot_reward[current_player]
 
-
         return r
 
-
     def offside_pass_penalty(self, obs, prev_obs, current_player, player_action):
-        #when agent pass and at least one of the teammate is at offside position, start checking, if gamemode has changed, highly likely offside
+        # when agent pass and at least one of the teammate is at offside position, start checking, if gamemode has changed, highly likely offside
         offside_r = 0
 
         def is_offside(obs):
-            our_team_offside = [0]*obs['left_team_roles']
-            second_last_opponent_x = sorted(obs['right_team'][:,0])[-2]
-            ball_x = obs['ball'][0]
-            for player_id, left_player_pos in enumerate(obs['left_team']):
-                if obs['game_mode'] == 0 and left_player_pos[0] > ball_x and left_player_pos[0] > second_last_opponent_x:
+            our_team_offside = [0] * obs["left_team_roles"]
+            second_last_opponent_x = sorted(obs["right_team"][:, 0])[-2]
+            ball_x = obs["ball"][0]
+            for player_id, left_player_pos in enumerate(obs["left_team"]):
+                if (
+                    obs["game_mode"] == 0
+                    and left_player_pos[0] > ball_x
+                    and left_player_pos[0] > second_last_opponent_x
+                ):
                     our_team_offside[player_id] = 1
             return sum(our_team_offside)
 
         if self.check_offside:
-            if obs['game_mode'] == 3:
+            if obs["game_mode"] == 3:
                 offside_r -= 1
                 self.check_offside = False
             else:
-                if obs['ball_owned_team'] == 0:
+                if obs["ball_owned_team"] == 0:
                     self.check_offside = False
-                elif obs['ball_owned_team'] == 1:
+                elif obs["ball_owned_team"] == 1:
                     self.check_offside = False
                 else:
                     pass
 
-        if player_action ==9 or player_action == 10 or player_action ==11:
+        if player_action == 9 or player_action == 10 or player_action == 11:
             if is_offside(obs):
                 self.check_offside = True
-
-
-
-
 
 
 class defense_r:
@@ -366,7 +372,7 @@ class defense_r:
 
     def r(self, obs, prev_obs, action, id):
 
-        if 'team_1' in id:
+        if "team_1" in id:
             return 0
 
         steal_ball_reward = self.get_possession(obs, prev_obs)
@@ -374,9 +380,7 @@ class defense_r:
 
         return steal_ball_reward + min_dist_reward
 
-
-
-    def get_possession(self, obs, prev_obs):        #get possessing
+    def get_possession(self, obs, prev_obs):  # get possessing
         """
         this include some scenarios getting ball possession including intercepting, opponent out-of-bound,
         we ignore when our goalkeeper steal the ball as we dont want them to have too much pressure, and we ignore offside here
@@ -384,33 +388,48 @@ class defense_r:
 
         r = 0
 
-        if prev_obs['score'][1] < obs['score'][1]:
-            self.steal_ball_recording = False       #change of ball ownership due to opponent's goal
+        if prev_obs["score"][1] < obs["score"][1]:
+            self.steal_ball_recording = (
+                False  # change of ball ownership due to opponent's goal
+            )
             return r
 
-        if obs['game_mode'] == 3:       #change of ball ownership from free kick, this is likely due to opponent offside
-            self.steal_ball_recording = False       #change of ball ownership due to opponent's goal
+        if (
+            obs["game_mode"] == 3
+        ):  # change of ball ownership from free kick, this is likely due to opponent offside
+            self.steal_ball_recording = (
+                False  # change of ball ownership due to opponent's goal
+            )
             return r
-
 
         if self.steal_ball_recording:
-            if obs['ball_owned_team'] == -1:
+            if obs["ball_owned_team"] == -1:
                 pass
-            elif obs['ball_owned_team'] == 1:
+            elif obs["ball_owned_team"] == 1:
                 self.steal_ball_recording = False
-            elif obs['ball_owned_team'] == 0 and obs['ball_owned_player'] == 0:   #our goalkeeper intercept the ball
+            elif (
+                obs["ball_owned_team"] == 0 and obs["ball_owned_player"] == 0
+            ):  # our goalkeeper intercept the ball
                 self.steal_ball_recording = False
-            elif obs['ball_owned_team'] == 0 and obs['ball_owned_player'] != 0 and obs['active'] == obs['ball_owned_player']:
+            elif (
+                obs["ball_owned_team"] == 0
+                and obs["ball_owned_player"] != 0
+                and obs["active"] == obs["ball_owned_player"]
+            ):
                 self.steal_ball_recording = False
-                r += self.steal_ball_reward             #only reward the agent stealing the ball (can we make it team reward?)
+                r += (
+                    self.steal_ball_reward
+                )  # only reward the agent stealing the ball (can we make it team reward?)
 
-        if (prev_obs['ball_owned_team'] == 1 and prev_obs['ball_owned_player'] !=0) and \
-                obs['ball_owned_team'] == 0:
-            if obs['active'] == obs['ball_owned_player']:
+        if (
+            prev_obs["ball_owned_team"] == 1 and prev_obs["ball_owned_player"] != 0
+        ) and obs["ball_owned_team"] == 0:
+            if obs["active"] == obs["ball_owned_player"]:
                 r += self.steal_ball_reward
 
-        elif (prev_obs['ball_owned_team'] == 1 and prev_obs['ball_owned_player'] != 0) and \
-                obs['ball_owned_team'] == -1:
+        elif (
+            prev_obs["ball_owned_team"] == 1 and prev_obs["ball_owned_player"] != 0
+        ) and obs["ball_owned_team"] == -1:
             self.steal_ball_recording = True
         else:
             pass
@@ -422,7 +441,9 @@ class defense_r:
         if obs["ball_owned_team"] != 0:
             ball_position = np.array(obs["ball"][:2])
             left_team_position = obs["left_team"][1:]
-            left_team_dist2ball = np.linalg.norm(left_team_position - ball_position, axis=1)
+            left_team_dist2ball = np.linalg.norm(
+                left_team_position - ball_position, axis=1
+            )
             min_dist2ball = np.min(left_team_dist2ball)
         else:
             min_dist2ball = 0.0
@@ -430,11 +451,9 @@ class defense_r:
         return min_dist2ball
 
 
-
 class default_r:
     def __init__(self):
         self.player_last_hold_ball = -1
-
 
     def r(self, obs, prev_obs):
         if obs["ball_owned_team"] == 0:
@@ -447,9 +466,14 @@ class default_r:
         hold_ball_reward = self.hold_ball_reward(obs)
         dist_to_goal = self.dist_goal_to_line(obs)
 
-        return win_reward + goal_reward + yellow_reward + ball_pos_reward + hold_ball_reward + dist_to_goal
-
-
+        return (
+            win_reward
+            + goal_reward
+            + yellow_reward
+            + ball_pos_reward
+            + hold_ball_reward
+            + dist_to_goal
+        )
 
     def win_reward(self, obs):
         win_reward = 0.0
@@ -466,8 +490,8 @@ class default_r:
         if opponent_score_after > opponent_score_pre:
             penalty -= 1.0
 
-        current_score_pre = prev_obs['score'][0]
-        current_score_after = obs['score'][0]
+        current_score_pre = prev_obs["score"][0]
+        current_score_after = obs["score"][0]
         if current_score_after > current_score_pre:
             penalty += 1.0
 
@@ -490,11 +514,11 @@ class default_r:
         ball_position_r = 0.0
         if (-END_X <= ball_x and ball_x < -PENALTY_X) and (
             -PENALTY_Y < ball_y and ball_y < PENALTY_Y
-        ):                                                             # in our penalty area
+        ):  # in our penalty area
             ball_position_r = -2.0
         elif (-END_X <= ball_x and ball_x < -MIDDLE_X) and (
             -END_Y < ball_y and ball_y < END_Y
-        ):                                                           #
+        ):  #
             ball_position_r = -1.0
         elif (-MIDDLE_X <= ball_x and ball_x <= MIDDLE_X) and (
             -END_Y < ball_y and ball_y < END_Y
@@ -518,15 +542,14 @@ class default_r:
         return ball_position_r
 
     def hold_ball_reward(self, obs):
-        r = 0.
+        r = 0.0
         if obs["ball_owned_team"] == 0:
-            r+= 0.001
+            r += 0.001
         elif obs["ball_owned_team"] == 1:
             r -= 0.001
         else:
             pass
         return r
-
 
     def dist_goal_to_line(self, obs):
         ball_position = np.array(obs["ball"][:2])
@@ -534,17 +557,16 @@ class default_r:
         return dist_goal_to_line
 
 
-
-
 def hold_ball_reward(obs):
-    r = 0.
+    r = 0.0
     if obs["ball_owned_team"] == 0:
-        r+= 0.001
+        r += 0.001
     elif obs["ball_owned_team"] == 1:
         r -= 0.001
     else:
         pass
     return r
+
 
 def dist_goal_to_line(obs):
     ball_position = np.array(obs["ball"][:2])
@@ -553,8 +575,9 @@ def dist_goal_to_line(obs):
 
 
 def player_move_reward(prev_obs, obs):
-    left_position_move = np.sum((prev_obs['left_team']-obs['left_team'])**2)
+    left_position_move = np.sum((prev_obs["left_team"] - obs["left_team"]) ** 2)
     return left_position_move
+
 
 def ball_possession_reward(prev_obs, obs, player_last_hold_ball):
     if prev_obs["ball_owned_team"] == 0 and obs["ball_owned_team"] == 1:
@@ -574,12 +597,13 @@ def goal_reward(pre_obs, obs):
     if opponent_score_after > opponent_score_pre:
         penalty -= 1.0
 
-    current_score_pre = pre_obs['score'][0]
-    current_score_after = obs['score'][0]
+    current_score_pre = pre_obs["score"][0]
+    current_score_after = obs["score"][0]
     if current_score_after > current_score_pre:
         penalty += 1.0
 
     return penalty
+
 
 def preprocess_score(obs, rew_signal, player_last_hold_ball):
     if rew_signal > 0:
@@ -617,14 +641,17 @@ def min_dist_reward(obs):
         min_dist2ball = 0.0
     return min_dist2ball
 
+
 def min_dist_individual_reward(obs):
     if obs["ball_owned_team"] != 0:
         ball_position = np.array(obs["ball"][:2])
         left_team_position = obs["left_team"][1:]
         left_team_dist2ball = np.linalg.norm(left_team_position - ball_position, axis=1)
         min_dist2ball = np.min(left_team_dist2ball)
-        min_player_id = np.argmin(left_team_dist2ball)+1   #int(np.where(left_team_dist2ball == min_dist2ball)[0])
-        if obs['active'] == min_player_id:
+        min_player_id = (
+            np.argmin(left_team_dist2ball) + 1
+        )  # int(np.where(left_team_dist2ball == min_dist2ball)[0])
+        if obs["active"] == min_player_id:
             return min_dist2ball
         else:
             return 0.0
@@ -640,7 +667,7 @@ def yellow_reward(prev_obs, obs):
     # right_yellow = np.sum(obs["right_team_yellow_card"]) - np.sum(
     #     prev_obs["right_team_yellow_card"]
     # )
-    yellow_r = - left_yellow
+    yellow_r = -left_yellow
     return yellow_r
 
 
@@ -651,11 +678,11 @@ def ball_position_reward(obs, player_last_hold_ball):
     ball_position_r = 0.0
     if (-END_X <= ball_x and ball_x < -PENALTY_X) and (
         -PENALTY_Y < ball_y and ball_y < PENALTY_Y
-    ):                                                             # in our penalty area
+    ):  # in our penalty area
         ball_position_r = -2.0
     elif (-END_X <= ball_x and ball_x < -MIDDLE_X) and (
         -END_Y < ball_y and ball_y < END_Y
-    ):                                                           #
+    ):  #
         ball_position_r = -1.0
     elif (-MIDDLE_X <= ball_x and ball_x <= MIDDLE_X) and (
         -END_Y < ball_y and ball_y < END_Y
@@ -677,7 +704,6 @@ def ball_position_reward(obs, player_last_hold_ball):
     #         ball_position_r *= 0.5
 
     return ball_position_r
-
 
 
 def calc_skilled_attack_reward(rew, prev_obs, obs):
@@ -732,10 +758,15 @@ def calc_skilled_attack_reward(rew, prev_obs, obs):
             win_reward = 1.0
 
     ### 鼓励球员运动
-    left_position_move = np.sum((prev_obs['left_team']-obs['left_team'])**2)
+    left_position_move = np.sum((prev_obs["left_team"] - obs["left_team"]) ** 2)
 
     reward = (
-        2.0 * win_reward + 20.0 * rew + 0.06 * ball_position_r + yellow_r + highpass_r + left_position_move
+        2.0 * win_reward
+        + 20.0 * rew
+        + 0.06 * ball_position_r
+        + yellow_r
+        + highpass_r
+        + left_position_move
     )
     # reward = 5.0*win_reward + 5.0*rew + 15.0*ball_position_r + yellow_r
     # reward = 20.0*win_reward + 20.0*rew + 10.0*ball_position_r + yellow_r
@@ -858,7 +889,6 @@ def calc_active_deffend_reward(rew, prev_obs, obs):
     return reward
 
 
-
 def calc_skilled_deffend_reward(rew, prev_obs, obs):
     ball_x, ball_y, ball_z = obs["ball"]
     MIDDLE_X, PENALTY_X, END_X = 0.2, 0.64, 1.0
@@ -919,7 +949,6 @@ def calc_skilled_deffend_reward(rew, prev_obs, obs):
     # reward = 20.0*win_reward + 20.0*rew + 10.0*ball_position_r + yellow_r
 
     return reward
-
 
 
 def calc_offside_reward(rew, prev_obs, obs):

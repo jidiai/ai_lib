@@ -13,12 +13,12 @@ import gym_minigrid
 
 class MiniGrid(GridGame, GridObservation):
     def __init__(self, conf):
-        colors = conf.get('colors', [(255, 255, 255), (0, 0, 0), (245, 245, 245)])
+        colors = conf.get("colors", [(255, 255, 255), (0, 0, 0), (245, 245, 245)])
         super(MiniGrid, self).__init__(conf, colors)
         # self.renderer = Renderer()
-        self.env_core = gym.make(conf['game_name'])
+        self.env_core = gym.make(conf["game_name"])
         self.action_dim = self.env_core.action_space.n
-        self.input_dimension = self.env_core.observation_space['image'].shape
+        self.input_dimension = self.env_core.observation_space["image"].shape
         # self.obs_type = [str(i) for i in str(conf["obs_type"]).split(',')]
         _ = self.reset()
         self.is_act_continuous = False
@@ -83,18 +83,17 @@ class MiniGrid(GridGame, GridObservation):
         return all_observes
 
 
-
 class Renderer:
     def __init__(self):
         self.root = None
         self.color = {
-    'red'   : np.array([255, 0, 0]),
-    'green' : np.array([0, 255, 0]),
-    'blue'  : np.array([0, 0, 255]),
-    'purple': np.array([112, 39, 195]),
-    'yellow': np.array([255, 255, 0]),
-    'grey'  : np.array([100, 100, 100])
-}
+            "red": np.array([255, 0, 0]),
+            "green": np.array([0, 255, 0]),
+            "blue": np.array([0, 0, 255]),
+            "purple": np.array([112, 39, 195]),
+            "yellow": np.array([255, 255, 0]),
+            "grey": np.array([100, 100, 100]),
+        }
 
     def _close_view(self):
         if self.root:
@@ -120,11 +119,7 @@ class Renderer:
 
         def fill_cell(x, y, color):
             self.canvas.create_rectangle(
-                x * scale,
-                y * scale,
-                (x + 1) * scale,
-                (y + 1) * scale,
-                fill=color
+                x * scale, y * scale, (x + 1) * scale, (y + 1) * scale, fill=color
             )
 
         for x in range(map.width):

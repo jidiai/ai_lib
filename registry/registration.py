@@ -17,4 +17,6 @@ from envs.leduc_poker.env import LeducPokerEnv
 from envs.gym.env import GymEnv
 
 from framework.scheduler.stopper.common.win_rate_stopper import WinRateStopper
-from framework.scheduler.stopper.poker.oracle_exploitability_stopper import PokerOracleExploitablityStopper
+from framework.scheduler.stopper.poker.oracle_exploitability_stopper import (
+    PokerOracleExploitablityStopper,
+)

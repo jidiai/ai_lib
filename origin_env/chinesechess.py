@@ -12,8 +12,14 @@ from utils.discrete import Discrete
 
 class ChineseChess(Game, DictObservation):
     def __init__(self, conf):
-        super(ChineseChess, self).__init__(conf['n_player'], conf['is_obs_continuous'], conf['is_act_continuous'],
-                                     conf['game_name'], conf['agent_nums'], conf['obs_type'])
+        super(ChineseChess, self).__init__(
+            conf["n_player"],
+            conf["is_obs_continuous"],
+            conf["is_act_continuous"],
+            conf["game_name"],
+            conf["agent_nums"],
+            conf["obs_type"],
+        )
         self.done = False
         self.dones = {}
         self.step_cnt = 0
@@ -64,8 +70,10 @@ class ChineseChess(Game, DictObservation):
             self.done = True
             self.set_n_return(reward)
             return self.all_observes, reward, self.done, "", ""
-        obs, reward, self.done, info_after = self.env_core_no_render.step(joint_action_decode)
-        info_after = ''
+        obs, reward, self.done, info_after = self.env_core_no_render.step(
+            joint_action_decode
+        )
+        info_after = ""
         self.current_state = obs
         self.all_observes = self.get_all_observes()
         # print("debug all observes ", type(self.all_observes[0]["obs"]))
@@ -77,21 +85,33 @@ class ChineseChess(Game, DictObservation):
     def is_valid_action(self, joint_action):
 
         if len(joint_action) != self.n_player:
-            raise Exception("Input joint action dimension should be {}, not {}.".format(
-                self.n_player, len(joint_action)))
+            raise Exception(
+                "Input joint action dimension should be {}, not {}.".format(
+                    self.n_player, len(joint_action)
+                )
+            )
 
-        if joint_action[self.current_player] is None or joint_action[self.current_player][0] is None:
-            raise Exception("Action of current player is needed. Current player is {}".format(
-                self.current_player))
+        if (
+            joint_action[self.current_player] is None
+            or joint_action[self.current_player][0] is None
+        ):
+            raise Exception(
+                "Action of current player is needed. Current player is {}".format(
+                    self.current_player
+                )
+            )
 
         for i in range(self.n_player):
             if joint_action[i] is None or joint_action[i][0] is None:
                 continue
             if len(joint_action[i][0]) != self.joint_action_space[i][0].n:
-                raise Exception("The input action dimension for player {} should be {}, not {}.".format(
-                    i, self.joint_action_space[i][0].n, len(joint_action[i][0])))
+                raise Exception(
+                    "The input action dimension for player {} should be {}, not {}.".format(
+                        i, self.joint_action_space[i][0].n, len(joint_action[i][0])
+                    )
+                )
 
-    def step_before_info(self, info=''):
+    def step_before_info(self, info=""):
         return info
 
     def is_terminal(self):
@@ -117,7 +137,7 @@ class ChineseChess(Game, DictObservation):
 
     def check_win(self):
         if self.all_equals(self.n_return):
-            return '-1'
+            return "-1"
 
         index = []
         max_n = max(self.n_return)
@@ -131,7 +151,10 @@ class ChineseChess(Game, DictObservation):
             return str(index)
 
     def decode(self, joint_action):
-        if joint_action[self.current_player] is None or joint_action[self.current_player][0] is None:
+        if (
+            joint_action[self.current_player] is None
+            or joint_action[self.current_player][0] is None
+        ):
             return None
         joint_action_decode = joint_action[self.current_player][0].index(1)
         return joint_action_decode
@@ -143,8 +166,10 @@ class ChineseChess(Game, DictObservation):
     def get_all_observes(self):
         all_observes = []
         for i in range(self.n_player):
-            each_obs = {"observation": copy.deepcopy(self.current_state),
-                        "possible_actions": self.env_core_no_render.get_possible_actions()}
+            each_obs = {
+                "observation": copy.deepcopy(self.current_state),
+                "possible_actions": self.env_core_no_render.get_possible_actions(),
+            }
             each = {"obs": each_obs, "controlled_player_index": i}
             all_observes.append(each)
         return all_observes

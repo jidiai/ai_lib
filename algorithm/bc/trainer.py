@@ -2,10 +2,7 @@
 
 import numpy as np
 from collections import defaultdict
-from training.data_generator import (
-    recurrent_generator,
-    simple_data_generator
-)
+from training.data_generator import recurrent_generator, simple_data_generator
 from .loss import BCLoss
 import torch
 import functools
@@ -14,40 +11,42 @@ from utils.timer import global_timer
 from ..return_compute import compute_return
 from ..common.trainer import Trainer
 
+
 def update_linear_schedule(optimizer, epoch, total_num_epochs, initial_lr):
     """Decreases the learning rate linearly"""
     lr = initial_lr - (initial_lr * (epoch / float(total_num_epochs)))
     for param_group in optimizer.param_groups:
         param_group["lr"] = lr
 
+
 class BCTrainer(Trainer):
     def __init__(self, tid):
         super().__init__(tid)
-        self.id=tid
+        self.id = tid
         # TODO(jh)
         self._loss = BCLoss()
 
     def optimize(self, batch, **kwargs):
         total_opt_result = defaultdict(lambda: 0)
         policy = self.loss.policy
-        
+
         # TODO(jh)
         # bootstrap_value = batch.pop('bootstrap_value')
-        
+
         global_timer.record("move_to_gpu_start")
         # move data to gpu
-        for key,value in batch.items():
-            if isinstance(value,np.ndarray):
+        for key, value in batch.items():
+            if isinstance(value, np.ndarray):
                 # TODO(jh): remove last step or add boostrap value?
-                value=torch.FloatTensor(value)
-            batch[key]=value.to(policy.device)
-        global_timer.time("move_to_gpu_start","move_to_gpu_end","move_to_gpu")
-        
+                value = torch.FloatTensor(value)
+            batch[key] = value.to(policy.device)
+        global_timer.time("move_to_gpu_start", "move_to_gpu_end", "move_to_gpu")
+
         num_mini_batch = policy.custom_config["num_mini_batch"]  # num_mini_batch
-        
-        assert num_mini_batch==1
+
+        assert num_mini_batch == 1
         assert not policy.custom_config["use_rnn"]
-        
+
         if policy.custom_config["use_rnn"]:
             data_generator_fn = functools.partial(
                 recurrent_generator,
@@ -60,14 +59,14 @@ class BCTrainer(Trainer):
             data_generator_fn = functools.partial(
                 simple_data_generator, batch, num_mini_batch, policy.device
             )
-        
+
         for mini_batch in data_generator_fn():
             global_timer.record("loss_start")
             tmp_opt_result = self.loss(mini_batch)
-            global_timer.time("loss_start","loss_end","loss")
+            global_timer.time("loss_start", "loss_end", "loss")
             for k, v in tmp_opt_result.items():
                 total_opt_result[k] = v
-        
+
         # global_timer.record("compute_return_start")
         # # TODO(jh)
         # if policy.custom_config.get('pre_update_v', False):
@@ -133,7 +132,6 @@ class BCTrainer(Trainer):
         #         total_epoch,
         #         self.loss._params["actor_lr"],
         #     )
-
 
         return total_opt_result
 

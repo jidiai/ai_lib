@@ -1,4 +1,4 @@
-'''
+"""
 TODO(jh): Fault tolerance
 
 Server: League Manager
@@ -16,4 +16,4 @@ Clients: League Worker
 Communications:
     Currently, we use TCP to communicate between server and clients.
     Redis maybe a good choice for out of ray communication, for its persistent storage(fault tolerence) and good scability.
-'''
+"""

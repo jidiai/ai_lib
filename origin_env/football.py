@@ -14,21 +14,31 @@ from utils.box import Box
 
 class Football(Game, DictObservation):
     def __init__(self, conf):
-        super().__init__(conf['n_player'], conf['is_obs_continuous'], conf['is_act_continuous'],
-                         conf['game_name'], conf['agent_nums'], conf['obs_type'])
+        super().__init__(
+            conf["n_player"],
+            conf["is_obs_continuous"],
+            conf["is_act_continuous"],
+            conf["game_name"],
+            conf["agent_nums"],
+            conf["obs_type"],
+        )
 
         self.done = False
         self.step_cnt = 0
         self.max_step = int(conf["max_step"])
 
         self.env_core = football_env.create_environment(
-            env_name=conf["game_name"], stacked=False,
-            representation='raw',
-            logdir='/tmp/football_render',
-            write_goal_dumps=False, write_full_episode_dumps=True, render=False,
+            env_name=conf["game_name"],
+            stacked=False,
+            representation="raw",
+            logdir="/tmp/football_render",
+            write_goal_dumps=False,
+            write_full_episode_dumps=True,
+            render=False,
             dump_frequency=0,
             number_of_left_players_agent_controls=self.agent_nums[0],
-            number_of_right_players_agent_controls=self.agent_nums[1])
+            number_of_right_players_agent_controls=self.agent_nums[1],
+        )
 
         self.load_action_space(conf)
         obs_list = self.env_core.reset()
@@ -46,16 +56,30 @@ class Football(Game, DictObservation):
 
     def load_action_space(self, conf):
         if "act_box" in conf:
-            input_action = json.loads(conf["act_box"]) if isinstance(conf["act_box"], str) else conf["act_box"]
+            input_action = (
+                json.loads(conf["act_box"])
+                if isinstance(conf["act_box"], str)
+                else conf["act_box"]
+            )
             # print(input_action)
             if self.is_act_continuous:
-                if ("high" not in input_action) or ("low" not in input_action) or ("shape" not in input_action):
-                    raise Exception("act_box in continuous case must have fields low, high, shape")
+                if (
+                    ("high" not in input_action)
+                    or ("low" not in input_action)
+                    or ("shape" not in input_action)
+                ):
+                    raise Exception(
+                        "act_box in continuous case must have fields low, high, shape"
+                    )
                 shape = tuple(input_action["shape"])
-                self.env_core.action_space = Box(input_action["low"], input_action["high"], shape, np.float32)
+                self.env_core.action_space = Box(
+                    input_action["low"], input_action["high"], shape, np.float32
+                )
             else:
                 if "discrete_n" not in input_action:
-                    raise Exception("act_box in discrete case must have field discrete_n")
+                    raise Exception(
+                        "act_box in discrete case must have field discrete_n"
+                    )
                 discrete_n = int(input_action["discrete_n"])
                 self.env_core.action_space = Discrete(discrete_n)
 
@@ -98,7 +122,7 @@ class Football(Game, DictObservation):
 
         return r
 
-    def step_before_info(self, info=''):
+    def step_before_info(self, info=""):
         return info
 
     def is_terminal(self):
@@ -118,11 +142,11 @@ class Football(Game, DictObservation):
         left_sum = self.n_return[0]
         right_sum = self.n_return[self.agent_nums[0]]
         if left_sum > right_sum:
-            return '0'
+            return "0"
         elif left_sum < right_sum:
-            return '1'
+            return "1"
         else:
-            return '-1'
+            return "-1"
 
     def reset(self):
         obs_list = self.get_sorted_next_state(self.env_core.reset())
@@ -151,14 +175,14 @@ class Football(Game, DictObservation):
 
     def get_dict_observation(self, current_state, player_id, info_before):
         ob = current_state[player_id]
-        ob['controlled_idx'] = player_id
+        ob["controlled_idx"] = player_id
         return ob
 
     def get_sorted_next_state(self, next_state):
-        left_team = next_state[:self.agent_nums[0]]
-        right_team = next_state[self.agent_nums[0]:]
-        left_team = sorted(left_team, key=lambda keys: keys['active'])
-        right_team = sorted(right_team, key=lambda keys: keys['active'])
+        left_team = next_state[: self.agent_nums[0]]
+        right_team = next_state[self.agent_nums[0] :]
+        left_team = sorted(left_team, key=lambda keys: keys["active"])
+        right_team = sorted(right_team, key=lambda keys: keys["active"])
 
         new_state = []
         index = 0

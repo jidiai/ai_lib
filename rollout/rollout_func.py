@@ -17,10 +17,7 @@ def rename_field(data, field, new_field):
 
 def select_fields(data, fields):
     rets = {
-        agent_id: {
-            field: agent_data[field]
-            for field in fields if field in agent_data
-        }
+        agent_id: {field: agent_data[field] for field in fields if field in agent_data}
         for agent_id, agent_data in data.items()
     }
     return rets
@@ -34,8 +31,7 @@ def update_fields(data1, data2):
         return d
 
     rets = {
-        agent_id: update_dict(data1[agent_id], data2[agent_id])
-        for agent_id in data1
+        agent_id: update_dict(data1[agent_id], data2[agent_id]) for agent_id in data1
     }
     return rets
 
@@ -51,14 +47,14 @@ def stack_step_data(step_data_list, bootstrap_data):
 
 
 def rollout_func(
-        eval: bool,
-        rollout_worker,
-        rollout_desc: RolloutDesc,
-        env: BaseEnv,
-        behavior_policies,
-        data_server,
-        rollout_length,
-        **kwargs
+    eval: bool,
+    rollout_worker,
+    rollout_desc: RolloutDesc,
+    env: BaseEnv,
+    behavior_policies,
+    data_server,
+    rollout_length,
+    **kwargs
 ):
     """
     TODO(jh): modify document
@@ -104,7 +100,7 @@ def rollout_func(
     custom_reset_config = {
         "feature_encoders": feature_encoders,
         "main_agent_id": rollout_desc.agent_id,
-        "rollout_length": rollout_length
+        "rollout_length": rollout_length,
     }
     # {agent_id:{field:value}}
     global_timer.record("env_step_start")
@@ -112,7 +108,9 @@ def rollout_func(
     global_timer.time("env_step_start", "env_step_end", "env_step")
 
     init_rnn_states = {
-        agent_id: behavior_policies[agent_id][1].get_initial_state(batch_size=env.num_players[agent_id])
+        agent_id: behavior_policies[agent_id][1].get_initial_state(
+            batch_size=env.num_players[agent_id]
+        )
         for agent_id in env.agent_ids
     }
 
@@ -121,7 +119,9 @@ def rollout_func(
 
     step = 0
     step_data_list = []
-    while not env.is_terminated():  # XXX(yan): terminate only when step_length >= fragment_length
+    while (
+        not env.is_terminated()
+    ):  # XXX(yan): terminate only when step_length >= fragment_length
         # prepare policy input
         policy_inputs = rename_field(step_data, EpisodeKey.NEXT_OBS, EpisodeKey.CUR_OBS)
         policy_outputs = {}
@@ -137,16 +137,28 @@ def rollout_func(
         global_timer.time("env_step_start", "env_step_end", "env_step")
 
         # record data after env step
-        step_data = update_fields(step_data, select_fields(env_rets, [EpisodeKey.REWARD, EpisodeKey.DONE]))
-        step_data = update_fields(step_data, select_fields(policy_outputs, [EpisodeKey.ACTION, EpisodeKey.ACTION_DIST,
-                                                                            EpisodeKey.STATE_VALUE]))
+        step_data = update_fields(
+            step_data, select_fields(env_rets, [EpisodeKey.REWARD, EpisodeKey.DONE])
+        )
+        step_data = update_fields(
+            step_data,
+            select_fields(
+                policy_outputs,
+                [EpisodeKey.ACTION, EpisodeKey.ACTION_DIST, EpisodeKey.STATE_VALUE],
+            ),
+        )
 
         # save data of trained agent for training
         step_data_list.append(step_data[rollout_desc.agent_id])
 
         # record data for next step
-        step_data = update_fields(env_rets, select_fields(policy_outputs,
-                                                          [EpisodeKey.ACTOR_RNN_STATE, EpisodeKey.CRITIC_RNN_STATE]))
+        step_data = update_fields(
+            env_rets,
+            select_fields(
+                policy_outputs,
+                [EpisodeKey.ACTOR_RNN_STATE, EpisodeKey.CRITIC_RNN_STATE],
+            ),
+        )
 
         step += 1
         if not eval:
@@ -159,22 +171,33 @@ def rollout_func(
                 s_idx = sample_length * (submit_ctr - 1)
                 e_idx = sample_length * submit_ctr
 
-                bootstrap_data = select_fields(step_data,
-                                               [EpisodeKey.NEXT_OBS, EpisodeKey.DONE, EpisodeKey.CRITIC_RNN_STATE,
-                                                EpisodeKey.CUR_STATE])
+                bootstrap_data = select_fields(
+                    step_data,
+                    [
+                        EpisodeKey.NEXT_OBS,
+                        EpisodeKey.DONE,
+                        EpisodeKey.CRITIC_RNN_STATE,
+                        EpisodeKey.CUR_STATE,
+                    ],
+                )
                 bootstrap_data = bootstrap_data[rollout_desc.agent_id]
                 bootstrap_data[EpisodeKey.CUR_OBS] = bootstrap_data[EpisodeKey.NEXT_OBS]
 
                 episode = stack_step_data(
                     step_data_list[s_idx:e_idx],
                     # TODO CUR_STATE is not supported now
-                    bootstrap_data
+                    bootstrap_data,
                 )
 
                 # submit data:
                 data_server.save.remote(
-                    default_table_name(rollout_desc.agent_id, rollout_desc.policy_id, rollout_desc.share_policies),
-                    [episode])
+                    default_table_name(
+                        rollout_desc.agent_id,
+                        rollout_desc.policy_id,
+                        rollout_desc.share_policies,
+                    ),
+                    [episode],
+                )
 
                 if submit_ctr != submit_max_num:
                     # update model:
@@ -183,4 +206,8 @@ def rollout_func(
 
     stats = env.get_episode_stats()
 
-    return {"main_agent_id": rollout_desc.agent_id, 'policy_ids': policy_ids, "stats": stats}
+    return {
+        "main_agent_id": rollout_desc.agent_id,
+        "policy_ids": policy_ids,
+        "stats": stats,
+    }

@@ -52,14 +52,18 @@ class DataPrefetcher:
         data_list = []
         for data_server, prefetching_desc in zip(self.data_servers, prefetching_descs):
             data, ok = ray.get(
-                data_server.sample.remote(prefetching_desc.table_name, prefetching_desc.batch_size)
+                data_server.sample.remote(
+                    prefetching_desc.table_name, prefetching_desc.batch_size
+                )
             )
             if not ok:
                 return
             else:
-                assert isinstance(data, list) and isinstance(data[0],
-                                                             dict), "type of data: {}, type of data[0]: {}".format(
-                    type(data), type(data[0]))
+                assert isinstance(data, list) and isinstance(
+                    data[0], dict
+                ), "type of data: {}, type of data[0]: {}".format(
+                    type(data), type(data[0])
+                )
                 data_list.append(data)
 
         # merge data
@@ -70,7 +74,9 @@ class DataPrefetcher:
                 sample.update(data[i])
             samples.append(sample)
 
-        self.timer.time("sample_from_remote_start", "sample_from_remote_end", "sample_from_remote")
+        self.timer.time(
+            "sample_from_remote_start", "sample_from_remote_end", "sample_from_remote"
+        )
 
         base_num = int(len(samples) / len(self.consumers))
         nums = np.full(len(self.consumers), fill_value=base_num)
@@ -97,9 +103,14 @@ class DataPrefetcher:
             elif isinstance(v, np.ndarray):
                 ret[k] = np.stack([sample[k] for sample in samples])
             elif isinstance(v, list):
-                ret[k] = [self.stack([sample[k][i] for sample in samples]) for i in range(len(v))]
+                ret[k] = [
+                    self.stack([sample[k][i] for sample in samples])
+                    for i in range(len(v))
+                ]
             else:
-                raise NotImplementedError(f'v = {v}, k={k}, ret = {[sample[k] for sample in samples]}')
+                raise NotImplementedError(
+                    f"v = {v}, k={k}, ret = {[sample[k] for sample in samples]}"
+                )
         return ret
 
     def concat(self, samples):
@@ -111,7 +122,10 @@ class DataPrefetcher:
             elif isinstance(v, np.ndarray):
                 ret[k] = np.concatenate([sample[k] for sample in samples])
             elif isinstance(v, list):
-                ret[k] = [self.concat([sample[k][i] for sample in samples]) for i in range(len(v))]
+                ret[k] = [
+                    self.concat([sample[k][i] for sample in samples])
+                    for i in range(len(v))
+                ]
             else:
                 raise NotImplementedError
         return ret
@@ -119,12 +133,15 @@ class DataPrefetcher:
 
 # TODO(jh): ?useful or not.
 class GPUPreLoadQueueWrapper:
-    '''
+    """
     Modified from https://docs.ray.io/en/latest/_modules/ray/train/torch.html#prepare_data_loader
-    '''
+    """
 
     def __init__(
-            self, queue: queue.Queue, device: torch.device = torch.device("cuda"), auto_transfer: bool = True
+        self,
+        queue: queue.Queue,
+        device: torch.device = torch.device("cuda"),
+        auto_transfer: bool = True,
     ):
 
         self._queue = queue

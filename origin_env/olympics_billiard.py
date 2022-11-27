@@ -15,16 +15,23 @@ from env.simulators.game import Game
 
 import numpy as np
 
+
 class OlympicsBilliard(Game):
     def __init__(self, conf, seed=None):
-        super(OlympicsBilliard, self).__init__(conf['n_player'], conf['is_obs_continuous'], conf['is_act_continuous'],
-                                         conf['game_name'], conf['agent_nums'], conf['obs_type'])
+        super(OlympicsBilliard, self).__init__(
+            conf["n_player"],
+            conf["is_obs_continuous"],
+            conf["is_act_continuous"],
+            conf["game_name"],
+            conf["agent_nums"],
+            conf["obs_type"],
+        )
         self.seed = seed
         self.set_seed()
 
         Gamemap = create_scenario("billiard-joint")
         self.env_core = billiard_joint(Gamemap)
-        self.max_step = int(conf['max_step'])
+        self.max_step = int(conf["max_step"])
         self.joint_action_space = self.set_action_space()
         self.action_dim = self.joint_action_space
 
@@ -35,8 +42,13 @@ class OlympicsBilliard(Game):
 
         _ = self.reset()
 
-        self.board_width = self.env_core.view_setting['width']+2*self.env_core.view_setting['edge']
-        self.board_height = self.env_core.view_setting['height']+2*self.env_core.view_setting['edge']
+        self.board_width = (
+            self.env_core.view_setting["width"] + 2 * self.env_core.view_setting["edge"]
+        )
+        self.board_height = (
+            self.env_core.view_setting["height"]
+            + 2 * self.env_core.view_setting["edge"]
+        )
 
     @staticmethod
     def create_seed():
@@ -44,9 +56,9 @@ class OlympicsBilliard(Game):
         return seed
 
     def set_seed(self, seed=None):
-        if not seed:        #use previous seed when no new seed input
+        if not seed:  # use previous seed when no new seed input
             seed = self.seed
-        else:               #update env global seed
+        else:  # update env global seed
             self.seed = seed
         random.seed(seed)
         np.random.seed(seed)
@@ -57,7 +69,7 @@ class OlympicsBilliard(Game):
         self.done = False
         self.init_info = None
         self.won = {}
-        self.n_return = [0]*self.n_player
+        self.n_return = [0] * self.n_player
 
         self.current_state = init_obs
         self.all_observes = self.get_all_observes()
@@ -67,8 +79,10 @@ class OlympicsBilliard(Game):
         self.is_valid_action(joint_action)
         info_before = self.step_before_info()
         joint_action_decode = self.decode(joint_action)
-        all_observations, reward, done, info_after = self.env_core.step(joint_action_decode)
-        info_after = ''
+        all_observations, reward, done, info_after = self.env_core.step(
+            joint_action_decode
+        )
+        info_after = ""
         self.current_state = all_observations
         self.all_observes = self.get_all_observes()
 
@@ -79,13 +93,15 @@ class OlympicsBilliard(Game):
 
         return self.all_observes, reward, self.done, info_before, info_after
 
-
     def is_valid_action(self, joint_action):
-        if len(joint_action) != self.n_player:          #check number of player
-            raise Exception("Input joint action dimension should be {}, not {}".format(
-                self.n_player, len(joint_action)))
+        if len(joint_action) != self.n_player:  # check number of player
+            raise Exception(
+                "Input joint action dimension should be {}, not {}".format(
+                    self.n_player, len(joint_action)
+                )
+            )
 
-    def step_before_info(self, info=''):
+    def step_before_info(self, info=""):
         return info
 
     def decode(self, joint_action):
@@ -107,7 +123,10 @@ class OlympicsBilliard(Game):
         return all_observes
 
     def set_action_space(self):
-        return [[Box(-100, 200, shape=(1,)), Box(-30, 30, shape=(1,))] for _ in range(self.n_player)]
+        return [
+            [Box(-100, 200, shape=(1,)), Box(-30, 30, shape=(1,))]
+            for _ in range(self.n_player)
+        ]
 
     def get_reward(self, reward):
         return [reward]
@@ -118,26 +137,21 @@ class OlympicsBilliard(Game):
     def set_n_return(self):
         # self.n_return[0] = self.env_core.total_reward
         total_reward = self.env_core.total_score
-        if total_reward[0]>total_reward[1]:
-            self.n_return = [1, 0.]
-        elif total_reward[0]<total_reward[1]:
-            self.n_return = [0.,1]
+        if total_reward[0] > total_reward[1]:
+            self.n_return = [1, 0.0]
+        elif total_reward[0] < total_reward[1]:
+            self.n_return = [0.0, 1]
         else:
-            self.n_return = [0., 0]
+            self.n_return = [0.0, 0]
 
     def check_win(self):
         total_reward = self.env_core.total_score
-        if total_reward[0]>total_reward[1]:
-            return '0'
-        elif total_reward[0]<total_reward[1]:
-            return '1'
+        if total_reward[0] > total_reward[1]:
+            return "0"
+        elif total_reward[0] < total_reward[1]:
+            return "1"
         else:
-            return '-1'
-
+            return "-1"
 
     def get_single_action_space(self, player_id):
         return self.joint_action_space[player_id]
-
-
-
-

@@ -12,8 +12,14 @@ import gym
 
 class CCGame(Game, VectorObservation):
     def __init__(self, conf):
-        super().__init__(conf['n_player'], conf['is_obs_continuous'], conf['is_act_continuous'],
-                         conf['game_name'], conf['agent_nums'], conf['obs_type'])
+        super().__init__(
+            conf["n_player"],
+            conf["is_obs_continuous"],
+            conf["is_act_continuous"],
+            conf["game_name"],
+            conf["agent_nums"],
+            conf["obs_type"],
+        )
         self.env_core = gym.make(self.game_name)
 
         self.load_action_space(conf)
@@ -36,21 +42,38 @@ class CCGame(Game, VectorObservation):
         self.input_dimension = self.env_core.observation_space
         self.ob_space = [self.env_core.observation_space for _ in range(self.n_player)]
         self.ob_vector_shape = [self.env_core.observation_space.shape] * self.n_player
-        self.ob_vector_range = [self.env_core.observation_space.low, self.env_core.observation_space.high] * self.n_player
+        self.ob_vector_range = [
+            self.env_core.observation_space.low,
+            self.env_core.observation_space.high,
+        ] * self.n_player
         self.init_info = None
 
     def load_action_space(self, conf):
         if "act_box" in conf:
-            input_action = json.loads(conf["act_box"]) if isinstance(conf["act_box"], str) else conf["act_box"]
+            input_action = (
+                json.loads(conf["act_box"])
+                if isinstance(conf["act_box"], str)
+                else conf["act_box"]
+            )
             # print(input_action)
             if self.is_act_continuous:
-                if ("high" not in input_action) or ("low" not in input_action) or ("shape" not in input_action):
-                    raise Exception("act_box in continuous case must have fields low, high, shape")
+                if (
+                    ("high" not in input_action)
+                    or ("low" not in input_action)
+                    or ("shape" not in input_action)
+                ):
+                    raise Exception(
+                        "act_box in continuous case must have fields low, high, shape"
+                    )
                 shape = tuple(input_action["shape"])
-                self.env_core.action_space = Box(input_action["low"], input_action["high"], shape, np.float32)
+                self.env_core.action_space = Box(
+                    input_action["low"], input_action["high"], shape, np.float32
+                )
             else:
                 if "discrete_n" not in input_action:
-                    raise Exception("act_box in discrete case must have field discrete_n")
+                    raise Exception(
+                        "act_box in discrete case must have field discrete_n"
+                    )
                 discrete_n = int(input_action["discrete_n"])
                 self.env_core.action_space = Discrete(discrete_n)
 
@@ -83,20 +106,35 @@ class CCGame(Game, VectorObservation):
     def is_valid_action(self, joint_action):
 
         if len(joint_action) != self.n_player:
-            raise Exception("Input joint action dimension should be {}, not {}".format(
-                self.n_player, len(joint_action)))
+            raise Exception(
+                "Input joint action dimension should be {}, not {}".format(
+                    self.n_player, len(joint_action)
+                )
+            )
 
         for i in range(self.n_player):
             if not self.is_act_continuous:
                 if len(joint_action[i][0]) != self.joint_action_space[i][0].n:
-                    raise Exception("The input action dimension for player {} should be {}, not {}".format(
-                        i, self.joint_action_space[i][0].n, len(joint_action[i][0])))
+                    raise Exception(
+                        "The input action dimension for player {} should be {}, not {}".format(
+                            i, self.joint_action_space[i][0].n, len(joint_action[i][0])
+                        )
+                    )
             else:
                 if not isinstance(joint_action[i][0], np.ndarray):
-                    raise Exception("For continuous action, the input of player {} should be numpy.ndarray".format(i))
+                    raise Exception(
+                        "For continuous action, the input of player {} should be numpy.ndarray".format(
+                            i
+                        )
+                    )
                 if joint_action[i][0].shape != self.joint_action_space[i][0].shape:
-                    raise Exception("The input action dimension for player {} should be {}, not {}".format(
-                        i, self.joint_action_space[i][0].shape, joint_action[i][0].shape))
+                    raise Exception(
+                        "The input action dimension for player {} should be {}, not {}".format(
+                            i,
+                            self.joint_action_space[i][0].shape,
+                            joint_action[i][0].shape,
+                        )
+                    )
 
     def get_next_state(self, action):
         observation, reward, done, info = self.env_core.step(action)
@@ -111,7 +149,7 @@ class CCGame(Game, VectorObservation):
             self.n_return[i] += r[i]
         return r
 
-    def step_before_info(self, info=''):
+    def step_before_info(self, info=""):
         return info
 
     def is_terminal(self):
@@ -128,7 +166,7 @@ class CCGame(Game, VectorObservation):
         return action_space
 
     def check_win(self):
-        return '0'
+        return "0"
 
     def reset(self):
         observation = self.env_core.reset()
@@ -164,7 +202,7 @@ class CCGame(Game, VectorObservation):
         all_obs_space = {}
         for i in player_id_list:
             m = self.ob_vector_shape[i]
-            all_obs_space[i] = (m)
+            all_obs_space[i] = m
         return all_obs_space
 
     def get_vector_observation(self, current_state, player_id, info_before):

@@ -6,7 +6,7 @@ import random
 import numpy as np
 
 
-class DoorOpen():
+class DoorOpen:
     """The agent that controls the opening and closing of the refrigerator door."""
 
     def __init__(self, door_open_time=10):

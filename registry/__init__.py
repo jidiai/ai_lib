@@ -1,1 +1,1 @@
-from .registry import registry,Registry
+from .registry import registry, Registry

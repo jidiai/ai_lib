@@ -19,7 +19,8 @@ class PolicyDataManager:
         # TODO(jh)
 
         module = importlib.import_module(
-            "agent.policy_data.custom_update_func.{}".format(self.cfg.update_func))
+            "agent.policy_data.custom_update_func.{}".format(self.cfg.update_func)
+        )
         self.update_func = module.update_func
 
         self.data = {}
@@ -44,20 +45,25 @@ class PolicyDataManager:
 
     def init_array_data(self, key, default_value=-100, dtype=float):
         if not self.agents.share_policies:
-            arrays = [np.full(self.max_num_policies, fill_value=default_value, dtype=dtype) for i in
-                      range(len(self.agents))]
+            arrays = [
+                np.full(self.max_num_policies, fill_value=default_value, dtype=dtype)
+                for i in range(len(self.agents))
+            ]
         else:
-            arrays = [np.full(self.max_num_policies, fill_value=default_value, dtype=dtype)] * len(self.agents)
+            arrays = [
+                np.full(self.max_num_policies, fill_value=default_value, dtype=dtype)
+            ] * len(self.agents)
         self.data[key] = {
-            agent_id: array
-            for agent_id, array in zip(self.agents, arrays)
+            agent_id: array for agent_id, array in zip(self.agents, arrays)
         }
 
     def get_array_data(self, key, agent2policy_indices=None):
         if agent2policy_indices is None:
             indices = [slice(len(agent.policy_ids)) for agent in self.agents.values()]
         else:
-            indices = [agent2policy_indices[agent_id] for agent_id in agent2policy_indices]
+            indices = [
+                agent2policy_indices[agent_id] for agent_id in agent2policy_indices
+            ]
         arrays = self.data[key]
         ret = {}
         for agent_id, index in zip(arrays, indices):
@@ -66,9 +72,13 @@ class PolicyDataManager:
 
     def get_matrix_data(self, key, agent2policy_indices=None):
         if agent2policy_indices is None:
-            indices = tuple(slice(len(agent.policy_ids)) for agent in self.agents.values())
+            indices = tuple(
+                slice(len(agent.policy_ids)) for agent in self.agents.values()
+            )
         else:
-            indices = np.ix_(*[agent2policy_indices[agent_id] for agent_id in agent2policy_indices])
+            indices = np.ix_(
+                *[agent2policy_indices[agent_id] for agent_id in agent2policy_indices]
+            )
         matrix = self.data[key]
         matrix = matrix[indices]
         return matrix

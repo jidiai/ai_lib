@@ -16,8 +16,14 @@ from utils.discrete import Discrete
 
 class Wilderness(JidiGame):
     def __init__(self, conf, seed=0):
-        super(Wilderness, self).__init__(conf['n_player'], conf['is_obs_continuous'], conf['is_act_continuous'],
-                                         conf['game_name'], conf['agent_nums'], conf['obs_type'])
+        super(Wilderness, self).__init__(
+            conf["n_player"],
+            conf["is_obs_continuous"],
+            conf["is_act_continuous"],
+            conf["game_name"],
+            conf["agent_nums"],
+            conf["obs_type"],
+        )
         if seed is None:
             self.seed = 0
         else:
@@ -26,14 +32,27 @@ class Wilderness(JidiGame):
         self.env_core = None
         self.game_config = {}
         if self.game_name == "wilderness-navigation":
-            self.game_config = {'timeout': 60 * 2, 'time_scale': 10, 'map_id': random.randint(1, 10),
-                                'random_seed': self.seed, 'target_location': [0, 0, 0], 'start_location': [0, 0, 0],
-                                'start_range': 2, 'start_hight': 5,
-                                'engine_dir': '../wilderness-scavenger/fps_linux',
-                                'map_dir': '../wilderness-scavenger/map_data',
-                                'num_workers': 0, 'eval_interval': None, 'record': False, 'replay_suffix': '',
-                                'checkpoint_dir': 'checkpoints_track1', 'detailed_log': False, 'stop_iters': 9999,
-                                'stop_timesteps': 100000000, 'stop-reward': 95}
+            self.game_config = {
+                "timeout": 60 * 2,
+                "time_scale": 10,
+                "map_id": random.randint(1, 10),
+                "random_seed": self.seed,
+                "target_location": [0, 0, 0],
+                "start_location": [0, 0, 0],
+                "start_range": 2,
+                "start_hight": 5,
+                "engine_dir": "../wilderness-scavenger/fps_linux",
+                "map_dir": "../wilderness-scavenger/map_data",
+                "num_workers": 0,
+                "eval_interval": None,
+                "record": False,
+                "replay_suffix": "",
+                "checkpoint_dir": "checkpoints_track1",
+                "detailed_log": False,
+                "stop_iters": 9999,
+                "stop_timesteps": 100000000,
+                "stop-reward": 95,
+            }
             self.env_core = NavigationEnvSimple(self.game_config)
 
         self.joint_action_space = self.env_core.action_space
@@ -42,7 +61,7 @@ class Wilderness(JidiGame):
         self.step_cnt = 0
         self.current_state = self.env_core.reset()
         self.all_observes = self.get_all_observes()
-        self.won = ''
+        self.won = ""
         self.n_return = [0]
 
     def reset(self):
@@ -73,12 +92,15 @@ class Wilderness(JidiGame):
         self.current_state = obs
         all_observes = self.get_all_observes()
         # print("reward is {}".format(reward))
-        return all_observes, reward, self.done, info, ''
+        return all_observes, reward, self.done, info, ""
 
     def get_all_observes(self):
         all_observes = []
         for i in range(self.n_player):
-            each = {"obs": copy.deepcopy(self.current_state), "controlled_player_index": i}
+            each = {
+                "obs": copy.deepcopy(self.current_state),
+                "controlled_player_index": i,
+            }
             all_observes.append(each)
 
         return all_observes
@@ -104,7 +126,7 @@ class Wilderness(JidiGame):
         return self.done
 
     def check_win(self):
-        return ''
+        return ""
 
     def set_n_return(self, reward):
         for i in range(self.n_player):
@@ -132,7 +154,11 @@ class BaseEnv(gym.Env):
         self.seed(config["random_seed"])
         self.server_port = BASE_WORKER_PORT
 
-        self.game = Game(map_dir=config["map_dir"], engine_dir=config["engine_dir"], server_port=self.server_port)
+        self.game = Game(
+            map_dir=config["map_dir"],
+            engine_dir=config["engine_dir"],
+            server_port=self.server_port,
+        )
         self.game.set_map_id(config["map_id"])
         self.game.set_episode_timeout(config["timeout"])
         self.game.set_random_seed(config["random_seed"])
@@ -224,12 +250,16 @@ class NavigationEnvSimple(NavigationBaseEnv):
             ActionVariable.JUMP: [True, False],
         }
         # self.action_space = MultiDiscrete([len(pool) for pool in self.action_pools.values()])
-        self.action_space = [[Discrete(len(pool)) for pool in self.action_pools.values()]]
+        self.action_space = [
+            [Discrete(len(pool)) for pool in self.action_pools.values()]
+        ]
         self.action_space[0][0] = Box(high=360, low=0, shape=(1,), dtype=np.float32)
         self.action_space[0][1] = Box(high=10, low=0, shape=(1,), dtype=np.float32)
         self.observation_space = Box(low=-1, high=1, shape=(3,), dtype=np.float32)
 
-        self.game.set_available_actions([action_name for action_name in self.action_pools.keys()])
+        self.game.set_available_actions(
+            [action_name for action_name in self.action_pools.keys()]
+        )
         self.game.init()
 
     def _get_obs(self):

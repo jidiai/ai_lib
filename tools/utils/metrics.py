@@ -229,9 +229,8 @@ class JointDistMetric(Metric):
         self._statistics = defaultdict(lambda: {MetricType.REWARD: 0.0})
 
 
-
 class GFootballMetric(SimpleMetrics):
-    #fixme(yan): current not using
+    # fixme(yan): current not using
     def __init__(self, agents: List[AgentID]):
         super(GFootballMetric, self).__init__(agents)
         self._episode_data["score"] = defaultdict(lambda: [])
@@ -298,10 +297,11 @@ class GFootballMetric(SimpleMetrics):
         return self._statistics
 
 
-
-METRIC_TYPES = {"simple": SimpleMetrics,
-                "jointdist": JointDistMetric,
-                "grf": GFootballMetric}
+METRIC_TYPES = {
+    "simple": SimpleMetrics,
+    "jointdist": JointDistMetric,
+    "grf": GFootballMetric,
+}
 
 
 def get_metric(metric_type: str):

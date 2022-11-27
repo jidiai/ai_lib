@@ -16,17 +16,28 @@ import numpy as np
 
 class OvercookedAI(Game, DictObservation):
     def __init__(self, conf):
-        super(OvercookedAI, self).__init__(conf['n_player'], conf['is_obs_continuous'], conf['is_act_continuous'],
-                                           conf['game_name'], conf['agent_nums'], conf['obs_type'])
+        super(OvercookedAI, self).__init__(
+            conf["n_player"],
+            conf["is_obs_continuous"],
+            conf["is_act_continuous"],
+            conf["game_name"],
+            conf["agent_nums"],
+            conf["obs_type"],
+        )
         self.done = False
         self.step_cnt = 0
         self.max_step = int(conf["max_step"])
 
-        self.base_mdp = OvercookedGridworld.from_layout_name(conf["game_name"].split("-")[1])
+        self.base_mdp = OvercookedGridworld.from_layout_name(
+            conf["game_name"].split("-")[1]
+        )
         self.env = OvercookedEnv.from_mdp(self.base_mdp, **DEFAULT_ENV_PARAMS)
         self.action_space = gym.spaces.Discrete(len(Action.ALL_ACTIONS))
         obs_list = self.env.reset()
-        self.current_state = [obs_list.to_dict() if obs_list is not None else obs_list for _ in range(self.n_player)]
+        self.current_state = [
+            obs_list.to_dict() if obs_list is not None else obs_list
+            for _ in range(self.n_player)
+        ]
         self.all_observes = self.get_all_observes()
 
         self.joint_action_space = self.set_action_space()
@@ -42,7 +53,10 @@ class OvercookedAI(Game, DictObservation):
         self.step_cnt = 0
         self.done = False
         obs_list = self.env.reset()
-        self.current_state = [obs_list.to_dict() if obs_list is not None else obs_list for _ in range(self.n_player)]
+        self.current_state = [
+            obs_list.to_dict() if obs_list is not None else obs_list
+            for _ in range(self.n_player)
+        ]
         self.all_observes = self.get_all_observes()
         self.init_info = None
         self.won = {}
@@ -62,21 +76,21 @@ class OvercookedAI(Game, DictObservation):
         info_after = self.parse_info_after(info_after)
         return self.all_observes, reward, done, info_before, info_after
 
-    def step_before_info(self, info=''):
+    def step_before_info(self, info=""):
         return info
 
     def parse_info_after(self, info_after):
-        if 'episode' in info_after:
-            episode = info_after['episode']
+        if "episode" in info_after:
+            episode = info_after["episode"]
             for out_key, out_value in episode.items():
                 if isinstance(out_value, dict):
                     for key, value in out_value.items():
                         if isinstance(value, np.ndarray):
-                            info_after['episode'][out_key][key] = value.tolist()
+                            info_after["episode"][out_key][key] = value.tolist()
                 elif isinstance(out_value, np.ndarray):
-                    info_after['episode'][out_key] = out_value.tolist()
+                    info_after["episode"][out_key] = out_value.tolist()
                 elif isinstance(out_value, np.int64):
-                    info_after['episode'][out_key] = int(out_value)
+                    info_after["episode"][out_key] = int(out_value)
 
         return info_after
 

@@ -11,6 +11,7 @@ from algo.ppo.Network import Actor, Critic
 import os
 from pathlib import Path
 import sys
+
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
 from common.buffer import Replay_buffer as buffer
@@ -58,8 +59,7 @@ class PPO(object):
         state = torch.tensor(observation, dtype=torch.float).unsqueeze(0)
         logits = self.actor(state).detach()
         action = Categorical(torch.Tensor(logits)).sample()
-        return {"action": action.item(),
-                "a_logit": logits[:, action.item()].item()}
+        return {"action": action.item(), "a_logit": logits[:, action.item()].item()}
 
     def add_experience(self, output):
         agent_id = 0
@@ -72,26 +72,30 @@ class PPO(object):
         data = self.memory.get_trajectory()
 
         transitions = {
-            "o_0": np.array(data['states']),
-            "r_0": data['rewards'],
-            "u_0": np.array(data['action']),
-            "log_prob": np.array(data['a_logit'])
+            "o_0": np.array(data["states"]),
+            "r_0": data["rewards"],
+            "u_0": np.array(data["action"]),
+            "log_prob": np.array(data["a_logit"]),
         }
 
         obs = torch.tensor(transitions["o_0"], dtype=torch.float)
         action = torch.tensor(transitions["u_0"], dtype=torch.long).view(-1, 1)
         reward = transitions["r_0"]
-        old_action_log_prob = torch.tensor(transitions["log_prob"], dtype=torch.float).view(-1, 1)
+        old_action_log_prob = torch.tensor(
+            transitions["log_prob"], dtype=torch.float
+        ).view(-1, 1)
 
         # 计算reward-to-go
         R = 0
         Gt = []
-        for r in reward[::-1]: # 反过来
+        for r in reward[::-1]:  # 反过来
             R = r[0] + self.gamma * R
             Gt.insert(0, R)
         Gt = torch.tensor(Gt, dtype=torch.float)
         for i in range(self.update_freq):
-            for index in BatchSampler(SubsetRandomSampler(range(data_length)), self.batch_size, False):
+            for index in BatchSampler(
+                SubsetRandomSampler(range(data_length)), self.batch_size, False
+            ):
                 Gt_index = Gt[index].view(-1, 1)
                 V = self.critic(obs[index])
                 delta = Gt_index - V
@@ -99,9 +103,12 @@ class PPO(object):
 
                 action_prob = self.actor(obs[index]).gather(1, action[index])
 
-                ratio = (action_prob / old_action_log_prob[index])
+                ratio = action_prob / old_action_log_prob[index]
                 surr1 = ratio * advantage
-                surr2 = torch.clamp(ratio, 1 - self.clip_param, 1 + self.clip_param) * advantage
+                surr2 = (
+                    torch.clamp(ratio, 1 - self.clip_param, 1 + self.clip_param)
+                    * advantage
+                )
 
                 action_loss = -torch.min(surr1, surr2).mean()
                 self.actor_optimizer.zero_grad()
@@ -118,7 +125,7 @@ class PPO(object):
         self.memory.item_buffer_clear()
 
     def save(self, save_path, episode):
-        base_path = os.path.join(save_path, 'trained_model')
+        base_path = os.path.join(save_path, "trained_model")
         if not os.path.exists(base_path):
             os.makedirs(base_path)
 

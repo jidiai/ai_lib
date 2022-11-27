@@ -12,8 +12,14 @@ from utils.discrete import Discrete
 
 class MAgent(Game, DictObservation):
     def __init__(self, conf):
-        super(MAgent, self).__init__(conf['n_player'], conf['is_obs_continuous'], conf['is_act_continuous'],
-                                     conf['game_name'], conf['agent_nums'], conf['obs_type'])
+        super(MAgent, self).__init__(
+            conf["n_player"],
+            conf["is_obs_continuous"],
+            conf["is_act_continuous"],
+            conf["game_name"],
+            conf["agent_nums"],
+            conf["obs_type"],
+        )
         self.seed = None
         self.done = False
         self.dones = {}
@@ -37,7 +43,9 @@ class MAgent(Game, DictObservation):
         if self.env_core is None:
             raise Exception("MAgent env_core is None!")
 
-        self.player_id_map, self.player_id_reverses_map = self.get_player_id_map(self.env_core.action_spaces.keys())
+        self.player_id_map, self.player_id_reverses_map = self.get_player_id_map(
+            self.env_core.action_spaces.keys()
+        )
 
         self.new_action_spaces = self.load_action_space()
         self.joint_action_space = self.set_action_space()
@@ -65,9 +73,10 @@ class MAgent(Game, DictObservation):
         self.is_valid_action(joint_action)
         info_before = self.step_before_info()
         joint_action_decode = self.decode(joint_action)
-        all_observations, reward, self.dones, info_after = \
-            self.env_core.step(joint_action_decode)
-        info_after = ''
+        all_observations, reward, self.dones, info_after = self.env_core.step(
+            joint_action_decode
+        )
+        info_after = ""
         # print("debug , state ", np.array(self.env_core.state()).shape)
         self.current_state = self.change_observation_keys(all_observations)
         self.all_observes = self.get_all_observevs()
@@ -80,17 +89,23 @@ class MAgent(Game, DictObservation):
     def is_valid_action(self, joint_action):
 
         if len(joint_action) != self.n_player:
-            raise Exception("Input joint action dimension should be {}, not {}".format(
-                self.n_player, len(joint_action)))
+            raise Exception(
+                "Input joint action dimension should be {}, not {}".format(
+                    self.n_player, len(joint_action)
+                )
+            )
 
         for i in range(self.n_player):
             if joint_action[i] is None or joint_action[i][0] is None:
                 continue
             if len(joint_action[i][0]) != self.joint_action_space[i][0].n:
-                raise Exception("The input action dimension for player {} should be {}, not {}".format(
-                    i, self.joint_action_space[i][0].n, len(joint_action[i][0])))
+                raise Exception(
+                    "The input action dimension for player {} should be {}, not {}".format(
+                        i, self.joint_action_space[i][0].n, len(joint_action[i][0])
+                    )
+                )
 
-    def step_before_info(self, info=''):
+    def step_before_info(self, info=""):
         return info
 
     def is_terminal(self):
@@ -130,14 +145,14 @@ class MAgent(Game, DictObservation):
         return action_space
 
     def check_win(self):
-        left_sum = sum(self.n_return[:self.agent_nums[0]])
-        right_sum = sum(self.n_return[self.agent_nums[0]:])
+        left_sum = sum(self.n_return[: self.agent_nums[0]])
+        right_sum = sum(self.n_return[self.agent_nums[0] :])
         if left_sum > right_sum:
-            return '0'
+            return "0"
         elif left_sum < right_sum:
-            return '1'
+            return "1"
         else:
-            return '-1'
+            return "-1"
 
     def decode(self, joint_action):
         joint_action_decode = {}
@@ -196,4 +211,3 @@ class MAgent(Game, DictObservation):
             each = {"obs": each, "controlled_player_index": i}
             all_observes.append(each)
         return all_observes
-

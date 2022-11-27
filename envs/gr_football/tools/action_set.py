@@ -1,6 +1,6 @@
-N_ACTIONS=19
+N_ACTIONS = 19
 
-NONE=-1
+NONE = -1
 
 (
     NO_OP,
@@ -24,15 +24,18 @@ NONE=-1
     RELEASE_DRIBBLE,
 ) = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18)
 
+
 def is_direction(action):
-    return action>=LEFT and action<=BOTTOM_LEFT
+    return action >= LEFT and action <= BOTTOM_LEFT
+
 
 def is_passing(action):
-    return action>=LONG_PASS and action<=SHORT_PASS
+    return action >= LONG_PASS and action <= SHORT_PASS
 
-DIRECTIONS=list(range(LEFT,LEFT+8))
-PASSINGS=list(range(LONG_PASS,SHORT_PASS+1))
 
-N_DIRECTIONS=len(DIRECTIONS)
+DIRECTIONS = list(range(LEFT, LEFT + 8))
+PASSINGS = list(range(LONG_PASS, SHORT_PASS + 1))
+
+N_DIRECTIONS = len(DIRECTIONS)
 
 BUILT_IN = 19

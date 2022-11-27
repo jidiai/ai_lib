@@ -20,6 +20,7 @@ import importlib
 from utils.logger import Logger
 from registry import registry
 
+
 def hard_update(target, source):
     """Copy network parameters from source to target.
 
@@ -32,6 +33,7 @@ def hard_update(target, source):
 
     for target_param, param in zip(target.parameters(), source.parameters()):
         target_param.data.copy_(param.data)
+
 
 @wrapt.decorator
 def shape_adjusting(wrapped, instance, args, kwargs):
@@ -66,6 +68,7 @@ def shape_adjusting(wrapped, instance, args, kwargs):
 
     return recover_rets
 
+
 @registry.registered(registry.POLICY)
 class MAPPO(Policy):
     def __init__(
@@ -78,17 +81,19 @@ class MAPPO(Policy):
         **kwargs,
     ):
         self.random_exploration = False
-        model_type = model_config.get("model", "gr_football.basic") # TODO(jh): legacy issue
+        model_type = model_config.get(
+            "model", "gr_football.basic"
+        )  # TODO(jh): legacy issue
 
         Logger.warning("use model type: {}".format(model_type))
-        model=importlib.import_module("model.{}".format(model_type))
-        self.share_backbone=model.share_backbone
-        assert not self.share_backbone,"jh: not supported now, but easy to implement"
-        self.feature_encoder=model.FeatureEncoder()
+        model = importlib.import_module("model.{}".format(model_type))
+        self.share_backbone = model.share_backbone
+        assert not self.share_backbone, "jh: not supported now, but easy to implement"
+        self.feature_encoder = model.FeatureEncoder()
 
         # jh: re-define observation space based on feature encoder
-        observation_space=self.feature_encoder.observation_space
-        
+        observation_space = self.feature_encoder.observation_space
+
         super(MAPPO, self).__init__(
             registered_name=registered_name,
             observation_space=observation_space,
@@ -118,9 +123,9 @@ class MAPPO(Policy):
             self.custom_config,
             self.model_config["initialization"],
         )
-        
+
         # TODO(jh): retrieve from feature encoder as well.
-        global_observation_space=observation_space
+        global_observation_space = observation_space
 
         critic = model.Critic(
             self.model_config["critic"],
@@ -249,8 +254,12 @@ class MAPPO(Policy):
 
     def get_initial_state(self, batch_size) -> List[DataTransferType]:
         return {
-            EpisodeKey.ACTOR_RNN_STATE: np.zeros((batch_size, self._actor.rnn_layer_num, self._actor.rnn_state_size)),
-            EpisodeKey.CRITIC_RNN_STATE: np.zeros((batch_size, self._critic.rnn_layer_num, self._critic.rnn_state_size))
+            EpisodeKey.ACTOR_RNN_STATE: np.zeros(
+                (batch_size, self._actor.rnn_layer_num, self._actor.rnn_state_size)
+            ),
+            EpisodeKey.CRITIC_RNN_STATE: np.zeros(
+                (batch_size, self._critic.rnn_layer_num, self._critic.rnn_state_size)
+            ),
         }
 
     def to_device(self, device):
@@ -271,39 +280,38 @@ class MAPPO(Policy):
         return logits, actor_rnn_states
 
     @shape_adjusting
-    def compute_action(self, **kwargs):   
+    def compute_action(self, **kwargs):
         with torch.no_grad():
-            observations=kwargs[EpisodeKey.CUR_OBS]     
-            actor_rnn_states=kwargs[EpisodeKey.ACTOR_RNN_STATE]
-            critic_rnn_states=kwargs[EpisodeKey.CRITIC_RNN_STATE]
-            action_masks=kwargs[EpisodeKey.ACTION_MASK]
+            observations = kwargs[EpisodeKey.CUR_OBS]
+            actor_rnn_states = kwargs[EpisodeKey.ACTOR_RNN_STATE]
+            critic_rnn_states = kwargs[EpisodeKey.CRITIC_RNN_STATE]
+            action_masks = kwargs[EpisodeKey.ACTION_MASK]
             rnn_masks = kwargs[EpisodeKey.DONE]
-            
-            if hasattr(self.actor,"compute_action"):
+
+            if hasattr(self.actor, "compute_action"):
                 actions, actor_rnn_states, action_probs = self.actor.compute_action(
-                    observations,
-                    actor_rnn_states,
-                    rnn_masks,
-                    action_masks
+                    observations, actor_rnn_states, rnn_masks, action_masks
                 )
-            else:        
-                logits, actor_rnn_states = self.actor(observations, actor_rnn_states, rnn_masks)
+            else:
+                logits, actor_rnn_states = self.actor(
+                    observations, actor_rnn_states, rnn_masks
+                )
                 # if "action_mask" in kwargs:
-                illegal_action_mask = torch.FloatTensor(
-                    1 - action_masks
-                ).to(logits.device)
+                illegal_action_mask = torch.FloatTensor(1 - action_masks).to(
+                    logits.device
+                )
                 # assert illegal_action_mask.max() == 1 and illegal_action_mask.min() == 0, (
                 #     illegal_action_mask.max(),
                 #     illegal_action_mask.min(),
                 # )
                 logits = logits - 1e10 * illegal_action_mask
-                    
+
                 dist = torch.distributions.Categorical(logits=logits)
-                actions=dist.sample()
+                actions = dist.sample()
                 action_probs = dist.probs  # num_action
-            
+
             actor_rnn_states = actor_rnn_states.detach().cpu().numpy()
-            actions=actions.detach().cpu().numpy()
+            actions = actions.detach().cpu().numpy()
             if self.random_exploration:
                 exploration_actions = np.zeros(actions.shape, dtype=int)
                 for i in range(len(actions)):
@@ -316,20 +324,20 @@ class MAPPO(Policy):
             action_probs = action_probs.detach().cpu().numpy()
 
             if EpisodeKey.CUR_STATE not in kwargs:
-                states=observations
+                states = observations
 
             values, critic_rnn_states = self.critic(
                 states, critic_rnn_states, rnn_masks
             )
             values = values.detach().cpu().numpy()
             critic_rnn_states = critic_rnn_states.detach().cpu().numpy()
-                
+
             return {
                 EpisodeKey.ACTION: actions,
                 EpisodeKey.ACTION_DIST: action_probs,
                 EpisodeKey.STATE_VALUE: values,
                 EpisodeKey.ACTOR_RNN_STATE: actor_rnn_states,
-                EpisodeKey.CRITIC_RNN_STATE: critic_rnn_states
+                EpisodeKey.CRITIC_RNN_STATE: critic_rnn_states,
             }
 
     @shape_adjusting
@@ -343,7 +351,7 @@ class MAPPO(Policy):
             critic_rnn_state = kwargs[EpisodeKey.CRITIC_RNN_STATE]
             rnn_mask = kwargs[EpisodeKey.DONE]
             value, _ = self.critic(states, critic_rnn_state, rnn_mask)
-            value=value.cpu().numpy()
+            value = value.cpu().numpy()
             return {EpisodeKey.STATE_VALUE: value}
 
     def train(self):
@@ -379,8 +387,8 @@ class MAPPO(Policy):
             **kwargs,
         )
 
-        actor_path=os.path.join(dump_dir, "actor.pt")
-        critic_path=os.path.join(dump_dir,"critic.pt")
+        actor_path = os.path.join(dump_dir, "actor.pt")
+        critic_path = os.path.join(dump_dir, "critic.pt")
         if os.path.exists(actor_path):
             actor = torch.load(os.path.join(dump_dir, "actor.pt"), res.device)
             hard_update(res._actor, actor)

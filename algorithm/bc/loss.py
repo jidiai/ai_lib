@@ -5,24 +5,29 @@ from algorithm.common.loss_func import LossFunc
 from utils.logger import Logger
 import torch.nn.functional as F
 
+
 def huber_loss(e, d):
     a = (abs(e) <= d).float()
     b = (e > d).float()
     return a * e ** 2 / 2 + b * d * (abs(e) - d / 2)
 
+
 def mse_loss(e):
     return (e ** 2) / 2
 
-def to_value(tensor:torch.Tensor):
+
+def to_value(tensor: torch.Tensor):
     return tensor.detach().cpu().item()
 
-def basic_stats(name,tensor:torch.Tensor):
-    stats={}
-    stats["{}_max".format(name)]=to_value(tensor.max())
-    stats["{}_min".format(name)]=to_value(tensor.min())
-    stats["{}_mean".format(name)]=to_value(tensor.mean())
-    stats["{}_std".format(name)]=to_value(tensor.std())
+
+def basic_stats(name, tensor: torch.Tensor):
+    stats = {}
+    stats["{}_max".format(name)] = to_value(tensor.max())
+    stats["{}_min".format(name)] = to_value(tensor.min())
+    stats["{}_mean".format(name)] = to_value(tensor.mean())
+    stats["{}_std".format(name)] = to_value(tensor.std())
     return stats
+
 
 class BCLoss(LossFunc):
     def __init__(self):
@@ -65,22 +70,22 @@ class BCLoss(LossFunc):
             )
 
     def loss_compute(self, sample):
-        policy=self._policy
-        self.max_grad_norm = policy.custom_config.get("max_grad_norm",10)
-        
+        policy = self._policy
+        self.max_grad_norm = policy.custom_config.get("max_grad_norm", 10)
+
         self._policy.opt_cnt += 1
 
         (
             obs_batch,
             actions_batch,
-        ) = (
-            sample[EpisodeKey.EXPERT_OBS],
-            sample[EpisodeKey.EXPERT_ACTION].long()
-        )
-        
-        action_logits_batch,_=self._policy.actor(obs_batch,None,None)
+        ) = (sample[EpisodeKey.EXPERT_OBS], sample[EpisodeKey.EXPERT_ACTION].long())
 
-        policy_loss=F.cross_entropy(action_logits_batch.reshape(-1,action_logits_batch.shape[-1]),actions_batch.reshape(-1))
+        action_logits_batch, _ = self._policy.actor(obs_batch, None, None)
+
+        policy_loss = F.cross_entropy(
+            action_logits_batch.reshape(-1, action_logits_batch.shape[-1]),
+            actions_batch.reshape(-1),
+        )
 
         self.optimizers["actor"].zero_grad()
         policy_loss.backward()
@@ -89,15 +94,13 @@ class BCLoss(LossFunc):
                 self._policy.actor.parameters(), self.max_grad_norm
             )
         self.optimizers["actor"].step()
-        
-        stats=dict(
-            policy_loss=float(policy_loss.detach().cpu().numpy())
-        )
+
+        stats = dict(policy_loss=float(policy_loss.detach().cpu().numpy()))
 
         return stats
-    
+
     def zero_grad(self):
         return super().zero_grad()
-    
+
     def step(self):
         return super().step()

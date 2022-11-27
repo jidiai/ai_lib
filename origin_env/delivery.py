@@ -15,10 +15,15 @@ from utils.discrete import Discrete
 
 
 class DeliveryGame(Game):
-
     def __init__(self, conf, seed=None):
-        super(DeliveryGame, self).__init__(conf['n_player'], conf['is_obs_continuous'], conf['is_act_continuous'],
-                                           conf['game_name'], conf['agent_nums'], conf['obs_type'])
+        super(DeliveryGame, self).__init__(
+            conf["n_player"],
+            conf["is_obs_continuous"],
+            conf["is_act_continuous"],
+            conf["game_name"],
+            conf["agent_nums"],
+            conf["obs_type"],
+        )
         self.seed = seed
         self.set_seed()
         self.board_height = N
@@ -46,9 +51,11 @@ class DeliveryGame(Game):
 
     def step(self, joint_action):
         self.is_valid_action(joint_action)
-        info_before = ''
+        info_before = ""
         joint_action_decode = self.decode(joint_action)
-        self.current_state, step_rewards, self.done, info_after = self.env_core.step(joint_action_decode)
+        self.current_state, step_rewards, self.done, info_after = self.env_core.step(
+            joint_action_decode
+        )
         self.all_observes = self.get_all_observations()
         done = self.is_terminal()
         self.set_n_return(step_rewards)
@@ -57,28 +64,46 @@ class DeliveryGame(Game):
 
     def decode(self, joint_action):
         # If action[0] doesn't contain 1, the agent will not move.
-        joint_action_decode = [[action[0].index(1) if 1 in action[0] else 4, action[1], action[2]]
-                               for action in joint_action]
+        joint_action_decode = [
+            [action[0].index(1) if 1 in action[0] else 4, action[1], action[2]]
+            for action in joint_action
+        ]
 
         return joint_action_decode
 
     def is_valid_action(self, joint_action):
         if len(joint_action) != self.n_player:
-            raise Exception("Input joint action dimension should be {}, not {}.".format(
-                self.n_player, len(joint_action)))
+            raise Exception(
+                "Input joint action dimension should be {}, not {}.".format(
+                    self.n_player, len(joint_action)
+                )
+            )
 
         for i in range(self.n_player):
             if len(joint_action[i]) != 3:
-                raise Exception("The input action should have 3 parts, not {}".format(len(joint_action[i])))
+                raise Exception(
+                    "The input action should have 3 parts, not {}".format(
+                        len(joint_action[i])
+                    )
+                )
             if len(joint_action[i][0]) != self.joint_action_space[i][0].n:
-                raise Exception("The first action dimension for player {} should be {}, not {}.".format(
-                    i, self.joint_action_space[i][0].n, len(joint_action[i][0])))
+                raise Exception(
+                    "The first action dimension for player {} should be {}, not {}.".format(
+                        i, self.joint_action_space[i][0].n, len(joint_action[i][0])
+                    )
+                )
             if len(joint_action[i][1]) != self.joint_action_space[i][1].n:
-                raise Exception("The second action dimension for player {} should be {}, not {}.".format(
-                    i, self.joint_action_space[i][1].n, len(joint_action[i][1])))
+                raise Exception(
+                    "The second action dimension for player {} should be {}, not {}.".format(
+                        i, self.joint_action_space[i][1].n, len(joint_action[i][1])
+                    )
+                )
             if len(joint_action[i][2]) != self.joint_action_space[i][2].n:
-                raise Exception("The third action dimension for player {} should be {}, not {}.".format(
-                    i, self.joint_action_space[i][2].n, len(joint_action[i][2])))
+                raise Exception(
+                    "The third action dimension for player {} should be {}, not {}.".format(
+                        i, self.joint_action_space[i][2].n, len(joint_action[i][2])
+                    )
+                )
 
     def get_single_action_space(self, player_id):
         return self.joint_action_space[player_id]
@@ -92,8 +117,10 @@ class DeliveryGame(Game):
         return all_observes
 
     def set_action_space(self):
-        action_spaces = [[Discrete(5), Discrete(DISTRIBUTE_NUM), Discrete(CAPACITY_RIDER)]
-                         for _ in range(self.n_player)]
+        action_spaces = [
+            [Discrete(5), Discrete(DISTRIBUTE_NUM), Discrete(CAPACITY_RIDER)]
+            for _ in range(self.n_player)
+        ]
         return action_spaces
 
     def is_terminal(self):
@@ -105,7 +132,7 @@ class DeliveryGame(Game):
 
     def check_win(self):
         if self.all_equals(self.n_return):
-            return '-1'
+            return "-1"
 
         index = []
         max_n = max(self.n_return)
@@ -148,22 +175,24 @@ FIX = 8
 
 # 0: obstacles 1: roads 2: available positions for customers and restaurants
 # 3: customers and restaurants(modified after init)
-MAP = [[0, 0, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 0, 0],
-       [0, 0, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 0, 0],
-       [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
-       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-       [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
-       [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
-       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-       [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
-       [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
-       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-       [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
-       [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
-       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-       [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
-       [0, 0, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 0, 0],
-       [0, 0, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 0, 0]]
+MAP = [
+    [0, 0, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 0, 0],
+    [0, 0, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 0, 0],
+    [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
+    [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
+    [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
+    [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [2, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2],
+    [0, 0, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 0, 0],
+    [0, 0, 2, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 2, 0, 0],
+]
 
 
 class Delivery:
@@ -283,10 +312,17 @@ class Delivery:
                     raise Exception("order_number_in_rider less than 0!")
                 if put_order_action[order_number_in_rider] == 1:
                     deleted_orders_agents[i].append(cur_order)
-                    if check_position(agent.position, self.customers[cur_order.customer_id].position) \
-                            and cur_order.end_time >= self.step_cnt:
-                        self.step_rewards[i] += calculate_distance(self.customers[cur_order.customer_id].position,
-                                                                   self.restaurants[cur_order.restaurant_id].position)
+                    if (
+                        check_position(
+                            agent.position,
+                            self.customers[cur_order.customer_id].position,
+                        )
+                        and cur_order.end_time >= self.step_cnt
+                    ):
+                        self.step_rewards[i] += calculate_distance(
+                            self.customers[cur_order.customer_id].position,
+                            self.restaurants[cur_order.restaurant_id].position,
+                        )
                     else:
                         self.step_rewards[i] -= 100
                 elif cur_order.end_time < self.step_cnt:
@@ -301,36 +337,62 @@ class Delivery:
                     self.step_rewards[i] -= 100
                     deleted_pick_orders_agents[i].append(order_to_pick)
                     # if the order is out of pick up time, the order will be reassigned.
-                    deleted_pick_orders_restaurants[order_to_pick.restaurant_id].append(order_to_pick)
+                    deleted_pick_orders_restaurants[order_to_pick.restaurant_id].append(
+                        order_to_pick
+                    )
                 # if the order is out of end_time, drop the order
                 elif order_to_pick.end_time < self.step_cnt:
                     self.step_rewards[i] -= 100
                     deleted_pick_orders_agents[i].append(order_to_pick)
-                    deleted_order_ids_restaurants[order_to_pick.restaurant_id].append(order_to_pick.order_id)
+                    deleted_order_ids_restaurants[order_to_pick.restaurant_id].append(
+                        order_to_pick.order_id
+                    )
 
-        added_pick_orders_agents, added_pick_orders_restaurants, deleted_order_ids_restaurants, single_rewards = \
-            self.accept_orders(pick_order_actions, deleted_orders_agents, deleted_pick_orders_agents,
-                               deleted_order_ids_restaurants)
+        (
+            added_pick_orders_agents,
+            added_pick_orders_restaurants,
+            deleted_order_ids_restaurants,
+            single_rewards,
+        ) = self.accept_orders(
+            pick_order_actions,
+            deleted_orders_agents,
+            deleted_pick_orders_agents,
+            deleted_order_ids_restaurants,
+        )
 
         for i in range(len(self.agents)):
             self.step_rewards[i] += single_rewards[i]
 
-        added_orders_agents, added_pick_orders_agents, added_pick_orders_restaurants, deleted_pick_orders_agents, \
-        deleted_order_ids_restaurants = self.pick_up_orders(deleted_pick_orders_agents, added_pick_orders_agents,
-                                                            added_pick_orders_restaurants,
-                                                            deleted_order_ids_restaurants)
+        (
+            added_orders_agents,
+            added_pick_orders_agents,
+            added_pick_orders_restaurants,
+            deleted_pick_orders_agents,
+            deleted_order_ids_restaurants,
+        ) = self.pick_up_orders(
+            deleted_pick_orders_agents,
+            added_pick_orders_agents,
+            added_pick_orders_restaurants,
+            deleted_order_ids_restaurants,
+        )
 
         for restaurant_id, restaurant in self.restaurants.items():
             for order in restaurant.order_list:
-                if order.end_time < self.step_cnt and order.order_id not in \
-                        deleted_order_ids_restaurants[restaurant_id]:
+                if (
+                    order.end_time < self.step_cnt
+                    and order.order_id
+                    not in deleted_order_ids_restaurants[restaurant_id]
+                ):
                     deleted_order_ids_restaurants[restaurant_id].append(order.order_id)
 
         # generate new orders for restaurants
         if self.step_cnt % UPDATE_FREQUENCY == 0 and self.step_cnt > 0:
             for restaurant_id, _ in self.restaurants.items():
-                new_orders = self.generate_orders(self.step_cnt, restaurant_id,
-                                                  deleted_order_ids_restaurants[restaurant_id])
+                new_orders = self.generate_orders(
+                    self.step_cnt,
+                    restaurant_id,
+                    deleted_order_ids_restaurants[restaurant_id],
+                )
                 added_orders_restaurants[restaurant_id] += new_orders
 
         # update agent information
@@ -338,20 +400,29 @@ class Delivery:
             agent = self.agents[i]
             agent.update_orders(deleted_orders_agents[i], added_orders_agents[i])
             agent.update_order_numbers()
-            agent.update_orders_to_pick(deleted_pick_orders_agents[i], added_pick_orders_agents[i])
+            agent.update_orders_to_pick(
+                deleted_pick_orders_agents[i], added_pick_orders_agents[i]
+            )
             order_set = set([order.order_id for order in agent.order_list])
             order_to_pick_set = set([order.order_id for order in agent.orders_to_pick])
             intersection = order_set.intersection(order_to_pick_set)
             if len(intersection) > 0:
-                raise Exception("Agent order list and order list to pick has intersection! ", intersection)
+                raise Exception(
+                    "Agent order list and order list to pick has intersection! ",
+                    intersection,
+                )
 
         # update restaurant information
         for restaurant_id, restaurant in self.restaurants.items():
-            restaurant.update_orders(deleted_order_ids_restaurants[restaurant_id],
-                                     added_orders_restaurants[restaurant_id])
+            restaurant.update_orders(
+                deleted_order_ids_restaurants[restaurant_id],
+                added_orders_restaurants[restaurant_id],
+            )
             restaurant.update_order_numbers()
-            restaurant.update_pick_up_order_status(deleted_pick_orders_restaurants[restaurant_id],
-                                                   added_pick_orders_restaurants[restaurant_id])
+            restaurant.update_pick_up_order_status(
+                deleted_pick_orders_restaurants[restaurant_id],
+                added_pick_orders_restaurants[restaurant_id],
+            )
             self.restaurants[restaurant_id] = restaurant
 
         self.distribute()
@@ -375,13 +446,24 @@ class Delivery:
     def generate_orders(self, step_cnt, restaurant_id, deleted_orders_restaurant):
         restaurant = self.restaurants[restaurant_id]
         new_orders = []
-        while len(restaurant.order_list) - len(deleted_orders_restaurant) + len(new_orders) < CAPACITY_RESTAURANT:
+        while (
+            len(restaurant.order_list)
+            - len(deleted_orders_restaurant)
+            + len(new_orders)
+            < CAPACITY_RESTAURANT
+        ):
             order_id = self.total_order
             customer_id = random.randint(0, len(self.customers) - 1)
             start_time = step_cnt
-            distance = calculate_distance(restaurant.position, self.customers[customer_id].position)
-            end_time = random.randint(step_cnt + distance, step_cnt + TIME_INTERVAL_END_TIME)
-            new_order = Order(order_id, customer_id, restaurant_id, start_time, end_time, -1)
+            distance = calculate_distance(
+                restaurant.position, self.customers[customer_id].position
+            )
+            end_time = random.randint(
+                step_cnt + distance, step_cnt + TIME_INTERVAL_END_TIME
+            )
+            new_order = Order(
+                order_id, customer_id, restaurant_id, start_time, end_time, -1
+            )
             new_orders.append(new_order)
             self.total_order += 1
 
@@ -394,16 +476,25 @@ class Delivery:
         for agent in self.agents:
             self.distribute_map[agent.agent_id] = []
             restaurants_to_sort = list(self.restaurants.values()).copy()
-            new_restaurants_to_sort = sorted(restaurants_to_sort,
-                                             key=lambda restaurant: calculate_distance(restaurant.position,
-                                                                                       agent.position))
+            new_restaurants_to_sort = sorted(
+                restaurants_to_sort,
+                key=lambda restaurant: calculate_distance(
+                    restaurant.position, agent.position
+                ),
+            )
             for restaurant in new_restaurants_to_sort:
-                if calculate_distance(restaurant.position, agent.position) < DISTRIBUTE_DISTANCE:
+                if (
+                    calculate_distance(restaurant.position, agent.position)
+                    < DISTRIBUTE_DISTANCE
+                ):
                     order_index = 0
-                    while len(self.distribute_map[agent.agent_id]) < DISTRIBUTE_NUM \
-                            and order_index < len(restaurant.order_list):
+                    while len(
+                        self.distribute_map[agent.agent_id]
+                    ) < DISTRIBUTE_NUM and order_index < len(restaurant.order_list):
                         if restaurant.order_list[order_index].distributed == -1:
-                            self.distribute_map[agent.agent_id].append(restaurant.order_list[order_index])
+                            self.distribute_map[agent.agent_id].append(
+                                restaurant.order_list[order_index]
+                            )
                         order_index += 1
                 else:
                     break
@@ -412,8 +503,13 @@ class Delivery:
             new_val = sorted(val, key=lambda order: order.order_id)
             self.distribute_map[key] = new_val
 
-    def accept_orders(self, pick_order_actions, deleted_orders_agents, deleted_pick_orders_agents,
-                      deleted_order_ids_restaurants):
+    def accept_orders(
+        self,
+        pick_order_actions,
+        deleted_orders_agents,
+        deleted_pick_orders_agents,
+        deleted_order_ids_restaurants,
+    ):
         single_rewards = [0.0 for _ in range(len(self.agents))]
         added_pick_orders_agents_temp = [[] for _ in range(len(self.agents))]
         added_pick_orders_agents = [[] for _ in range(len(self.agents))]
@@ -445,41 +541,70 @@ class Delivery:
                 random.shuffle(value)
                 order_id2riders[key] = value
 
-        new_all_orders = sorted(all_orders, key=lambda single_order: single_order.order_id)
+        new_all_orders = sorted(
+            all_orders, key=lambda single_order: single_order.order_id
+        )
 
         for order in new_all_orders:
             selected_agents = order_id2riders[order.order_id]
             for selected_agent_id in selected_agents:
-                if len(self.agents[selected_agent_id].order_list) + len(self.agents[selected_agent_id].orders_to_pick) \
-                        + len(added_pick_orders_agents_temp[selected_agent_id]) - \
-                        len(deleted_orders_agents[selected_agent_id]) - \
-                        len(deleted_pick_orders_agents[selected_agent_id]) < CAPACITY_RIDER:
+                if (
+                    len(self.agents[selected_agent_id].order_list)
+                    + len(self.agents[selected_agent_id].orders_to_pick)
+                    + len(added_pick_orders_agents_temp[selected_agent_id])
+                    - len(deleted_orders_agents[selected_agent_id])
+                    - len(deleted_pick_orders_agents[selected_agent_id])
+                    < CAPACITY_RIDER
+                ):
                     order_ = order_id2order[order.order_id]
                     added_pick_orders_agents_temp[selected_agent_id].append(order_)
                     break
 
         for i in range(len(self.agents)):
             selected_agent_id = i
-            added_pick_orders_agents_step = added_pick_orders_agents_temp[selected_agent_id]
+            added_pick_orders_agents_step = added_pick_orders_agents_temp[
+                selected_agent_id
+            ]
             for added_order in added_pick_orders_agents_step:
                 if added_order.end_time >= self.step_cnt:
-                    distance_to_restaurant = calculate_distance(self.agents[selected_agent_id].position,
-                                                                self.restaurants[added_order.restaurant_id].position)
-                    pick_up_time = random.randint(distance_to_restaurant, PICK_UP_TIMES * distance_to_restaurant)
+                    distance_to_restaurant = calculate_distance(
+                        self.agents[selected_agent_id].position,
+                        self.restaurants[added_order.restaurant_id].position,
+                    )
+                    pick_up_time = random.randint(
+                        distance_to_restaurant, PICK_UP_TIMES * distance_to_restaurant
+                    )
                     # set the pick_up_time for the order when the order is accepted.
                     added_order.set_pick_up_time(self.step_cnt + pick_up_time)
                     added_order.distributed = selected_agent_id
                     added_pick_orders_agents[selected_agent_id].append(added_order)
-                    added_pick_orders_restaurants[added_order.restaurant_id].append(added_order)
+                    added_pick_orders_restaurants[added_order.restaurant_id].append(
+                        added_order
+                    )
                 else:
                     single_rewards[selected_agent_id] -= 100
-                    if added_order.order_id not in deleted_order_ids_restaurants[added_order.restaurant_id]:
-                        deleted_order_ids_restaurants[added_order.restaurant_id].append(added_order.order_id)
+                    if (
+                        added_order.order_id
+                        not in deleted_order_ids_restaurants[added_order.restaurant_id]
+                    ):
+                        deleted_order_ids_restaurants[added_order.restaurant_id].append(
+                            added_order.order_id
+                        )
 
-        return added_pick_orders_agents, added_pick_orders_restaurants, deleted_order_ids_restaurants, single_rewards
+        return (
+            added_pick_orders_agents,
+            added_pick_orders_restaurants,
+            deleted_order_ids_restaurants,
+            single_rewards,
+        )
 
-    def pick_up_orders(self, deleted_pick_orders_agents, added_pick_orders_agents, added_pick_orders_restaurants,
-                       deleted_order_ids_restaurants):
+    def pick_up_orders(
+        self,
+        deleted_pick_orders_agents,
+        added_pick_orders_agents,
+        added_pick_orders_restaurants,
+        deleted_order_ids_restaurants,
+    ):
         # if agent is at restaurant, check his/her orders_to_pick
         added_orders_agents = [[] for _ in range(len(self.agents))]
 
@@ -490,79 +615,162 @@ class Delivery:
                 restaurant_id = self.pos2restaurant[pos_key]
                 # orders have already picked
                 for cur_order in agent.orders_to_pick:
-                    if cur_order.restaurant_id == restaurant_id and cur_order.pick_up_time >= self.step_cnt \
-                            and cur_order.end_time >= self.step_cnt:
+                    if (
+                        cur_order.restaurant_id == restaurant_id
+                        and cur_order.pick_up_time >= self.step_cnt
+                        and cur_order.end_time >= self.step_cnt
+                    ):
                         added_orders_agents[agent.agent_id].append(cur_order)
                         deleted_pick_orders_agents[agent.agent_id].append(cur_order)
-                        if cur_order.order_id not in deleted_order_ids_restaurants[cur_order.restaurant_id]:
-                            deleted_order_ids_restaurants[cur_order.restaurant_id].append(cur_order.order_id)
+                        if (
+                            cur_order.order_id
+                            not in deleted_order_ids_restaurants[
+                                cur_order.restaurant_id
+                            ]
+                        ):
+                            deleted_order_ids_restaurants[
+                                cur_order.restaurant_id
+                            ].append(cur_order.order_id)
                 # orders picked in this step
                 picked_orders_step = added_pick_orders_agents[i]
                 added_pick_orders_agents_to_remove = []
                 for cur_order in picked_orders_step:
-                    if cur_order.restaurant_id == restaurant_id and cur_order.pick_up_time >= self.step_cnt \
-                            and cur_order.end_time >= self.step_cnt:
+                    if (
+                        cur_order.restaurant_id == restaurant_id
+                        and cur_order.pick_up_time >= self.step_cnt
+                        and cur_order.end_time >= self.step_cnt
+                    ):
                         added_pick_orders_agents_to_remove.append(cur_order)
                         added_orders_agents[agent.agent_id].append(cur_order)
-                        if cur_order.order_id not in deleted_order_ids_restaurants[cur_order.restaurant_id]:
-                            deleted_order_ids_restaurants[cur_order.restaurant_id].append(cur_order.order_id)
+                        if (
+                            cur_order.order_id
+                            not in deleted_order_ids_restaurants[
+                                cur_order.restaurant_id
+                            ]
+                        ):
+                            deleted_order_ids_restaurants[
+                                cur_order.restaurant_id
+                            ].append(cur_order.order_id)
                 for order_to_remove in added_pick_orders_agents_to_remove:
                     added_pick_orders_agents[i].remove(order_to_remove)
                 for order_to_remove in added_pick_orders_agents_to_remove:
                     added_pick_orders_restaurants_to_move = []
-                    for order in added_pick_orders_restaurants[order_to_remove.restaurant_id]:
+                    for order in added_pick_orders_restaurants[
+                        order_to_remove.restaurant_id
+                    ]:
                         if order.order_id == order_to_remove.order_id:
                             added_pick_orders_restaurants_to_move.append(order)
                     for order in added_pick_orders_restaurants_to_move:
-                        added_pick_orders_restaurants[order_to_remove.restaurant_id].remove(order)
+                        added_pick_orders_restaurants[
+                            order_to_remove.restaurant_id
+                        ].remove(order)
 
-        return added_orders_agents, added_pick_orders_agents, added_pick_orders_restaurants, \
-               deleted_pick_orders_agents, deleted_order_ids_restaurants
+        return (
+            added_orders_agents,
+            added_pick_orders_agents,
+            added_pick_orders_restaurants,
+            deleted_pick_orders_agents,
+            deleted_order_ids_restaurants,
+        )
 
     def get_current_state(self):
         return {
             "agents": [agent2dict(agent) for agent in self.agents],
-            "restaurants": [restaurant2dict(restaurant) for _, restaurant in self.restaurants.items()],
-            "customers": [customer2dict(customer) for _, customer in self.customers.items()],
-            "distributed_orders": copy.deepcopy([(agent_id, [order2dict(order) for order in agent_orders])
-                                                 for agent_id, agent_orders in self.distribute_map.items()]),
-            "roads": copy.deepcopy([[key2pos(pos)[0], key2pos(pos)[1]] for pos in self.road])
+            "restaurants": [
+                restaurant2dict(restaurant)
+                for _, restaurant in self.restaurants.items()
+            ],
+            "customers": [
+                customer2dict(customer) for _, customer in self.customers.items()
+            ],
+            "distributed_orders": copy.deepcopy(
+                [
+                    (agent_id, [order2dict(order) for order in agent_orders])
+                    for agent_id, agent_orders in self.distribute_map.items()
+                ]
+            ),
+            "roads": copy.deepcopy(
+                [[key2pos(pos)[0], key2pos(pos)[1]] for pos in self.road]
+            ),
         }
 
     def get_info_after(self):
         return {
             "agents": [agent2dict_info_after(agent) for agent in self.agents],
-            "restaurants": [restaurant2dict_info_after(restaurant) for _, restaurant in self.restaurants.items()],
-            "customers": [customer2dict(customer) for _, customer in self.customers.items()],
-            "distributed_orders": copy.deepcopy([(agent_id, [order2dict(order) for order in agent_orders])
-                                                 for agent_id, agent_orders in self.distribute_map.items()]),
-            "step_rewards": self.step_rewards
+            "restaurants": [
+                restaurant2dict_info_after(restaurant)
+                for _, restaurant in self.restaurants.items()
+            ],
+            "customers": [
+                customer2dict(customer) for _, customer in self.customers.items()
+            ],
+            "distributed_orders": copy.deepcopy(
+                [
+                    (agent_id, [order2dict(order) for order in agent_orders])
+                    for agent_id, agent_orders in self.distribute_map.items()
+                ]
+            ),
+            "step_rewards": self.step_rewards,
         }
 
     def get_init_info(self):
         return {
             "agents": [agent2dict_info_after(agent) for agent in self.agents],
-            "restaurants": [restaurant2dict_info_after(restaurant) for _, restaurant in self.restaurants.items()],
-            "customers": [customer2dict(customer) for _, customer in self.customers.items()],
-            "roads": copy.deepcopy([[key2pos(pos)[0], key2pos(pos)[1]] for pos in self.road]),
-            "distributed_orders": copy.deepcopy([(agent_id, [order2dict(order) for order in agent_orders])
-                                                 for agent_id, agent_orders in self.distribute_map.items()])
+            "restaurants": [
+                restaurant2dict_info_after(restaurant)
+                for _, restaurant in self.restaurants.items()
+            ],
+            "customers": [
+                customer2dict(customer) for _, customer in self.customers.items()
+            ],
+            "roads": copy.deepcopy(
+                [[key2pos(pos)[0], key2pos(pos)[1]] for pos in self.road]
+            ),
+            "distributed_orders": copy.deepcopy(
+                [
+                    (agent_id, [order2dict(order) for order in agent_orders])
+                    for agent_id, agent_orders in self.distribute_map.items()
+                ]
+            ),
         }
 
     def render(self, fps=1):
         if self.step_cnt == 0:
             # images
-            resource_path_rider = os.path.join(os.path.dirname(__file__), "images", "delivery", "rider.png")
-            resource_path_restaurant = os.path.join(os.path.dirname(__file__), "images", "delivery", "restaurant.png")
-            resource_path_customer = os.path.join(os.path.dirname(__file__), "images", "delivery", "customer.png")
+            resource_path_rider = os.path.join(
+                os.path.dirname(__file__), "images", "delivery", "rider.png"
+            )
+            resource_path_restaurant = os.path.join(
+                os.path.dirname(__file__), "images", "delivery", "restaurant.png"
+            )
+            resource_path_customer = os.path.join(
+                os.path.dirname(__file__), "images", "delivery", "customer.png"
+            )
             self.images = {
-                "agents": [Bitmap(Image.open(resource_path_rider), GRID_UNIT, (0, 191, 255))
-                           for _ in range(len(self.agents))],
-                "restaurants": [Bitmap(change_background(Image.open(resource_path_restaurant), (148, 0, 211)),
-                                       GRID_UNIT - 1, (0, 0, 0)) for _ in range(len(self.restaurants))],
+                "agents": [
+                    Bitmap(Image.open(resource_path_rider), GRID_UNIT, (0, 191, 255))
+                    for _ in range(len(self.agents))
+                ],
+                "restaurants": [
+                    Bitmap(
+                        change_background(
+                            Image.open(resource_path_restaurant), (148, 0, 211)
+                        ),
+                        GRID_UNIT - 1,
+                        (0, 0, 0),
+                    )
+                    for _ in range(len(self.restaurants))
+                ],
                 "customers": [
-                    Bitmap(change_background(Image.open(resource_path_customer), (148, 0, 211)), GRID_UNIT - 1,
-                           (0, 0, 0)) for _ in range(len(self.customers))]
+                    Bitmap(
+                        change_background(
+                            Image.open(resource_path_customer), (148, 0, 211)
+                        ),
+                        GRID_UNIT - 1,
+                        (0, 0, 0),
+                    )
+                    for _ in range(len(self.customers))
+                ],
             }
             pygame.init()
             self.grid = Delivery.init_board(N, N, GRID_UNIT)
@@ -583,12 +791,19 @@ class Delivery:
 
     @staticmethod
     def init_board(width, height, grid_unit, color=(148, 0, 211)):
-        im = Image.new(mode="RGB", size=(width * grid_unit, height * grid_unit), color=color)
+        im = Image.new(
+            mode="RGB", size=(width * grid_unit, height * grid_unit), color=color
+        )
         draw = ImageDraw.Draw(im)
         for x in range(0, width):
-            draw.line(((x * grid_unit, 0), (x * grid_unit, height * grid_unit)), fill=(0, 0, 0))
+            draw.line(
+                ((x * grid_unit, 0), (x * grid_unit, height * grid_unit)),
+                fill=(0, 0, 0),
+            )
         for y in range(0, height):
-            draw.line(((0, y * grid_unit), (width * grid_unit, y * grid_unit)), fill=(0, 0, 0))
+            draw.line(
+                ((0, y * grid_unit), (width * grid_unit, y * grid_unit)), fill=(0, 0, 0)
+            )
         return im
 
     def render_board(self):
@@ -600,21 +815,31 @@ class Delivery:
             self.images["agents"][i].set_pos(x, y)
             # print("position in render {}, {}".format(pos, i))
             if (x, y) not in extra_info.keys():
-                extra_info[(x, y)] = 'A_' + str(i) + " #" + str(len(agent.order_list))
+                extra_info[(x, y)] = "A_" + str(i) + " #" + str(len(agent.order_list))
             else:
-                extra_info[(x, y)] += '\n' + 'A_' + str(i) + " #" + str(len(agent.order_list))
+                extra_info[(x, y)] += (
+                    "\n" + "A_" + str(i) + " #" + str(len(agent.order_list))
+                )
 
             if abs(self.step_rewards[i] - 0.0) > 0.0000001:
-                extra_info[(x, y)] += '\n' + 'Reward' + '\n' + str(self.step_rewards[i])
+                extra_info[(x, y)] += "\n" + "Reward" + "\n" + str(self.step_rewards[i])
 
         for restaurant_id, restaurant in self.restaurants.items():
             x = restaurant.position[0]
             y = restaurant.position[1]
             self.images["restaurants"][restaurant_id].set_pos(x, y)
             if (x, y) not in extra_info.keys():
-                extra_info[(x, y)] = 'R_' + str(restaurant_id) + "#" + str(len(restaurant.order_list))
+                extra_info[(x, y)] = (
+                    "R_" + str(restaurant_id) + "#" + str(len(restaurant.order_list))
+                )
             else:
-                extra_info[(x, y)] += '\n' + 'R_' + str(restaurant_id) + "#" + str(len(restaurant.order_list))
+                extra_info[(x, y)] += (
+                    "\n"
+                    + "R_"
+                    + str(restaurant_id)
+                    + "#"
+                    + str(len(restaurant.order_list))
+                )
 
         for customer_id, customer in self.customers.items():
             x = customer.position[0]
@@ -623,7 +848,9 @@ class Delivery:
 
         # print("extra info is {}".format(extra_info))
 
-        im_data = np.array(self._render_board(self.grid, GRID_UNIT, FIX, self.images, extra_info))
+        im_data = np.array(
+            self._render_board(self.grid, GRID_UNIT, FIX, self.images, extra_info)
+        )
         self.game_tape.append(im_data)
         return im_data
 
@@ -635,15 +862,25 @@ class Delivery:
             pos = key2pos(road)
             row = pos[0]
             col = pos[1]
-            draw.rectangle(build_rectangle(col, row, unit, fix), fill=(250, 235, 215), outline=(0, 0, 0))
+            draw.rectangle(
+                build_rectangle(col, row, unit, fix),
+                fill=(250, 235, 215),
+                outline=(0, 0, 0),
+            )
 
         for image in images["restaurants"]:
             # draw.bitmap((image.y * unit + unit // fix - 4, image.x * unit + unit // fix - 4), image.bitmap, image.color)
-            im.paste(image.bitmap, (image.y * unit + unit // fix - 4, image.x * unit + unit // fix - 4))
+            im.paste(
+                image.bitmap,
+                (image.y * unit + unit // fix - 4, image.x * unit + unit // fix - 4),
+            )
 
         for image in images["customers"]:
             # draw.bitmap((image.y * unit + unit // fix - 4, image.x * unit + unit // fix - 4), image.bitmap, image.color)
-            im.paste(image.bitmap, (image.y * unit + unit // fix - 4, image.x * unit + unit // fix - 4))
+            im.paste(
+                image.bitmap,
+                (image.y * unit + unit // fix - 4, image.x * unit + unit // fix - 4),
+            )
 
         image_id = 0
         for i in extra_info.keys():
@@ -654,13 +891,21 @@ class Delivery:
             values = value.split("\n")
 
             for v in values:
-                if v[0] == 'A':
+                if v[0] == "A":
                     image = images["agents"][image_id]
-                    draw.bitmap((image.y * unit + unit // fix - 4, image.x * unit + unit // fix - 4), image.bitmap,
-                                image.color)
+                    draw.bitmap(
+                        (
+                            image.y * unit + unit // fix - 4,
+                            image.x * unit + unit // fix - 4,
+                        ),
+                        image.bitmap,
+                        image.color,
+                    )
                     image_id += 1
 
-            draw.text(((y + 1.0 / 20) * unit, (x + 1.0 / 20) * unit), value, fill=(0, 0, 0))
+            draw.text(
+                ((y + 1.0 / 20) * unit, (x + 1.0 / 20) * unit), value, fill=(0, 0, 0)
+            )
         return im
 
 
@@ -669,7 +914,9 @@ def agent2dict(agent):
         "agent_id": copy.deepcopy(agent.agent_id),
         "position": copy.deepcopy(agent.position),
         "order_list": copy.deepcopy([order2dict(order) for order in agent.order_list]),
-        "orders_to_pick": copy.deepcopy([order2dict(order) for order in agent.orders_to_pick])
+        "orders_to_pick": copy.deepcopy(
+            [order2dict(order) for order in agent.orders_to_pick]
+        ),
     }
 
 
@@ -677,7 +924,7 @@ def agent2dict_info_after(agent):
     return {
         "agent_id": copy.deepcopy(agent.agent_id),
         "position": copy.deepcopy(agent.position),
-        "order_list_length": len(agent.order_list)
+        "order_list_length": len(agent.order_list),
     }
 
 
@@ -692,7 +939,11 @@ class Agent:
         new_row = self.position[0] + DIRECTION[move_action][0]
         new_col = self.position[1] + DIRECTION[move_action][1]
 
-        if 0 <= new_row < N and 0 <= new_col < N and (board[new_row][new_col] == 1 or board[new_row][new_col] == 3):
+        if (
+            0 <= new_row < N
+            and 0 <= new_col < N
+            and (board[new_row][new_col] == 1 or board[new_row][new_col] == 3)
+        ):
             self.position[0] = new_row
             self.position[1] = new_col
 
@@ -744,7 +995,9 @@ def restaurant2dict(restaurant):
     return {
         "restaurant_id": copy.deepcopy(restaurant.restaurant_id),
         "position": copy.deepcopy(restaurant.position),
-        "order_list": copy.deepcopy([order2dict(order) for order in restaurant.order_list])
+        "order_list": copy.deepcopy(
+            [order2dict(order) for order in restaurant.order_list]
+        ),
     }
 
 
@@ -752,7 +1005,7 @@ def restaurant2dict_info_after(restaurant):
     return {
         "restaurant_id": copy.deepcopy(restaurant.restaurant_id),
         "position": copy.deepcopy(restaurant.position),
-        "order_list_length": len(restaurant.order_list)
+        "order_list_length": len(restaurant.order_list),
     }
 
 
@@ -787,7 +1040,9 @@ class Restaurant:
 
         self.order_list = new_order_list
 
-    def update_pick_up_order_status(self, deleted_pick_orders_restaurant, added_pick_order_restaurant):
+    def update_pick_up_order_status(
+        self, deleted_pick_orders_restaurant, added_pick_order_restaurant
+    ):
         new_order_map = {}
         new_deleted_order_list = []
 
@@ -811,7 +1066,7 @@ class Restaurant:
 def customer2dict(customer):
     return {
         "customer_id": copy.deepcopy(customer.customer_id),
-        "position": copy.deepcopy(customer.position)
+        "position": copy.deepcopy(customer.position),
     }
 
 
@@ -831,12 +1086,14 @@ def order2dict(order):
         "pick_up_time": order.pick_up_time,
         "distributed": order.distributed,
         "order_number_in_restaurant": order.order_number_in_restaurant,
-        "order_number_in_rider": order.order_number_in_rider
+        "order_number_in_rider": order.order_number_in_rider,
     }
 
 
 class Order:
-    def __init__(self, order_id, customer_id, restaurant_id, start_time, end_time, distributed):
+    def __init__(
+        self, order_id, customer_id, restaurant_id, start_time, end_time, distributed
+    ):
         self.order_id = order_id
         self.customer_id = customer_id
         self.restaurant_id = restaurant_id
@@ -869,7 +1126,7 @@ def key2pos(key):
 
 def change_background(img, color):
     x, y = img.size
-    new_image = Image.new('RGBA', img.size, color=color)
+    new_image = Image.new("RGBA", img.size, color=color)
     new_image.paste(img, (0, 0, x, y), img)
     return new_image
 

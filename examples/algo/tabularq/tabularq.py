@@ -3,6 +3,7 @@ import numpy as np
 import os
 from pathlib import Path
 import sys
+
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
 from common.buffer import Replay_buffer as buffer
@@ -14,7 +15,6 @@ def get_trajectory_property():
 
 
 class TABULARQ(object):
-
     def __init__(self, args):
 
         self.args = args
@@ -69,30 +69,39 @@ class TABULARQ(object):
     def learn(self):
         data = self.memory.get_step_data()
 
-        next_state = data['states_next']
-        state = data['states']
-        reward = data['rewards']
-        action = data['action']
-        done = data['dones']
+        next_state = data["states_next"]
+        state = data["states"]
+        reward = data["rewards"]
+        action = data["action"]
+        done = data["dones"]
 
         target_index = self.target_policy(self._q[next_state, :])
-        target = reward + self.gamma * (self._q[next_state, :] @ target_index) * (1 - done)
+        target = reward + self.gamma * (self._q[next_state, :] @ target_index) * (
+            1 - done
+        )
         self._q[state, action] += self.lr * (target - self._q[state, action])
 
     def save(self, save_path, episode):
         if self.args.scenario == "gridworld":
             W = -100  # wall
             G = 100  # goal
-            GRID_LAYOUT = np.array([
-                [W, W, W, W, W, W, W, W, W, W, W, W],
-                [W, W, 0, W, W, W, W, W, W, 0, W, W],
-                [W, 0, 0, 0, 0, 0, 0, 0, 0, G, 0, W],
-                [W, 0, 0, 0, W, W, W, W, 0, 0, 0, W],
-                [W, 0, 0, 0, W, W, W, W, 0, 0, 0, W],
-                [W, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, W],
-                [W, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, W],
-                [W, W, 0, 0, 0, 0, 0, 0, 0, 0, W, W],
-                [W, W, W, W, W, W, W, W, W, W, W, W]
-            ])
-            plot_action_values(self.args.algo, GRID_LAYOUT, self._q.reshape((9, 12) + (4,)), vmin=-20, vmax=100)
-
+            GRID_LAYOUT = np.array(
+                [
+                    [W, W, W, W, W, W, W, W, W, W, W, W],
+                    [W, W, 0, W, W, W, W, W, W, 0, W, W],
+                    [W, 0, 0, 0, 0, 0, 0, 0, 0, G, 0, W],
+                    [W, 0, 0, 0, W, W, W, W, 0, 0, 0, W],
+                    [W, 0, 0, 0, W, W, W, W, 0, 0, 0, W],
+                    [W, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, W],
+                    [W, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, W],
+                    [W, W, 0, 0, 0, 0, 0, 0, 0, 0, W, W],
+                    [W, W, W, W, W, W, W, W, W, W, W, W],
+                ]
+            )
+            plot_action_values(
+                self.args.algo,
+                GRID_LAYOUT,
+                self._q.reshape((9, 12) + (4,)),
+                vmin=-20,
+                vmax=100,
+            )

@@ -36,7 +36,9 @@ class DataServer:
             return statistics
         except KeyError:
             time.sleep(1)
-            info = "{}::get_table_stats: table {} is not found".format(self.id, table_name)
+            info = "{}::get_table_stats: table {} is not found".format(
+                self.id, table_name
+            )
             Logger.warning(info)
             return {}
 
@@ -48,7 +50,9 @@ class DataServer:
                 table.write(data)
         except KeyError:
             time.sleep(1)
-            Logger.warning("{}::save_data: table for {} is not found".format(self.id, table_name))
+            Logger.warning(
+                "{}::save_data: table for {} is not found".format(self.id, table_name)
+            )
 
     def sample(self, table_name, batch_size, wait=False):
         try:
@@ -61,16 +65,18 @@ class DataServer:
             else:
                 return samples, False
         except KeyError:
-            Logger.warning("{}::sample_data: table {} is not found".format(self.id, table_name))
+            Logger.warning(
+                "{}::sample_data: table {} is not found".format(self.id, table_name)
+            )
             time.sleep(1)
             samples = None
             return samples, False
 
     def load_data(self, table_name, data_path):
-        '''
+        """
         TODO(jh): maybe support more data format?
         data now are supposed to be stored in pickle format as a list of samples.
-        '''
+        """
         # check extension
         assert data_path[-4:] == ".pkl"
 
@@ -80,12 +86,18 @@ class DataServer:
 
         # load data from disk
         import pickle as pkl
+
         with open(data_path, "rb") as f:
             samples = pkl.load(f)
 
-        assert len(samples) <= table.capacity, "load too much data(size{}) to fit into table(capacity:{})".format(
-            len(samples), table.capacity)
+        assert (
+            len(samples) <= table.capacity
+        ), "load too much data(size{}) to fit into table(capacity:{})".format(
+            len(samples), table.capacity
+        )
 
         # write samples to table
         table.write(samples)
-        Logger.info("Table {} load {} data from {}".format(self.id, len(samples), data_path))
+        Logger.info(
+            "Table {} load {} data from {}".format(self.id, len(samples), data_path)
+        )

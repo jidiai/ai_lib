@@ -1,6 +1,6 @@
-'''
+"""
 https://www.kaggle.com/competitions/connectx/overview
-'''
+"""
 
 from kaggle_environments import evaluate, make, utils
 
@@ -15,5 +15,6 @@ print(env.render(mode="ansi"))
 
 # model weights (hard-encoding)
 
-def my_agent(observation,configuration):
+
+def my_agent(observation, configuration):
     pass

@@ -1,5 +1,5 @@
 # -*- coding:utf-8  -*-
-# 作者：zruizhi   
+# 作者：zruizhi
 # 创建时间： 2020/7/21 10:24 上午
 # 描述：
 from env.simulators.gridgame import GridGame
@@ -12,10 +12,13 @@ class Reversi(GridGame, GridObservation):
     # 棋盘大小n（n为偶数，且4≤n≤26）
     def __init__(self, conf):
 
-        colors = conf.get('colors', [(255, 255, 255), (0, 0, 0), (245, 245, 245)])
+        colors = conf.get("colors", [(255, 255, 255), (0, 0, 0), (245, 245, 245)])
         super().__init__(conf, colors)
         # 1：黑子 2：白子 默认黑子先下
-        self.current_state = [[[0] * self.cell_dim for _ in range(self.board_width)] for _ in range(self.board_height)]
+        self.current_state = [
+            [[0] * self.cell_dim for _ in range(self.board_width)]
+            for _ in range(self.board_height)
+        ]
         self.chess_player = 1
         self.n = self.board_width
         if self.n % 2:
@@ -23,7 +26,16 @@ class Reversi(GridGame, GridObservation):
         # 黑白棋手当前棋盘的位置信息
         self.black = {(self.n // 2 - 1, self.n // 2), (self.n // 2, self.n // 2 - 1)}
         self.white = {(self.n // 2, self.n // 2), (self.n // 2 - 1, self.n // 2 - 1)}
-        self.directions = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+        self.directions = [
+            (-1, -1),
+            (-1, 0),
+            (-1, 1),
+            (0, -1),
+            (0, 1),
+            (1, -1),
+            (1, 0),
+            (1, 1),
+        ]
         # 当前棋手可以落子的合法位置
         self.legal_position = self.legal_positions()
 
@@ -47,7 +59,10 @@ class Reversi(GridGame, GridObservation):
         self.action_dim = self.get_action_dim()
 
     def reset(self):
-        self.current_state = [[[0] * self.cell_dim for _ in range(self.board_width)] for _ in range(self.board_height)]
+        self.current_state = [
+            [[0] * self.cell_dim for _ in range(self.board_width)]
+            for _ in range(self.board_height)
+        ]
         # 四个初始棋子的摆放
         self.current_state[int(self.n / 2 - 1)][int(self.n / 2 - 1)][0] = 2
         self.current_state[int(self.n / 2 - 1)][int(self.n / 2)][0] = 1
@@ -75,8 +90,13 @@ class Reversi(GridGame, GridObservation):
         return current_state
 
     def get_dict_observation(self, player_id):
-        key_info = {1: self.black, 2: self.white, "chess_player_idx": player_id, 'board_width': self.board_width,
-                    'board_height': self.board_height}
+        key_info = {
+            1: self.black,
+            2: self.white,
+            "chess_player_idx": player_id,
+            "board_width": self.board_width,
+            "board_height": self.board_height,
+        }
 
         return key_info
 
@@ -140,7 +160,7 @@ class Reversi(GridGame, GridObservation):
             self.all_observes = self.get_all_observes()
             return self.all_observes, info_after
 
-    def step_before_info(self, info=''):
+    def step_before_info(self, info=""):
         info = "当前棋手:%d" % self.chess_player
         self.legal_position = self.legal_positions()
         # info += "\n可落子位置，及落子后反色的位置集合: %s" % str(self.legal_position)
@@ -148,7 +168,10 @@ class Reversi(GridGame, GridObservation):
         return info
 
     def set_action_space(self):
-        action_space = [[Discrete(self.board_height), Discrete(self.board_width)] for _ in range(self.n_player)]
+        action_space = [
+            [Discrete(self.board_height), Discrete(self.board_width)]
+            for _ in range(self.n_player)
+        ]
         # action_space = [[self.board_height, self.board_width] for _ in range(self.n_player)]
         return action_space
 
@@ -158,8 +181,11 @@ class Reversi(GridGame, GridObservation):
             raise Exception("joint action 维度不正确！", len(all_action))
 
         for i in range(self.n_player):
-            if len(all_action[i]) != 2 or len(all_action[i][0]) != self.board_width or len(
-                    all_action[i][1]) != self.board_height:
+            if (
+                len(all_action[i]) != 2
+                or len(all_action[i][0]) != self.board_width
+                or len(all_action[i][1]) != self.board_height
+            ):
                 raise Exception("玩家%d joint action维度不正确！" % i, all_action[i])
         return not_valid
 
@@ -266,8 +292,8 @@ class Reversi(GridGame, GridObservation):
 
     def draw_board(self):
         cols = [chr(i) for i in range(65, 65 + self.board_width)]
-        s = ', '.join(cols)
-        print('  ', s)
+        s = ", ".join(cols)
+        print("  ", s)
         for i in range(self.board_width):
             print(chr(i + 65), self.current_state[i])
 

@@ -216,7 +216,7 @@ class RolloutDescription:
     policy_distribution: Dict[AgentID, Dict[PolicyID, float]] = None
     benchmark_ratio: float = 0.0
     time_stamp: float = time.time()
-    optimization_task_ref: Any=None
+    optimization_task_ref: Any = None
 
 
 @dataclass

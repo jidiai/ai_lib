@@ -15,7 +15,7 @@ PARAMETER_SERVER_ACTOR = "ParameterServer"
 OFFLINE_DATASET_ACTOR = "OfflineDataset"
 COORDINATOR_SERVER_ACTOR = "coordinator"
 
-DATA_SERVER_STORE = "private_memory" # "share_memory"
+DATA_SERVER_STORE = "private_memory"  # "share_memory"
 
 # default episode capacity when initializing
 DEFAULT_EPISODE_INIT_CAPACITY = int(1e6)

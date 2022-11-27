@@ -21,19 +21,25 @@ resource_path = os.path.join(current_dir, "logistics", "resources")
 
 
 def load_config(file_path):
-    with open(file_path, 'r') as f:
+    with open(file_path, "r") as f:
         config = json.load(f)
     return config
 
 
 class LogisticsEnv(Game, DictObservation):
     def __init__(self, conf):
-        super().__init__(conf['n_player'], conf['is_obs_continuous'], conf['is_act_continuous'],
-                         conf['game_name'], conf['agent_nums'], conf['obs_type'])
+        super().__init__(
+            conf["n_player"],
+            conf["is_obs_continuous"],
+            conf["is_act_continuous"],
+            conf["game_name"],
+            conf["agent_nums"],
+            conf["obs_type"],
+        )
         map_path = os.path.join(current_dir, "logistics", "map_1.json")
         self.map_conf = load_config(map_path)
         # self.map_conf = generate_random_map()
-        self.max_step = int(conf['max_step'])
+        self.max_step = int(conf["max_step"])
         self.step_cnt = 0
 
         self.players = []
@@ -60,18 +66,18 @@ class LogisticsEnv(Game, DictObservation):
 
     def init_map(self, conf):
         # 添加图中的节点
-        vertices = conf['vertices'].copy()
+        vertices = conf["vertices"].copy()
         for vertex_info in vertices:
-            key = vertex_info['key']
+            key = vertex_info["key"]
             self.add_vertex(key, vertex_info)
 
         # 添加图中的有向边
-        edges = conf['edges'].copy()
+        edges = conf["edges"].copy()
         for edge_info in edges:
-            start = edge_info['start']
-            end = edge_info['end']
+            start = edge_info["start"]
+            end = edge_info["end"]
             self.add_edge(start, end, edge_info)
-            if not self.map_conf['is_graph_directed']:  # 若是无向图，则加上反方向的边
+            if not self.map_conf["is_graph_directed"]:  # 若是无向图，则加上反方向的边
                 self.add_edge(end, start, edge_info)
 
         # 对每个节点进行初始化
@@ -102,9 +108,11 @@ class LogisticsEnv(Game, DictObservation):
 
         self.joint_action_space = self.set_action_space()
         self.info = {
-            'productions': [self.players[i].production for i in range(self.n_player)],
-            'upper_storages': [self.players[i].upper_storage for i in range(self.n_player)],
-            'upper_capacity': [act[0].high.tolist() for act in self.joint_action_space]
+            "productions": [self.players[i].production for i in range(self.n_player)],
+            "upper_storages": [
+                self.players[i].upper_storage for i in range(self.n_player)
+            ],
+            "upper_capacity": [act[0].high.tolist() for act in self.joint_action_space],
         }
 
         self.render_mode = False
@@ -120,17 +128,16 @@ class LogisticsEnv(Game, DictObservation):
         self.step_cnt += 1
 
         all_actions = self.bound_actions(all_actions)
-        self.info.update({'actual_actions': all_actions})
+        self.info.update({"actual_actions": all_actions})
 
         self.current_state = self.get_next_state(all_actions)
         self.all_observes = self.get_all_observations()
 
         reward, single_rewards = self.get_reward(all_actions)
         done = self.is_terminal()
-        self.info.update({
-            'actual_actions': all_actions,
-            'single_rewards': single_rewards
-        })
+        self.info.update(
+            {"actual_actions": all_actions, "single_rewards": single_rewards}
+        )
 
         return self.all_observes, single_rewards, done, "", self.info
 
@@ -145,7 +152,9 @@ class LogisticsEnv(Game, DictObservation):
                 bounded_actions.append([0] * len(action))
             elif actual_trans > vertex.init_storage:  # 运出的总货物量超过初始库存量
                 # 每条运输途径的货物量进行等比例缩放
-                bounded_action = [act * vertex.init_storage / actual_trans for act in action]
+                bounded_action = [
+                    act * vertex.init_storage / actual_trans for act in action
+                ]
                 bounded_actions.append(bounded_action)
             else:  # 合法动作
                 bounded_actions.append(action)
@@ -173,10 +182,7 @@ class LogisticsEnv(Game, DictObservation):
             self.players[i].update_final_storage(out_storages[i], in_storages[i])
             self.players[i].update_init_storage()
             next_state.append(self.players[i].init_storage)
-        self.info.update({
-            'start_storages': start_storages,
-            'demands': demands
-        })
+        self.info.update({"start_storages": start_storages, "demands": demands})
 
         return next_state
 
@@ -184,15 +190,13 @@ class LogisticsEnv(Game, DictObservation):
         obs = {
             "obs": current_state,
             "connected_player_index": self.players[player_id].get_connections(),
-            "controlled_player_index": player_id
+            "controlled_player_index": player_id,
         }
         return obs
 
-    def get_all_observations(self, info_before=''):
+    def get_all_observations(self, info_before=""):
         all_obs = self.get_dict_many_observation(
-            self.current_state,
-            range(self.n_player),
-            info_before
+            self.current_state, range(self.n_player), info_before
         )
         return all_obs
 
@@ -243,30 +247,30 @@ class LogisticsEnv(Game, DictObservation):
             all_times.append(times)
 
         network_data = {
-            'n_vertex': self.n_player,
-            'v_coords': self.map_conf.get('coords'),
-            'pd_gap': pd_gap,  # 记录每个节点生产量和平均消耗量之间的差距
-            'connections': all_connections,
-            'trans_times': all_times
+            "n_vertex": self.n_player,
+            "v_coords": self.map_conf.get("coords"),
+            "pd_gap": pd_gap,  # 记录每个节点生产量和平均消耗量之间的差距
+            "connections": all_connections,
+            "trans_times": all_times,
         }
 
         return network_data
 
     def get_render_data(self, current_state=None):
         render_data = {
-            'day': self.step_cnt,
-            'storages': self.info['start_storages'],
-            'productions': self.info['productions'],
-            'demands': self.info['demands'],
-            'total_reward': sum(self.n_return),
-            'single_rewards': self.info['single_rewards'],
-            'actions': self.info['actual_actions']
+            "day": self.step_cnt,
+            "storages": self.info["start_storages"],
+            "productions": self.info["productions"],
+            "demands": self.info["demands"],
+            "total_reward": sum(self.n_return),
+            "single_rewards": self.info["single_rewards"],
+            "actions": self.info["actual_actions"],
         }
 
         return render_data
 
     def check_win(self):
-        return '-1'
+        return "-1"
 
     def render(self):
 
@@ -290,7 +294,7 @@ class LogisticsEnv(Game, DictObservation):
                     sys.exit()
 
             self.interface_ctrl.refresh_background(render_data)
-            self.interface_ctrl.move_trucks(render_data['actions'])
+            self.interface_ctrl.move_trucks(render_data["actions"])
             current_frame += 1
 
             self.FPSClock.tick(FPS)
@@ -302,16 +306,16 @@ class LogisticsVertex(object):
         self.key = key
         self.connectedTo = {}
 
-        self.production = info['production']
+        self.production = info["production"]
         self.init_storage = 0
-        self.final_storage = info['init_storage']
-        self.upper_storage = info['upper_storage']
-        self.store_cost = info['store_cost']
-        self.loss_cost = info['loss_cost']
+        self.final_storage = info["init_storage"]
+        self.upper_storage = info["upper_storage"]
+        self.store_cost = info["store_cost"]
+        self.loss_cost = info["loss_cost"]
         self.storage_loss = 0  # 更新完当天的最终库存量后，统计当天的库存溢出量
         self.init_storage_loss = 0  # 因为每次状态更新会提前计算下一天的初始库存量，
         # 若不单独记录初始库存的溢出量，则会在计算每日reward时出错
-        self.lambda_ = info['lambda']
+        self.lambda_ = info["lambda"]
         self.demand = 0
 
     def add_neighbor(self, nbr, edge):
@@ -339,7 +343,7 @@ class LogisticsVertex(object):
         self.final_storage = self.init_storage - out_storage + in_storage
         self.storage_loss = self.init_storage_loss
         if self.final_storage > self.upper_storage:  # 当天最终库存量超过存储上限
-            self.storage_loss += (self.final_storage - self.upper_storage)
+            self.storage_loss += self.final_storage - self.upper_storage
             self.final_storage = self.upper_storage
 
     def calc_reward(self, action, mu=1, scale=100):
@@ -351,21 +355,21 @@ class LogisticsVertex(object):
         # 当日运输货物的成本
         for (act, nbr) in zip(action, connections):
             edge = self.get_edge(nbr)
-            reward -= (edge.trans_cost * edge.trans_time * act)
+            reward -= edge.trans_cost * edge.trans_time * act
 
         if self.final_storage >= 0:  # 因库存盈余所导致的存储成本
-            reward -= (self.store_cost * self.final_storage)
+            reward -= self.store_cost * self.final_storage
         else:  # 因库存空缺而加的惩罚项
-            reward += (mu * self.final_storage)
+            reward += mu * self.final_storage
 
         return reward / scale
 
 
 class LogisticsEdge(object):
     def __init__(self, info):
-        self.upper_capacity = info['upper_capacity']
-        self.trans_time = info['trans_time']
-        self.trans_cost = info['trans_cost']
+        self.upper_capacity = info["upper_capacity"]
+        self.trans_time = info["trans_time"]
+        self.trans_cost = info["trans_cost"]
 
 
 # NOTE: FPS*SPD应为24的倍数，否则可能导致货车到达终点时偏移仓库图标中心
@@ -375,7 +379,9 @@ SPD = 4  # Second Per Day，游戏中每天所占的秒数
 
 class Truck(object):
     def __init__(self, start, end, trans_time, size=(32, 32)):
-        self.image = pygame.image.load(os.path.join(resource_path, "img/truck.png")).convert_alpha()
+        self.image = pygame.image.load(
+            os.path.join(resource_path, "img/truck.png")
+        ).convert_alpha()
         self.image = pygame.transform.scale(self.image, size)
         self.rect = self.image.get_rect()
         self.rect.center = start
@@ -406,7 +412,9 @@ class Truck(object):
         # 当货车在道路上时才显示
         if 0 < self.update_frame < self.total_frame:
             screen.blit(self.image, self.rect)
-            text = self.font.render(f"{round(action, 2)}", True, (44, 44, 44), (255, 255, 255))
+            text = self.font.render(
+                f"{round(action, 2)}", True, (44, 44, 44), (255, 255, 255)
+            )
             text_rect = text.get_rect()
             text_rect.centerx, text_rect.y = self.rect.centerx, self.rect.y - 12
             screen.blit(text, text_rect)
@@ -417,23 +425,33 @@ class LogisticsInterface(object):
         self.width = width
         self.height = height
         self.v_radius = 42
-        self.n_vertex = network_data['n_vertex']
-        self.pd_gap = network_data['pd_gap']  # 每个节点生产量和平均消耗量之间的差距
-        self.connections = network_data['connections']
-        self.trans_times = network_data['trans_times']
-        self.v_coords = self._spread_vertex(network_data['v_coords'])
+        self.n_vertex = network_data["n_vertex"]
+        self.pd_gap = network_data["pd_gap"]  # 每个节点生产量和平均消耗量之间的差距
+        self.connections = network_data["connections"]
+        self.trans_times = network_data["trans_times"]
+        self.v_coords = self._spread_vertex(network_data["v_coords"])
         self.v_colors = []
 
         self.screen = screen
         # self.screen = pygame.display.set_mode([width, height])
         self.screen.fill("white")
 
-        self.font1 = pygame.font.Font(os.path.join(resource_path, "font/simhei.ttf"), 24)
-        self.font2 = pygame.font.Font(os.path.join(resource_path, "font/simhei.ttf"), 18)
-        self.font3 = pygame.font.Font(os.path.join(resource_path, "font/simhei.ttf"), 14)
-        self.p_img = pygame.image.load(os.path.join(resource_path, "img/produce.png")).convert_alpha()
+        self.font1 = pygame.font.Font(
+            os.path.join(resource_path, "font/simhei.ttf"), 24
+        )
+        self.font2 = pygame.font.Font(
+            os.path.join(resource_path, "font/simhei.ttf"), 18
+        )
+        self.font3 = pygame.font.Font(
+            os.path.join(resource_path, "font/simhei.ttf"), 14
+        )
+        self.p_img = pygame.image.load(
+            os.path.join(resource_path, "img/produce.png")
+        ).convert_alpha()
         self.p_img = pygame.transform.scale(self.p_img, (16, 16))
-        self.d_img = pygame.image.load(os.path.join(resource_path, "img/demand.png")).convert_alpha()
+        self.d_img = pygame.image.load(
+            os.path.join(resource_path, "img/demand.png")
+        ).convert_alpha()
         self.d_img = pygame.transform.scale(self.d_img, (14, 14))
 
         self.background = self.init_background()
@@ -448,14 +466,20 @@ class LogisticsInterface(object):
                 if (j, i) in drawn_roads:
                     continue
                 end = self.v_coords[j]
-                self._rotated_road(start, end, width=12,
-                                   border_color=(252, 122, 90), fill_color=(255, 172, 77))
+                self._rotated_road(
+                    start,
+                    end,
+                    width=12,
+                    border_color=(252, 122, 90),
+                    fill_color=(255, 172, 77),
+                )
                 drawn_roads.append((i, j))
 
         # 绘制仓库节点
-        norm = Normalize(vmin=min(self.pd_gap) - 200,
-                         vmax=max(self.pd_gap) + 200)  # 数值映射范围（略微扩大）
-        color_map = get_cmap('RdYlGn')  # 颜色映射表
+        norm = Normalize(
+            vmin=min(self.pd_gap) - 200, vmax=max(self.pd_gap) + 200
+        )  # 数值映射范围（略微扩大）
+        color_map = get_cmap("RdYlGn")  # 颜色映射表
         for coord, gap in zip(self.v_coords, self.pd_gap):
             rgb = color_map(norm(gap))[:3]
             color = pygame.Color(rgb2hex(rgb))
@@ -496,8 +520,10 @@ class LogisticsInterface(object):
         layout_coords[1] = layout_coords[1] - layout_coords[1].min()
 
         # 将layout的坐标映射到画布坐标，并将图形整体居中
-        stretch_rate = min((self.width - 2 * self.v_radius - 30) / layout_coords[0].max(),
-                           (self.height - 2 * self.v_radius - 30) / layout_coords[1].max())
+        stretch_rate = min(
+            (self.width - 2 * self.v_radius - 30) / layout_coords[0].max(),
+            (self.height - 2 * self.v_radius - 30) / layout_coords[1].max(),
+        )
         margin_x = (self.width - layout_coords[0].max() * stretch_rate) // 2
         margin_y = (self.height - layout_coords[1].max() * stretch_rate) // 2
         vertex_coord = []
@@ -515,7 +541,7 @@ class LogisticsInterface(object):
 
         vertex = lambda e1, e2: (
             start[0] + (e1 * length * cos + e2 * width * sin) / 2,
-            start[1] + (e1 * length * sin - e2 * width * cos) / 2
+            start[1] + (e1 * length * sin - e2 * width * cos) / 2,
         )
         vertices = [vertex(*e) for e in [(0, -1), (0, 1), (2, 1), (2, -1)]]
 
@@ -545,21 +571,24 @@ class LogisticsInterface(object):
                 truck.draw(self.screen, action)
 
     def refresh_background(self, render_data):
-        day = render_data['day']
-        storages = render_data['storages']
-        productions = render_data['productions']
-        demands = render_data['demands']
-        total_reward = render_data['total_reward']
-        single_rewards = render_data['single_rewards']
+        day = render_data["day"]
+        storages = render_data["storages"]
+        productions = render_data["productions"]
+        demands = render_data["demands"]
+        total_reward = render_data["total_reward"]
+        single_rewards = render_data["single_rewards"]
 
         self.screen.blit(self.background, (0, 0))
         day_text = self.font1.render(f"第{day}天", True, (44, 44, 44), (255, 255, 255))
         self.screen.blit(day_text, (18, 10))
-        r_text = self.font2.render(f"累计奖赏:{round(total_reward, 2)}", True, (44, 44, 44), (255, 255, 255))
+        r_text = self.font2.render(
+            f"累计奖赏:{round(total_reward, 2)}", True, (44, 44, 44), (255, 255, 255)
+        )
         self.screen.blit(r_text, (18, 40))
 
-        for coord, s, p, d, r, color in \
-                zip(self.v_coords, storages, productions, demands, single_rewards, self.v_colors):
+        for coord, s, p, d, r, color in zip(
+            self.v_coords, storages, productions, demands, single_rewards, self.v_colors
+        ):
             s_text = self.font3.render(f"{round(s, 2)}", True, (44, 44, 44), color)
             s_text_rect = s_text.get_rect()
             s_text_rect.centerx, s_text_rect.y = coord[0], coord[1] - 31
@@ -645,7 +674,7 @@ def generate_random_map(is_graph_directed=True):
             "upper_storage": randint(MIN_UPPER_STORAGE, MAX_UPPER_STORAGE),
             "store_cost": randint(MIN_STORE_COST, MAX_STORE_COST) / 10,
             "loss_cost": randint(MIN_LOSS_COST, MAX_LOSS_COST) / 10,
-            "lambda": randint(MIN_LAMBDA, MAX_LAMBDA)
+            "lambda": randint(MIN_LAMBDA, MAX_LAMBDA),
         }
         vertices.append(vertex)
 
@@ -657,7 +686,7 @@ def generate_random_map(is_graph_directed=True):
             "end": used_vertex[(i + 1) % num_circle],
             "upper_capacity": randint(MIN_UPPER_CAPACITY, MAX_UPPER_CAPACITY),
             "trans_time": randint(MIN_TRANS_TIME, MAX_TRANS_TIME),
-            "trans_cost": randint(MIN_TRANS_COST, MAX_TRANS_COST) / 100
+            "trans_cost": randint(MIN_TRANS_COST, MAX_TRANS_COST) / 100,
         }
         edges.append(edge)
 
@@ -673,7 +702,7 @@ def generate_random_map(is_graph_directed=True):
                 "end": v,
                 "upper_capacity": randint(MIN_UPPER_CAPACITY, MAX_UPPER_CAPACITY),
                 "trans_time": randint(MIN_TRANS_TIME, MAX_TRANS_TIME),
-                "trans_cost": randint(MIN_TRANS_COST, MAX_TRANS_COST) / 100
+                "trans_cost": randint(MIN_TRANS_COST, MAX_TRANS_COST) / 100,
             }
             edges.append(edge)
 
@@ -686,7 +715,7 @@ def generate_random_map(is_graph_directed=True):
                 "end": i,
                 "upper_capacity": randint(MIN_UPPER_CAPACITY, MAX_UPPER_CAPACITY),
                 "trans_time": randint(MIN_TRANS_TIME, MAX_TRANS_TIME),
-                "trans_cost": randint(MIN_TRANS_COST, MAX_TRANS_COST) / 100
+                "trans_cost": randint(MIN_TRANS_COST, MAX_TRANS_COST) / 100,
             }
             edges.append(edge)
 
@@ -696,7 +725,7 @@ def generate_random_map(is_graph_directed=True):
         "n_vertex": num_vertex,
         "vertices": vertices,
         "is_graph_directed": is_graph_directed,
-        "edges": edges
+        "edges": edges,
     }
 
     return map_data

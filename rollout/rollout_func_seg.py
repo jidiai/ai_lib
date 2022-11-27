@@ -17,10 +17,7 @@ def rename_field(data, field, new_field):
 
 def select_fields(data, fields):
     rets = {
-        agent_id: {
-            field: agent_data[field]
-            for field in fields if field in agent_data
-        }
+        agent_id: {field: agent_data[field] for field in fields if field in agent_data}
         for agent_id, agent_data in data.items()
     }
     return rets
@@ -34,8 +31,7 @@ def update_fields(data1, data2):
         return d
 
     rets = {
-        agent_id: update_dict(data1[agent_id], data2[agent_id])
-        for agent_id in data1
+        agent_id: update_dict(data1[agent_id], data2[agent_id]) for agent_id in data1
     }
     return rets
 
@@ -51,14 +47,14 @@ def stack_step_data(step_data_list, bootstrap_data):
 
 
 def rollout_func(
-        eval: bool,
-        rollout_worker,
-        rollout_desc: RolloutDesc,
-        env: BaseEnv,
-        behavior_policies,
-        data_server,
-        rollout_length,
-        **kwargs
+    eval: bool,
+    rollout_worker,
+    rollout_desc: RolloutDesc,
+    env: BaseEnv,
+    behavior_policies,
+    data_server,
+    rollout_length,
+    **kwargs
 ):
     """
     TODO(jh): modify document
@@ -108,7 +104,7 @@ def rollout_func(
         "feature_encoders": feature_encoders,
         "main_agent_id": rollout_desc.agent_id,
         "rollout_length": rollout_length,
-        'rewarders': rewarders
+        "rewarders": rewarders,
     }
     # {agent_id:{field:value}}
     global_timer.record("env_step_start")
@@ -116,7 +112,9 @@ def rollout_func(
     global_timer.time("env_step_start", "env_step_end", "env_step")
 
     init_rnn_states = {
-        agent_id: behavior_policies[agent_id][1].get_initial_state(batch_size=env.num_players[agent_id])
+        agent_id: behavior_policies[agent_id][1].get_initial_state(
+            batch_size=env.num_players[agent_id]
+        )
         for agent_id in env.agent_ids
     }
 
@@ -125,14 +123,18 @@ def rollout_func(
 
     step = 0
     step_data_list = []
-    while not env.is_terminated():  # XXX(yan): terminate only when step_length >= fragment_length
+    while (
+        not env.is_terminated()
+    ):  # XXX(yan): terminate only when step_length >= fragment_length
         # prepare policy input
         # breakpoint()
-        policy_inputs = step_data #rename_field(step_data, EpisodeKey.NEXT_OBS, EpisodeKey.CUR_OBS)
+        policy_inputs = step_data  # rename_field(step_data, EpisodeKey.NEXT_OBS, EpisodeKey.CUR_OBS)
         policy_outputs = {}
         global_timer.record("inference_start")
         for agent_id, (policy_id, policy) in behavior_policies.items():
-            policy_outputs[agent_id] = policy.compute_action(explore= not eval, **policy_inputs[agent_id])
+            policy_outputs[agent_id] = policy.compute_action(
+                explore=not eval, **policy_inputs[agent_id]
+            )
         global_timer.time("inference_start", "inference_end", "inference")
 
         actions = select_fields(policy_outputs, [EpisodeKey.ACTION])
@@ -143,20 +145,51 @@ def rollout_func(
 
         # env_rets = rename_field(_env_rets, EpisodeKey.CUR_OBS, EpisodeKey.NEXT_OBS)
         # env_rets = rename_field(env_rets, EpisodeKey.ACTION_MASK, EpisodeKey.NEXT_ACTION_MASK)
-        step_data = update_fields(step_data,select_fields(env_rets, [EpisodeKey.NEXT_OBS, EpisodeKey.REWARD, EpisodeKey.DONE, EpisodeKey.NEXT_ACTION_MASK]))
-        step_data = update_fields(step_data, select_fields(policy_outputs, [EpisodeKey.ACTION, EpisodeKey.ACTION_DIST,
-                                                                              EpisodeKey.STATE_VALUE, EpisodeKey.ACTION_MASK]))
+        step_data = update_fields(
+            step_data,
+            select_fields(
+                env_rets,
+                [
+                    EpisodeKey.NEXT_OBS,
+                    EpisodeKey.REWARD,
+                    EpisodeKey.DONE,
+                    EpisodeKey.NEXT_ACTION_MASK,
+                ],
+            ),
+        )
+        step_data = update_fields(
+            step_data,
+            select_fields(
+                policy_outputs,
+                [
+                    EpisodeKey.ACTION,
+                    EpisodeKey.ACTION_DIST,
+                    EpisodeKey.STATE_VALUE,
+                    EpisodeKey.ACTION_MASK,
+                ],
+            ),
+        )
 
-        #RNN state is actually the init RNN state
+        # RNN state is actually the init RNN state
         step_data_list.append(step_data[rollout_desc.agent_id])
 
-
-        #for next step
+        # for next step
         env_rets = rename_field(env_rets, EpisodeKey.NEXT_OBS, EpisodeKey.CUR_OBS)
-        env_rets = rename_field(env_rets, EpisodeKey.NEXT_ACTION_MASK, EpisodeKey.ACTION_MASK)
-        step_data = update_fields(step_data, select_fields(env_rets, [EpisodeKey.CUR_OBS, EpisodeKey.ACTION_MASK,EpisodeKey.ACTOR_RNN_STATE,
-                                                                       EpisodeKey.CRITIC_RNN_STATE]))
-
+        env_rets = rename_field(
+            env_rets, EpisodeKey.NEXT_ACTION_MASK, EpisodeKey.ACTION_MASK
+        )
+        step_data = update_fields(
+            step_data,
+            select_fields(
+                env_rets,
+                [
+                    EpisodeKey.CUR_OBS,
+                    EpisodeKey.ACTION_MASK,
+                    EpisodeKey.ACTOR_RNN_STATE,
+                    EpisodeKey.CRITIC_RNN_STATE,
+                ],
+            ),
+        )
 
         step += 1
         # print('step = ', step)
@@ -166,11 +199,19 @@ def rollout_func(
 
     if not eval:
         episode = step_data_list
-        data_server.save.remote(default_table_name(rollout_desc.agent_id,
-                                                   rollout_desc.policy_id,
-                                                   rollout_desc.share_policies),
-                                                   episode)
+        data_server.save.remote(
+            default_table_name(
+                rollout_desc.agent_id,
+                rollout_desc.policy_id,
+                rollout_desc.share_policies,
+            ),
+            episode,
+        )
 
     stats = env.get_episode_stats()
 
-    return {"main_agent_id": rollout_desc.agent_id, 'policy_ids': policy_ids, "stats": stats}
+    return {
+        "main_agent_id": rollout_desc.agent_id,
+        "policy_ids": policy_ids,
+        "stats": stats,
+    }

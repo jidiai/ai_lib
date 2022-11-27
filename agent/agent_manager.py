@@ -38,22 +38,28 @@ class AgentManager:
                 # print('population cfg = ', population_cfg)
                 population_id = population_cfg["population_id"]
                 algorithm_cfg = population_cfg["algorithm"]
-                self.agents[agent_id].add_new_population(population_id, algorithm_cfg, self.policy_server)
+                self.agents[agent_id].add_new_population(
+                    population_id, algorithm_cfg, self.policy_server
+                )
         # print('self.agents = ', self.agents[agent_id])
 
         for population_cfg in populations_cfg:
             population_id = population_cfg["population_id"]
             algorithm_cfg = population_cfg.algorithm
-            policy_init_cfg = algorithm_cfg.get('policy_init_cfg', None)
+            policy_init_cfg = algorithm_cfg.get("policy_init_cfg", None)
             if policy_init_cfg is None:
                 continue
             for agent_id, agent_policy_init_cfg in policy_init_cfg.items():
-                print('agent id = ', agent_id)
-                print('init cfg = ', agent_policy_init_cfg)
-                agent_initial_policies = agent_policy_init_cfg.get("initial_policies", None)
+                print("agent id = ", agent_id)
+                print("init cfg = ", agent_policy_init_cfg)
+                agent_initial_policies = agent_policy_init_cfg.get(
+                    "initial_policies", None
+                )
                 if agent_initial_policies is None:
                     continue
-                oppo_dist = agent_policy_init_cfg.get('initial_policies_distribution', None)
+                oppo_dist = agent_policy_init_cfg.get(
+                    "initial_policies_distribution", None
+                )
                 if oppo_dist is not None:
                     self.oppo_dist = oppo_dist
                     # breakpoint()
@@ -101,9 +107,7 @@ class AgentManager:
         # raise NotImplementedError
 
         # TODO(jh):Logger
-        Logger.warning(
-            "after initialization:\n{}".format(self.agents)
-        )
+        Logger.warning("after initialization:\n{}".format(self.agents))
 
     @staticmethod
     def default_agent_id(id):
@@ -111,13 +115,26 @@ class AgentManager:
 
     @staticmethod
     def build_agents(agent_manager_cfg):
-        agent_ids = [AgentManager.default_agent_id(idx) for idx in range(agent_manager_cfg.num_agents)]
+        agent_ids = [
+            AgentManager.default_agent_id(idx)
+            for idx in range(agent_manager_cfg.num_agents)
+        ]
         if agent_manager_cfg.share_policies:
             agent = Agent(AgentManager.default_agent_id(0))
-            agents = Agents(OrderedDict({agent_id: agent for agent_id in agent_ids}), True)
+            agents = Agents(
+                OrderedDict({agent_id: agent for agent_id in agent_ids}), True
+            )
         else:
-            agents = [Agent(AgentManager.default_agent_id(idx)) for idx in range(len(agent_ids))]
-            agents = Agents(OrderedDict({agent_id: agent for agent_id, agent in zip(agent_ids, agents)}), False)
+            agents = [
+                Agent(AgentManager.default_agent_id(idx))
+                for idx in range(len(agent_ids))
+            ]
+            agents = Agents(
+                OrderedDict(
+                    {agent_id: agent for agent_id, agent in zip(agent_ids, agents)}
+                ),
+                False,
+            )
         return agents
 
     def gen_new_policy(self, agent_id, population_id):
@@ -128,10 +145,5 @@ class AgentManager:
 
     def push_policy_to_remote(self, agent_id, policy_id, policy, version=-1):
         # push to remote
-        policy_desc = PolicyDesc(
-            agent_id,
-            policy_id,
-            policy,
-            version
-        )
+        policy_desc = PolicyDesc(agent_id, policy_id, policy, version)
         ray.get(self.policy_server.push.remote(self.id, policy_desc))

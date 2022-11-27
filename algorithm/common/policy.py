@@ -89,7 +89,7 @@ class Policy(metaclass=ABCMeta):
             "preprocess_mode": Mode.FLATTEN,
         }
         # FIXME(jh): either start from {} or deep copy DEFAUL_MODEL_CONFIG!
-        self.model_config = {}  #DEFAULT_MODEL_CONFIG
+        self.model_config = {}  # DEFAULT_MODEL_CONFIG
 
         if custom_config is None:
             custom_config = {}

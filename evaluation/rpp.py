@@ -3,20 +3,25 @@ import nashpy as nash
 
 
 class RPP:
-    '''
+    """
     Relative Population Performance
-    '''
+    """
 
     def __init__(self):
         pass
 
     def eval(self, payoff, population_0, population_1):
-        '''
+        """
         population: {agent_id:[policy_id_idx]}
         perf of pop0 - perf of pop1
-        '''
-        assert len(population_0) == 2 and len(population_1) == 2 and np.all(
-            payoff + payoff.T < 1e-6), "only support two-player zero-sum symetric games now.\n payoff:{}".format(payoff)
+        """
+        assert (
+            len(population_0) == 2
+            and len(population_1) == 2
+            and np.all(payoff + payoff.T < 1e-6)
+        ), "only support two-player zero-sum symetric games now.\n payoff:{}".format(
+            payoff
+        )
         p0a0_policy_idices = np.array(population_0["agent_0"], dtype=int)
         p0a1_policy_idices = np.array(population_0["agent_1"], dtype=int)
         p1a0_policy_idices = np.array(population_1["agent_0"], dtype=int)

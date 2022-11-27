@@ -13,7 +13,16 @@ class CliffWalking(GridGame):
     def __init__(self, conf):
         self.env_core = CliffWalkingEnv(12, 4)
         self.load_action_space(conf)
-        colors = conf.get('colors', [(255, 255, 255), (255, 140, 0), (181, 255, 80), (100, 100, 100), (100, 144, 255)])
+        colors = conf.get(
+            "colors",
+            [
+                (255, 255, 255),
+                (255, 140, 0),
+                (181, 255, 80),
+                (100, 100, 100),
+                (100, 144, 255),
+            ],
+        )
         super(CliffWalking, self).__init__(conf, colors)
         self.done = False
         self.step_cnt = 0
@@ -29,7 +38,11 @@ class CliffWalking(GridGame):
 
     def load_action_space(self, conf):
         if "act_box" in conf:
-            input_action = json.loads(conf["act_box"]) if isinstance(conf["act_box"], str) else conf["act_box"]
+            input_action = (
+                json.loads(conf["act_box"])
+                if isinstance(conf["act_box"], str)
+                else conf["act_box"]
+            )
             # print(input_action)
             if "discrete_n" not in input_action:
                 raise Exception("act_box in discrete case must have field discrete_n")
@@ -58,13 +71,19 @@ class CliffWalking(GridGame):
     def is_valid_action(self, joint_action):
 
         if len(joint_action) != self.n_player:
-            raise Exception("Input joint action dimension should be {}, not {}".format(
-                self.n_player, len(joint_action)))
+            raise Exception(
+                "Input joint action dimension should be {}, not {}".format(
+                    self.n_player, len(joint_action)
+                )
+            )
 
         for i in range(self.n_player):
             if len(joint_action[i][0]) != self.joint_action_space[i][0].n:
-                raise Exception("The input action dimension for player {} should be {}, not {}".format(
-                    i, self.joint_action_space[i][0].n, len(joint_action[i][0])))
+                raise Exception(
+                    "The input action dimension for player {} should be {}, not {}".format(
+                        i, self.joint_action_space[i][0].n, len(joint_action[i][0])
+                    )
+                )
 
     def get_reward(self, reward):
         r = [0] * self.n_player
@@ -74,7 +93,7 @@ class CliffWalking(GridGame):
             self.n_return[i] += r[i]
         return r
 
-    def step_before_info(self, info=''):
+    def step_before_info(self, info=""):
         return info
 
     def is_terminal(self):
@@ -88,13 +107,13 @@ class CliffWalking(GridGame):
         return action_space
 
     def check_win(self):
-        return '0'
+        return "0"
 
     def get_render_data(self, current_state):
         grid_map = [[0] * self.board_width for _ in range(self.board_height)]
         grid_map[-1][0] = 1
         grid_map[3][-1] = 2
-        for j in range(1, self.board_width-1):
+        for j in range(1, self.board_width - 1):
             grid_map[3][j] = 3
         grid_map[self.env_core.y][self.env_core.x] = 4
         return grid_map
@@ -130,23 +149,28 @@ class CliffWalkingEnv:
     def __init__(self, ncol, nrow):
         self.nrow = nrow
         self.ncol = ncol
-        self.x = 0 # 记录当前智能体位置的横坐标
-        self.y = self.nrow - 1 # 记录当前智能体位置的纵坐标
+        self.x = 0  # 记录当前智能体位置的横坐标
+        self.y = self.nrow - 1  # 记录当前智能体位置的纵坐标
 
-    def step(self, action): # 外部调用这个函数来让当前位置改变
-        change = [[0, -1], [0, 1], [-1, 0], [1, 0]] # 4 种动作, 0:上, 1:下, 2:左, 3:右。原点(0,0)定义在左上角
+    def step(self, action):  # 外部调用这个函数来让当前位置改变
+        change = [
+            [0, -1],
+            [0, 1],
+            [-1, 0],
+            [1, 0],
+        ]  # 4 种动作, 0:上, 1:下, 2:左, 3:右。原点(0,0)定义在左上角
         self.x = min(self.ncol - 1, max(0, self.x + change[action][0]))
         self.y = min(self.nrow - 1, max(0, self.y + change[action][1]))
         next_state = self.y * self.ncol + self.x
         reward = -1
         done = False
-        if self.y == self.nrow - 1 and self.x > 0: # 下一个位置在悬崖或者终点
+        if self.y == self.nrow - 1 and self.x > 0:  # 下一个位置在悬崖或者终点
             done = True
             if self.x != self.ncol - 1:
                 reward = -100
         return next_state, reward, done
 
-    def reset(self): # 回归初始状态，坐标轴原点在左上角
+    def reset(self):  # 回归初始状态，坐标轴原点在左上角
         self.x = 0
         self.y = self.nrow - 1
         return self.y * self.ncol + self.x

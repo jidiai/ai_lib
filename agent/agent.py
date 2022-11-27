@@ -24,11 +24,16 @@ class Agents(OrderedDict):
 
     def __reduce__(self):
         state = super().__reduce__()
-        newstate = (self.__class__,
-                    ({}, None),
-                    {"share_policies": self.share_policies, "agent_ids": self.agent_ids},  # state to __setstate__
-                    None,
-                    state[4])  # items
+        newstate = (
+            self.__class__,
+            ({}, None),
+            {
+                "share_policies": self.share_policies,
+                "agent_ids": self.agent_ids,
+            },  # state to __setstate__
+            None,
+            state[4],
+        )  # items
         return newstate
 
     def __setstate__(self, state):
@@ -71,12 +76,12 @@ class Agent:
         if population_id in self.populations:
             Logger.error("Cannot add {}, which is already in the population pool")
             raise Exception("Cannot add {}, which is already in the population pool")
-        self.populations[population_id] = Population(population_id, self, algorithm_cfg, policy_server)
+        self.populations[population_id] = Population(
+            population_id, self, algorithm_cfg, policy_server
+        )
 
     def __str__(self):
-        s = "[A {}]\npolicy_ids:\n{}\npopulations:\n".format(
-            self.id, self.policy_ids
-        )
+        s = "[A {}]\npolicy_ids:\n{}\npopulations:\n".format(self.id, self.policy_ids)
         for population_id, population in self.populations.items():
             s += "{}".format(population)
         return s
@@ -89,12 +94,14 @@ class Population:
         self.id = id
         self.agent = agent
         self.policy_ids = []
-        self.policy_factory = PolicyFactory(self.agent.id, self.id, algorithm_cfg, policy_server)
+        self.policy_factory = PolicyFactory(
+            self.agent.id, self.id, algorithm_cfg, policy_server
+        )
 
     def add_new_policy(self, policy_id):
-        '''
+        """
         TODO(jh): maybe in the future we could save something like how this model is trained as policy meta-data.
-        '''
+        """
         self.policy_ids.append(policy_id)
 
     def gen_new_policy(self):

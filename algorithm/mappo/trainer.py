@@ -2,10 +2,7 @@
 
 import numpy as np
 from collections import defaultdict
-from training.data_generator import (
-    recurrent_generator,
-    simple_data_generator
-)
+from training.data_generator import recurrent_generator, simple_data_generator
 from .loss import MAPPOLoss
 import torch
 import functools
@@ -15,20 +12,22 @@ from ..return_compute import compute_return
 from ..common.trainer import Trainer
 from registry import registry
 
+
 def update_linear_schedule(optimizer, epoch, total_num_epochs, initial_lr):
     """Decreases the learning rate linearly"""
     lr = initial_lr - (initial_lr * (epoch / float(total_num_epochs)))
     for param_group in optimizer.param_groups:
         param_group["lr"] = lr
 
+
 @registry.registered(registry.TRAINER)
 class MAPPOTrainer(Trainer):
     def __init__(self, tid):
         super().__init__(tid)
-        self.id=tid
+        self.id = tid
         # TODO(jh)
         self._loss = MAPPOLoss()
-        
+
     def pre_update(self, batch, policy):
         num_mini_batch = 1
         pre_update_epoch = 5
@@ -51,26 +50,30 @@ class MAPPOTrainer(Trainer):
     def optimize(self, batch, **kwargs):
         total_opt_result = defaultdict(lambda: 0)
         policy = self.loss.policy
-        
+
         # TODO(jh)
         # bootstrap_value = batch.pop('bootstrap_value')
-        
+
         global_timer.record("move_to_gpu_start")
         # move data to gpu
-        for key,value in batch.items():
-            if isinstance(value,np.ndarray):
+        for key, value in batch.items():
+            if isinstance(value, np.ndarray):
                 # TODO(jh): remove last step or add boostrap value?
-                value=torch.FloatTensor(value)
-            batch[key]=value.to(policy.device)
-        global_timer.time("move_to_gpu_start","move_to_gpu_end","move_to_gpu")
-        
+                value = torch.FloatTensor(value)
+            batch[key] = value.to(policy.device)
+        global_timer.time("move_to_gpu_start", "move_to_gpu_end", "move_to_gpu")
+
         global_timer.record("compute_return_start")
         # TODO(jh)
-        if policy.custom_config.get('pre_update_v', False):
-            self.pre_update(batch, policy)      #update V in advance and compute GAE with new V
+        if policy.custom_config.get("pre_update_v", False):
+            self.pre_update(
+                batch, policy
+            )  # update V in advance and compute GAE with new V
         new_data = compute_return(policy, batch)
         batch.update(new_data)
-        global_timer.time("compute_return_start","compute_return_end","compute_return")
+        global_timer.time(
+            "compute_return_start", "compute_return_end", "compute_return"
+        )
 
         ppo_epoch = policy.custom_config["ppo_epoch"]
         num_mini_batch = policy.custom_config["num_mini_batch"]  # num_mini_batch
@@ -90,14 +93,16 @@ class MAPPOTrainer(Trainer):
             )
 
         # jh: special optimization
-        if num_mini_batch==1:
+        if num_mini_batch == 1:
             global_timer.record("data_generator_start")
-            mini_batch=next(data_generator_fn())
-            global_timer.time("data_generator_start","data_generator_end","data_generator")
+            mini_batch = next(data_generator_fn())
+            global_timer.time(
+                "data_generator_start", "data_generator_end", "data_generator"
+            )
             for i_epoch in range(ppo_epoch):
                 global_timer.record("loss_start")
                 tmp_opt_result = self.loss(mini_batch)
-                global_timer.time("loss_start","loss_end","loss")
+                global_timer.time("loss_start", "loss_end", "loss")
                 for k, v in tmp_opt_result.items():
                     total_opt_result[k] = v
         else:
@@ -105,7 +110,7 @@ class MAPPOTrainer(Trainer):
                 for mini_batch in data_generator_fn():
                     global_timer.record("loss_start")
                     tmp_opt_result = self.loss(mini_batch)
-                    global_timer.time("loss_start","loss_end","loss")
+                    global_timer.time("loss_start", "loss_end", "loss")
                     for k, v in tmp_opt_result.items():
                         total_opt_result[k] = v
 
@@ -129,7 +134,6 @@ class MAPPOTrainer(Trainer):
         #         total_epoch,
         #         self.loss._params["actor_lr"],
         #     )
-
 
         return total_opt_result
 

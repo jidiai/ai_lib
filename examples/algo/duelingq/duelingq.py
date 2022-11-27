@@ -9,6 +9,7 @@ from networks.critic import Dueling_Critic as Critic
 import os
 from pathlib import Path
 import sys
+
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
 from common.buffer import Replay_buffer as buffer
@@ -30,7 +31,7 @@ class DUELINGQ(object):
         self.batch_size = args.batch_size
         self.gamma = args.gamma
 
-        self.critic_eval = Critic(self.state_dim,  self.action_dim, self.hidden_size)
+        self.critic_eval = Critic(self.state_dim, self.action_dim, self.hidden_size)
         self.critic_target = Critic(self.state_dim, self.action_dim, self.hidden_size)
         self.optimizer = optimizer.Adam(self.critic_eval.parameters(), lr=self.lr)
 
@@ -82,22 +83,26 @@ class DUELINGQ(object):
         data = self.memory.sample(self.batch_size)
 
         transitions = {
-            "o_0": np.array(data['states']),
-            "o_next_0": np.array(data['states_next']),
-            "r_0": np.array(data['rewards']).reshape(-1, 1),
-            "u_0": np.array(data['action']),
-            "d_0": np.array(data['dones']).reshape(-1, 1),
+            "o_0": np.array(data["states"]),
+            "o_next_0": np.array(data["states_next"]),
+            "r_0": np.array(data["rewards"]).reshape(-1, 1),
+            "u_0": np.array(data["action"]),
+            "d_0": np.array(data["dones"]).reshape(-1, 1),
         }
 
         obs = torch.tensor(transitions["o_0"], dtype=torch.float)
         obs_ = torch.tensor(transitions["o_next_0"], dtype=torch.float)
-        action = torch.tensor(transitions["u_0"], dtype=torch.long).view(self.batch_size, -1)
+        action = torch.tensor(transitions["u_0"], dtype=torch.long).view(
+            self.batch_size, -1
+        )
         reward = torch.tensor(transitions["r_0"], dtype=torch.float).squeeze()
         done = torch.tensor(transitions["d_0"], dtype=torch.float).squeeze()
 
         q_eval = self.critic_eval(obs).gather(1, action)
         q_next = self.critic_target(obs_).detach()
-        q_target = (reward + self.gamma * q_next.max(1)[0] * (1 - done)).view(self.batch_size, 1)
+        q_target = (reward + self.gamma * q_next.max(1)[0] * (1 - done)).view(
+            self.batch_size, 1
+        )
         loss_fn = nn.MSELoss()
         loss = loss_fn(q_eval, q_target)
 
@@ -112,7 +117,7 @@ class DUELINGQ(object):
         return loss
 
     def save(self, save_path, episode):
-        base_path = os.path.join(save_path, 'trained_model')
+        base_path = os.path.join(save_path, "trained_model")
         if not os.path.exists(base_path):
             os.makedirs(base_path)
 

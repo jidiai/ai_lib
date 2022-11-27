@@ -3,9 +3,11 @@ from torch import nn
 import torch
 import numpy as np
 
+
 def init_fc_weights(m, init_method, gain=1.0):
     init_method(m.weight.data, gain=gain)
     nn.init.constant_(m.bias.data, 0)
+
 
 class PopArt(nn.Module):
     """Normalize a vector of observations - across the first norm_axes dimensions"""
@@ -27,10 +29,18 @@ class PopArt(nn.Module):
         self.beta = beta
         self.per_element_update = per_element_update
 
-        self.running_mean = nn.Parameter(torch.zeros(input_shape,dtype=torch.float32), requires_grad=False)
-        self.running_mean_sq = nn.Parameter(torch.zeros(input_shape,dtype=torch.float32), requires_grad=False)
-        self.debiasing_term = nn.Parameter(torch.tensor(0.0,dtype=torch.float32), requires_grad=False)
-        self.forward_cnt = nn.Parameter(torch.tensor(0.0,dtype=torch.float32), requires_grad=False)
+        self.running_mean = nn.Parameter(
+            torch.zeros(input_shape, dtype=torch.float32), requires_grad=False
+        )
+        self.running_mean_sq = nn.Parameter(
+            torch.zeros(input_shape, dtype=torch.float32), requires_grad=False
+        )
+        self.debiasing_term = nn.Parameter(
+            torch.tensor(0.0, dtype=torch.float32), requires_grad=False
+        )
+        self.forward_cnt = nn.Parameter(
+            torch.tensor(0.0, dtype=torch.float32), requires_grad=False
+        )
 
     def reset_parameters(self):
         self.running_mean.zero_()
@@ -78,9 +88,9 @@ class PopArt(nn.Module):
 
     def denormalize(self, input_vector):
         """Transform normalized data back into original distribution"""
-        is_np=False
+        is_np = False
         if type(input_vector) == np.ndarray:
-            is_np=True
+            is_np = True
             input_vector = torch.from_numpy(input_vector)
         input_vector = input_vector.to(device=self.running_mean.device)
 

@@ -6,6 +6,7 @@
 import os
 import sys
 from pathlib import Path
+
 CURRENT_PATH = str(Path(__file__).resolve().parent.parent.parent)
 CURRENT_FOLDER = str(Path(__file__).resolve().parent.parent)
 smarts_path = os.path.join(CURRENT_PATH, "SMARTS")
@@ -31,13 +32,23 @@ from utils.box import Box
 
 class SmartsNGSIM(Game):
     def __init__(self, conf):
-        super(SmartsNGSIM, self).__init__(conf['n_player'], conf['is_obs_continuous'], conf['is_act_continuous'],
-                                         conf['game_name'], conf['agent_nums'], conf['obs_type'])
+        super(SmartsNGSIM, self).__init__(
+            conf["n_player"],
+            conf["is_obs_continuous"],
+            conf["is_act_continuous"],
+            conf["game_name"],
+            conf["agent_nums"],
+            conf["obs_type"],
+        )
         self.max_step = int(conf["max_step"])
         self.partial = conf["partial"]
         scenario_name = conf["scenario_name"]
-        self.scenario_path = os.path.join(CURRENT_PATH, "SMARTS", "scenarios", scenario_name)
-        test_file_path = os.path.join(CURRENT_FOLDER, "env", "ngsim_jidi", "test_data.pkl")
+        self.scenario_path = os.path.join(
+            CURRENT_PATH, "SMARTS", "scenarios", scenario_name
+        )
+        test_file_path = os.path.join(
+            CURRENT_FOLDER, "env", "ngsim_jidi", "test_data.pkl"
+        )
 
         with open(test_file_path, "rb") as f:
             self.test_ids = pickle.load(f)
@@ -70,7 +81,7 @@ class SmartsNGSIM(Game):
         return self.all_observes
 
     def step(self, joint_action):
-        info_before = ''
+        info_before = ""
         self.is_valid_action(joint_action)
         action = self.decode(joint_action)
         obs, reward, self.done, self.info = self.env_core.step(action)
@@ -95,19 +106,42 @@ class SmartsNGSIM(Game):
 
     def is_valid_action(self, joint_action):
         if len(joint_action) != self.n_player:
-            raise Exception("Input joint action dimension should be {}, not {}".format(
-                self.n_player, len(joint_action)))
+            raise Exception(
+                "Input joint action dimension should be {}, not {}".format(
+                    self.n_player, len(joint_action)
+                )
+            )
 
-        if (not isinstance(joint_action[0], list)) and (not isinstance(joint_action[0], np.ndarray)):
-            raise Exception("Submitted action should be list or np.ndarray, not {}.".format(type(joint_action[0])))
+        if (not isinstance(joint_action[0], list)) and (
+            not isinstance(joint_action[0], np.ndarray)
+        ):
+            raise Exception(
+                "Submitted action should be list or np.ndarray, not {}.".format(
+                    type(joint_action[0])
+                )
+            )
 
-        action_shape = np.array(joint_action).shape if not isinstance(joint_action, np.ndarray) else joint_action.shape
+        action_shape = (
+            np.array(joint_action).shape
+            if not isinstance(joint_action, np.ndarray)
+            else joint_action.shape
+        )
         if len(action_shape) != 3:
-            raise Exception("joint action shape should be in length 3: (1, 1, {}), not the length of {}."
-                            .format(self.joint_action_space[0][0].shape[0], len(action_shape)))
-        if action_shape[0] != 1 or action_shape[1] != 1 or action_shape[2] != self.joint_action_space[0][0].shape[0]:
-            raise Exception("joint action shape should be (1, 1, {}), not {}."
-                            .format(self.joint_action_space[0][0].shape[0], action_shape))
+            raise Exception(
+                "joint action shape should be in length 3: (1, 1, {}), not the length of {}.".format(
+                    self.joint_action_space[0][0].shape[0], len(action_shape)
+                )
+            )
+        if (
+            action_shape[0] != 1
+            or action_shape[1] != 1
+            or action_shape[2] != self.joint_action_space[0][0].shape[0]
+        ):
+            raise Exception(
+                "joint action shape should be (1, 1, {}), not {}.".format(
+                    self.joint_action_space[0][0].shape[0], action_shape
+                )
+            )
 
     def get_reward(self, reward):
         r = [0] * self.n_player
@@ -145,7 +179,7 @@ class SmartsNGSIM(Game):
         return self.joint_action_space[player_id]
 
     def check_win(self):
-        return ''
+        return ""
 
 
 class SMARTSImitation:
@@ -178,10 +212,12 @@ class SMARTSImitation:
             if dones[self.vehicle_id]:
                 distance = 0
                 for ts in range(self._vehicle_step, demo_total_step):
-                    distance += np.linalg.norm(ego_pos - self.vehicle_demo_data[self.vehicle_id][ts])
+                    distance += np.linalg.norm(
+                        ego_pos - self.vehicle_demo_data[self.vehicle_id][ts]
+                    )
                 return -distance
             demo_pos = self.vehicle_demo_data[self.vehicle_id][self._vehicle_step]
-            demo_traj = self.vehicle_demo_data[self.vehicle_id][:self._vehicle_step]
+            demo_traj = self.vehicle_demo_data[self.vehicle_id][: self._vehicle_step]
         else:
             demo_pos = self.vehicle_demo_data[self.vehicle_id][-1]
             demo_traj = self.vehicle_demo_data[self.vehicle_id][:]
@@ -246,9 +282,7 @@ class SMARTSImitation:
 
 def compute_frechet_distance(sample_traj, expert_traj):
 
-    frechet_solver = DiscreteFrechet(
-        dist_func=lambda p, q: np.linalg.norm(p - q)
-    )
+    frechet_solver = DiscreteFrechet(dist_func=lambda p, q: np.linalg.norm(p - q))
     frechet_distance = frechet_solver.distance(
         np.stack([traj[:2] for traj in expert_traj], axis=0),
         np.concatenate([traj for traj in sample_traj], axis=0),

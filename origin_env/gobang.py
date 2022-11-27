@@ -1,6 +1,6 @@
 # -*- coding:utf-8  -*-
-# 作者：zruizhi   
-# 创建时间： 2020/7/10 10:24 上午   
+# 作者：zruizhi
+# 创建时间： 2020/7/10 10:24 上午
 # 描述：
 from random import randrange
 from env.simulators.gridgame import GridGame
@@ -10,12 +10,17 @@ from utils.discrete import Discrete
 
 class GoBang(GridGame, GridObservation):
     def __init__(self, conf):
-        colors = conf.get('colors', [(255, 255, 255), (0, 0, 0), (245, 245, 245)])
+        colors = conf.get("colors", [(255, 255, 255), (0, 0, 0), (245, 245, 245)])
 
         super().__init__(conf, colors)
         if self.board_width != 15 or self.board_height != 15:
-            raise Exception("棋盘大小应设置为15,15,当前棋盘大小为：%d,%d" % (self.board_width, self.board_height))
-        self.current_state = [[[0] * self.cell_dim for _ in range(self.board_width)] for _ in range(self.board_height)]
+            raise Exception(
+                "棋盘大小应设置为15,15,当前棋盘大小为：%d,%d" % (self.board_width, self.board_height)
+            )
+        self.current_state = [
+            [[0] * self.cell_dim for _ in range(self.board_width)]
+            for _ in range(self.board_height)
+        ]
         self.all_observes = self.get_all_observes()
         # 1：黑子 2：白子 默认黑子先下
         self.chess_player = 1
@@ -33,7 +38,10 @@ class GoBang(GridGame, GridObservation):
         self.action_dim = self.get_action_dim()
 
     def reset(self):
-        self.current_state = [[[0] * self.cell_dim for _ in range(self.board_width)] for _ in range(self.board_height)]
+        self.current_state = [
+            [[0] * self.cell_dim for _ in range(self.board_width)]
+            for _ in range(self.board_height)
+        ]
         self.chess_player = 1
         self.won = {}
         self.step_cnt = 1
@@ -46,7 +54,10 @@ class GoBang(GridGame, GridObservation):
         return self.all_observes
 
     def set_action_space(self):
-        action_space = [[Discrete(self.board_height), Discrete(self.board_width)] for _ in range(self.n_player)]
+        action_space = [
+            [Discrete(self.board_height), Discrete(self.board_width)]
+            for _ in range(self.n_player)
+        ]
         # action_space = [[self.board_height, self.board_width] for _ in range(self.n_player)]
         return action_space
 
@@ -55,7 +66,7 @@ class GoBang(GridGame, GridObservation):
         not_valid = self.is_not_valid_action(joint_action)
         if not not_valid:
             next_state = self.current_state
-            cur_action = joint_action[self.chess_player-1]
+            cur_action = joint_action[self.chess_player - 1]
 
             x, y = self.decode(cur_action)
             if self.check_at(x, y):
@@ -85,7 +96,7 @@ class GoBang(GridGame, GridObservation):
 
             return self.all_observes, info_after
 
-    def step_before_info(self, info=''):
+    def step_before_info(self, info=""):
         info = "当前棋手:%d" % self.chess_player
         return info
 
@@ -95,15 +106,19 @@ class GoBang(GridGame, GridObservation):
             raise Exception("joint action 维度不正确！", len(all_action))
 
         for i in range(self.n_player):
-            if len(all_action[i]) != 2 or len(all_action[i][0]) != self.board_width or len(all_action[i][1]) != self.board_height:
+            if (
+                len(all_action[i]) != 2
+                or len(all_action[i][0]) != self.board_width
+                or len(all_action[i][1]) != self.board_height
+            ):
                 raise Exception("玩家%d joint action维度不正确！" % i, all_action[i])
         return not_valid
 
     def get_reward(self, joint_action):
-        r = [0]*self.n_player
+        r = [0] * self.n_player
         if self.is_terminal():
-            r[2-self.chess_player] = 100
-            self.n_return[2-self.chess_player] = 1
+            r[2 - self.chess_player] = 100
+            self.n_return[2 - self.chess_player] = 1
         return r
 
     def encode(self, x, y):
@@ -133,13 +148,15 @@ class GoBang(GridGame, GridObservation):
         dirs = ((1, -1), (1, 0), (1, 1), (0, 1))
         for i in range(self.board_width):
             for j in range(self.board_height):
-                if self.current_state[i][j][0] == 0: continue
+                if self.current_state[i][j][0] == 0:
+                    continue
                 id = self.current_state[i][j][0]
                 for d in dirs:
                     x, y = i, j
                     count = 0
                     for k in range(5):
-                        if self.get(x, y) != id: break
+                        if self.get(x, y) != id:
+                            break
                         x += d[0]
                         y += d[1]
                         count += 1
@@ -166,8 +183,12 @@ class GoBang(GridGame, GridObservation):
         return current_state
 
     def get_dict_observation(self, player_id):
-        key_info = {"state_map": self.current_state, "chess_player_idx": player_id, 'board_width': self.board_width,
-                    'board_height': self.board_height}
+        key_info = {
+            "state_map": self.current_state,
+            "chess_player_idx": player_id,
+            "board_width": self.board_width,
+            "board_height": self.board_height,
+        }
 
         return key_info
 
@@ -182,7 +203,7 @@ class GoBang(GridGame, GridObservation):
     def get_terminal_actions(self):
         not_input_valid = 1
         while not_input_valid:
-            print("请输入落子横纵坐标[0-%d]，空格隔开：" % (self.board_width-1))
+            print("请输入落子横纵坐标[0-%d]，空格隔开：" % (self.board_width - 1))
             cur = input()
             l = cur.split(" ")
             x = int(l[0])
@@ -198,7 +219,3 @@ class GoBang(GridGame, GridObservation):
             action_dim *= self.joint_action_space[0][i].n
 
         return action_dim
-
-
-
-

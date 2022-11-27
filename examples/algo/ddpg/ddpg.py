@@ -15,6 +15,7 @@ from algo.ddpg.Network import Actor, Critic
 import os
 from pathlib import Path
 import sys
+
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
 from common.buffer import Replay_buffer as buffer
@@ -71,10 +72,9 @@ class DDPG(object):
             state = torch.tensor(observation, dtype=torch.float).unsqueeze(0)
             logits = self.actor(state).detach().numpy()
         else:
-            logits = np.random.uniform(low=0, high=1, size=(1,2))
+            logits = np.random.uniform(low=0, high=1, size=(1, 2))
         action = Categorical(torch.Tensor(logits)).sample()
-        return {"action": action,
-                "logits": logits}
+        return {"action": action, "logits": logits}
 
     def add_experience(self, output):
         agent_id = 0
@@ -91,18 +91,24 @@ class DDPG(object):
             data = self.memory.sample(self.batch_size)
 
             transitions = {
-                "o_0": np.array(data['states']),
-                "o_next_0": np.array(data['states_next']),
-                "r_0": np.array(data['rewards']).reshape(-1, 1),
-                "u_0": np.array(data['logits']),
-                "d_0": np.array(data['dones']).reshape(-1, 1),
+                "o_0": np.array(data["states"]),
+                "o_next_0": np.array(data["states_next"]),
+                "r_0": np.array(data["rewards"]).reshape(-1, 1),
+                "u_0": np.array(data["logits"]),
+                "d_0": np.array(data["dones"]).reshape(-1, 1),
             }
 
             obs = torch.tensor(transitions["o_0"], dtype=torch.float)
             obs_ = torch.tensor(transitions["o_next_0"], dtype=torch.float)
             action = torch.tensor(transitions["u_0"], dtype=torch.float).squeeze()
-            reward = torch.tensor(transitions["r_0"], dtype=torch.float).view(self.batch_size, -1)
-            done = torch.tensor(transitions["d_0"], dtype=torch.float).squeeze().view(self.batch_size, -1)
+            reward = torch.tensor(transitions["r_0"], dtype=torch.float).view(
+                self.batch_size, -1
+            )
+            done = (
+                torch.tensor(transitions["d_0"], dtype=torch.float)
+                .squeeze()
+                .view(self.batch_size, -1)
+            )
 
             with torch.no_grad():
                 a1 = self.actor_target(obs_)
@@ -128,7 +134,7 @@ class DDPG(object):
             target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
 
     def save(self, save_path, episode):
-        base_path = os.path.join(save_path, 'trained_model')
+        base_path = os.path.join(save_path, "trained_model")
         if not os.path.exists(base_path):
             os.makedirs(base_path)
 
@@ -138,7 +144,9 @@ class DDPG(object):
         torch.save(self.critic.state_dict(), model_actor_path)
 
     def load(self, load_path, i):
-        self.actor.load_state_dict(torch.load(str(load_path) + '/actor_net_{}.pth'.format(i)))
+        self.actor.load_state_dict(
+            torch.load(str(load_path) + "/actor_net_{}.pth".format(i))
+        )
 
     def scale_noise(self, decay):
         self.actor.noise.scale = self.actor.noise.scale * decay

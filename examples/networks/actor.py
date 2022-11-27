@@ -10,6 +10,7 @@ def weights_init_(m):
         torch.nn.init.xavier_uniform_(m.weight, gain=1)
         torch.nn.init.constant_(m.bias, 0)
 
+
 class Actor(nn.Module):
     def __init__(self, input_size, output_size):
         super().__init__()
@@ -28,7 +29,17 @@ class NoisyActor(nn.Module):
     """
     continuous actor with random noise
     """
-    def __init__(self, state_dim, hidden_dim, out_dim, num_hidden_layer=0, tanh=False, action_high = 1, action_low = -1):
+
+    def __init__(
+        self,
+        state_dim,
+        hidden_dim,
+        out_dim,
+        num_hidden_layer=0,
+        tanh=False,
+        action_high=1,
+        action_low=-1,
+    ):
         super(NoisyActor, self).__init__()
 
         self.linear_in = nn.Linear(state_dim, hidden_dim)
@@ -36,18 +47,18 @@ class NoisyActor(nn.Module):
         self.num_hidden_layer = num_hidden_layer
 
         if self.num_hidden_layer > 0:
-                hid_net = []
-                for _ in range(self.num_hidden_layer):
-                    hid_net.append(nn.Linear(hidden_dim, hidden_dim))
-                    hid_net.append(nn.ReLU())
-                self.linear_hid = nn.Sequential(*hid_net)
+            hid_net = []
+            for _ in range(self.num_hidden_layer):
+                hid_net.append(nn.Linear(hidden_dim, hidden_dim))
+                hid_net.append(nn.ReLU())
+            self.linear_hid = nn.Sequential(*hid_net)
 
         self.apply(weights_init_)
         self.noise = torch.Tensor(1)
         self.tanh = tanh
-        if tanh:  #normalise the action
-            self.action_scale = torch.FloatTensor([(action_high - action_low) / 2.])
-            self.action_bias = torch.FloatTensor([(action_high + action_low) / 2.])
+        if tanh:  # normalise the action
+            self.action_scale = torch.FloatTensor([(action_high - action_low) / 2.0])
+            self.action_bias = torch.FloatTensor([(action_high + action_low) / 2.0])
 
     def forward(self, state):
         x = F.relu(self.linear_in(state))
@@ -65,20 +76,23 @@ class NoisyActor(nn.Module):
         :return: (sampled_action, prob, logprob, mean)
         """
         mean = self.forward(state)
-        noise = self.noise.normal_(0., std = 0.1)    #all these hyperparameters can be defined in advance
+        noise = self.noise.normal_(
+            0.0, std=0.1
+        )  # all these hyperparameters can be defined in advance
         noise = noise.clamp(-0.25, 0.25)
         action = mean + noise
-        return action, torch.tensor(1.), torch.tensor(0.), mean
+        return action, torch.tensor(1.0), torch.tensor(0.0), mean
 
 
 class CategoricalActor(nn.Module):
-
     def __init__(self, state_dim, hidden_dim, action_dim):
         super(CategoricalActor, self).__init__()
 
         self.linear1 = nn.Linear(state_dim, hidden_dim)
         self.linear2 = nn.Linear(hidden_dim, hidden_dim)
-        self.linear3 = nn.Linear(hidden_dim, action_dim)  # should be followed by a softmax layer
+        self.linear3 = nn.Linear(
+            hidden_dim, action_dim
+        )  # should be followed by a softmax layer
         self.apply(weights_init_)
 
     def forward(self, state):
@@ -100,39 +114,57 @@ class CategoricalActor(nn.Module):
 
         return sample_action, prob, logprob, greedy
 
+
 class openai_actor(nn.Module):
     def __init__(self, num_inputs, action_size):
         super(openai_actor, self).__init__()
-        self.tanh= nn.Tanh()
+        self.tanh = nn.Tanh()
         self.LReLU = nn.LeakyReLU(0.01)
         self.linear_a1 = nn.Linear(num_inputs, 128)
         self.linear_a2 = nn.Linear(128, 64)
         self.linear_a = nn.Linear(64, action_size)
         self.reset_parameters()
         self.train()
-    
+
     def reset_parameters(self):
-        gain = nn.init.calculate_gain('leaky_relu')
-        gain_tanh = nn.init.calculate_gain('tanh')
-        nn.init.xavier_uniform_(self.linear_a1.weight, gain=nn.init.calculate_gain('leaky_relu'))
-        nn.init.xavier_uniform_(self.linear_a2.weight, gain=nn.init.calculate_gain('leaky_relu'))
-        nn.init.xavier_uniform_(self.linear_a.weight, gain=nn.init.calculate_gain('leaky_relu'))
-    
+        gain = nn.init.calculate_gain("leaky_relu")
+        gain_tanh = nn.init.calculate_gain("tanh")
+        nn.init.xavier_uniform_(
+            self.linear_a1.weight, gain=nn.init.calculate_gain("leaky_relu")
+        )
+        nn.init.xavier_uniform_(
+            self.linear_a2.weight, gain=nn.init.calculate_gain("leaky_relu")
+        )
+        nn.init.xavier_uniform_(
+            self.linear_a.weight, gain=nn.init.calculate_gain("leaky_relu")
+        )
+
     def forward(self, input, original_out=False):
         x = self.LReLU(self.linear_a1(input))
         x = self.LReLU(self.linear_a2(x))
         model_out = self.linear_a(x)
         u = torch.rand_like(model_out)
         policy = F.softmax(model_out - torch.log(-torch.log(u)), dim=-1)
-        if original_out == True:   return model_out, policy
+        if original_out == True:
+            return model_out, policy
         return policy
+
 
 LOG_SIG_MAX = 2
 LOG_SIG_MIN = -20
 epsilon = 1e-6
 
+
 class GaussianActor(nn.Module):
-    def __init__(self, state_dim, hidden_dim, action_dim, tanh=False, action_high = 2, action_low = -2):
+    def __init__(
+        self,
+        state_dim,
+        hidden_dim,
+        action_dim,
+        tanh=False,
+        action_high=2,
+        action_low=-2,
+    ):
         super(GaussianActor, self).__init__()
 
         self.linear_in = nn.Linear(state_dim, hidden_dim)
@@ -144,8 +176,8 @@ class GaussianActor(nn.Module):
 
         self.tanh = tanh
         if tanh:  # normalise the action
-            self.action_scale = torch.FloatTensor([(action_high - action_low) / 2.])
-            self.action_bias = torch.FloatTensor([(action_high + action_low) / 2.])
+            self.action_scale = torch.FloatTensor([(action_high - action_low) / 2.0])
+            self.action_bias = torch.FloatTensor([(action_high + action_low) / 2.0])
 
     def forward(self, state):
         x = F.relu(self.linear_in(state))
@@ -170,7 +202,7 @@ class GaussianActor(nn.Module):
         else:
             action = x_t
             log_prob = normal.log_prob(x_t)
-            log_prob = log_prob.sum(1, keepdim = True)
+            log_prob = log_prob.sum(1, keepdim=True)
             mean = mean
 
         return action, log_prob, mean
