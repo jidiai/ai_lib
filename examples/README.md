@@ -15,7 +15,11 @@ Come and play these games together~
         <td>MountainCar-v0</td> 
         <td>Pendulum-v0</td> 
         <td>gridworld</td> 
-   </tr>
+        <td>Kuhn Poker</td>
+        <td>Leduc Poker</td>
+        <td>ConnectFour</td>
+        <td>GRF</td>
+    </tr>
 
 [comment]: <> (   <tr>)
 
@@ -28,6 +32,10 @@ Come and play these games together~
         <td>√</td> 
         <td>√</td> 
         <td>√</td> 
+        <td>√</td> 
+        <td>√</td> 
+        <td>√</td> 
+        <td>√</td>
    </tr>
     <tr>
         <td>Q-learning</td> 
@@ -35,36 +43,60 @@ Come and play these games together~
         <td>-</td> 
         <td> - </td> 
         <td> √ </td> 
+        <td>√</td>
+        <td>√</td>
+        <td>-</td>
+        <td>-</td>
     <tr>
         <td>Sarsa</td> 
         <td>-</td> 
         <td>-</td> 
         <td> - </td> 
-        <td> √ </td> 
+        <td> √ </td>
+        <td>-</td>
+        <td>-</td>
+        <td>-</td>
+        <td>-</td>
     <tr>
         <td>DQN</td> 
         <td>√</td> 
         <td>√</td> 
         <td> - </td> 
-        <td> - </td> 
+        <td> - </td>
+        <td>√</td>
+        <td>√</td>
+        <td>-</td>
+        <td>-</td>
     <tr>
         <td>DDQN</td> 
         <td>√</td> 
         <td>√</td> 
         <td> - </td> 
-        <td> - </td> 
+        <td> - </td>
+        <td>-</td>
+        <td>-</td>
+        <td>-</td>
+        <td>-</td>
     <tr>
         <td>Duelingq</td> 
         <td>√</td> 
         <td>√</td> 
         <td> - </td>
         <td> - </td> 
+        <td>-</td>
+        <td>-</td>
+        <td>-</td>
+        <td>-</td>
     <tr>
         <td>SAC</td>
         <td>√</td> 
         <td> √ </td> 
         <td> √ </td>
         <td> - </td> 
+        <td>-</td>
+        <td>-</td>
+        <td>-</td>
+        <td>-</td>
 
 [comment]: <> (        <td rowspan="8">classic_CartPole-v0</td>)
 
@@ -75,6 +107,10 @@ Come and play these games together~
         <td> - </td> 
         <td> - </td>
         <td> - </td> 
+        <td>-</td>
+        <td>-</td>
+        <td>√</td>
+        <td>√</td>
    </tr>
     <tr>
         <td>PG</td>
@@ -82,6 +118,10 @@ Come and play these games together~
         <td> - </td> 
         <td> - </td>
         <td> - </td> 
+        <td>-</td>
+        <td>-</td>
+        <td>-</td>
+        <td>-</td>
    </tr>
      <tr>
         <td>AC</td>
@@ -89,6 +129,10 @@ Come and play these games together~
         <td> - </td> 
         <td> - </td> 
         <td> - </td> 
+        <td>-</td>
+        <td>-</td>
+        <td>-</td>
+        <td>-</td>
    </tr>
    </tr>
      <tr>
@@ -97,12 +141,20 @@ Come and play these games together~
         <td> - </td> 
         <td> - </td>
         <td> - </td> 
+        <td>-</td>
+        <td>-</td>
+        <td>-</td>
+        <td>-</td>
      <tr>
         <td>TD3</td>
         <td> - </td> 
         <td> - </td> 
         <td> √ </td>
-        <td> - </td> 
+        <td> - </td>
+        <td>-</td>
+        <td>-</td>
+        <td>-</td>
+        <td>-</td>
    </tr>
     
 
