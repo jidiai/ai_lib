@@ -7,7 +7,8 @@
 [![Release Version](https://img.shields.io/badge/release-2.0-red.svg)]()
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)]()
 
-Jidi AiLib is a library that integrates many (MA)RL-related benchmarking environments and baselines to support various training and evaluation demands. 
+**Jidi AiLib is a general distributed-RL library that integrates  Single-Agent RL, Multi-Agent RL and Population-based Training framework (i.e. Self-Play, PSRO, League Training). It inherits its structure from [DB-Football](https://github.com/Shanghai-Digital-Brain-Laboratory/DB-Football).**
+
 
 ## Quick Start
 
