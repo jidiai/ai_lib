@@ -14,9 +14,9 @@ object_path = '/olympics'
 sys.path.append(os.path.join(olympics_path+object_path))
 print('sys path = ', sys.path)
 
-from olympics.core import OlympicsBase
-from olympics.generator import create_scenario
-from olympics.scenario.running import *
+from olympics_engine.core import OlympicsBase
+from olympics_engine.generator import create_scenario
+from olympics_engine.scenario.running_competition import *
 
 from env.simulators.game import Game
 from utils.box import Box
@@ -46,9 +46,25 @@ class OlympicsRunning(Game):
         self.num_map = conf['map_num']
         map_index_seq = list(range(1, conf['map_num']+1))
         rand_map_idx = random.choice(map_index_seq)
-        Gamemap = create_scenario("map"+str(rand_map_idx))
+        Gamemap = create_scenario("running-competition")
 
-        self.env_core = Running(Gamemap)
+        self.env_core = Running_competition(meta_map = Gamemap, map_id = rand_map_idx)
+        self.env_core.VIEW_BACK = -self.env_core.map['agents'][0].r/self.env_core.map['agents'][0].visibility
+        self.env_core.VIEW_ITSELF = True
+        self.env_core.obs_boundary_init = list()
+        self.env_core.obs_boundary = self.env_core.obs_boundary_init
+
+        for index, item in enumerate(self.env_core.map["agents"]):
+            position = item.position_init
+            r = item.r
+            if item.type == 'agent':
+                visibility = item.visibility
+                boundary = self.env_core.get_obs_boundaray(position, r, visibility)
+                self.env_core.obs_boundary_init.append(boundary)
+            else:
+                self.env_core.obs_boundary_init.append(None)
+
+
         self.max_step = int(conf['max_step'])
         self.joint_action_space = self.set_action_space()
         self.action_dim = self.joint_action_space
@@ -81,7 +97,7 @@ class OlympicsRunning(Game):
     def specify_a_map(self, num):
         assert num <= self.num_map, print('the num is larger than the total number of map')
         Gamemap = create_scenario("map"+str(num))
-        self.env_core = Running(Gamemap)
+        self.env_core = Running_competition(map_id = num)
         _ = self.reset()
         self.env_core.map_num = num
 
@@ -92,7 +108,7 @@ class OlympicsRunning(Game):
             map_index_seq = list(range(1, self.num_map + 1))
             rand_map_idx = random.choice(map_index_seq)
             Gamemap = create_scenario("map"+str(rand_map_idx))
-            self.env_core = Running(Gamemap)
+            self.env_core = Running_competition(map_id = rand_map_idx)
             self.env_core.map_num = rand_map_idx
 
         self.env_core.reset()

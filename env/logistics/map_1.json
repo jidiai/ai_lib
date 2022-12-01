@@ -1,0 +1,201 @@
+{
+  "n_vertex": 10,
+  "vertices": [
+    {
+      "key": 0,
+      "production": 2100,
+      "init_storage": 2200,
+      "upper_storage": 6000,
+      "store_cost": 0.06,
+      "loss_cost": 0.1,
+      "lambda": 1800
+    },
+    {
+      "key": 1,
+      "production": 2000,
+      "init_storage": 2500,
+      "upper_storage": 8000,
+      "store_cost": 0.04,
+      "loss_cost": 0.1,
+      "lambda": 1700
+    },
+    {
+      "key": 2,
+      "production": 1200,
+      "init_storage": 3000,
+      "upper_storage": 10000,
+      "store_cost": 0.08,
+      "loss_cost": 0.2,
+      "lambda": 2300
+    },
+    {
+      "key": 3,
+      "production": 2100,
+      "init_storage": 2800,
+      "upper_storage": 7000,
+      "store_cost": 0.02,
+      "loss_cost": 0.12,
+      "lambda": 1400
+    },
+    {
+      "key": 4,
+      "production": 900,
+      "init_storage": 2400,
+      "upper_storage": 9000,
+      "store_cost": 0.08,
+      "loss_cost": 0.2,
+      "lambda": 1800
+    },
+    {
+      "key": 5,
+      "production": 2200,
+      "init_storage": 3000,
+      "upper_storage": 7000,
+      "store_cost": 0.06,
+      "loss_cost": 0.15,
+      "lambda": 1500
+    },
+    {
+      "key": 6,
+      "production": 1300,
+      "init_storage": 3800,
+      "upper_storage": 8000,
+      "store_cost": 0.08,
+      "loss_cost": 0.2,
+      "lambda": 1900
+    },
+    {
+      "key": 7,
+      "production": 1900,
+      "init_storage": 3200,
+      "upper_storage": 7000,
+      "store_cost": 0.06,
+      "loss_cost": 0.12,
+      "lambda": 1800
+    },
+    {
+      "key": 8,
+      "production": 1600,
+      "init_storage": 2400,
+      "upper_storage": 9000,
+      "store_cost": 0.06,
+      "loss_cost": 0.2,
+      "lambda": 1400
+    },
+    {
+      "key": 9,
+      "production": 2200,
+      "init_storage": 2600,
+      "upper_storage": 8000,
+      "store_cost": 0.04,
+      "loss_cost": 0.15,
+      "lambda": 1900
+    }
+  ],
+  "coords": [
+    [3.9, 0],
+    [3.9, 1],
+    [2.6, 1],
+    [2.6, 2],
+    [3.9, 3],
+    [2.6, 3],
+    [2.6, 4],
+    [1.3, 2],
+    [0, 1],
+    [0, 3]
+  ],
+  "is_graph_directed": false,
+  "edges": [
+    {
+      "start": 0,
+      "end": 1,
+      "upper_capacity": 2400,
+      "trans_time": 7,
+      "trans_cost": 0.01
+    },
+    {
+      "start": 1,
+      "end": 2,
+      "upper_capacity": 2600,
+      "trans_time": 10,
+      "trans_cost": 0.008
+    },
+    {
+      "start": 2,
+      "end": 4,
+      "upper_capacity": 2100,
+      "trans_time": 13,
+      "trans_cost": 0.006
+    },
+    {
+      "start": 3,
+      "end": 2,
+      "upper_capacity": 2800,
+      "trans_time": 8,
+      "trans_cost": 0.01
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "upper_capacity": 2500,
+      "trans_time": 11,
+      "trans_cost": 0.008
+    },
+    {
+      "start": 3,
+      "end": 5,
+      "upper_capacity": 3200,
+      "trans_time": 6,
+      "trans_cost": 0.01
+    },
+    {
+      "start": 4,
+      "end": 6,
+      "upper_capacity": 2000,
+      "trans_time": 16,
+      "trans_cost": 0.012
+    },
+    {
+      "start": 5,
+      "end": 4,
+      "upper_capacity": 2700,
+      "trans_time": 10,
+      "trans_cost": 0.008
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "upper_capacity": 3000,
+      "trans_time": 12,
+      "trans_cost": 0.01
+    },
+    {
+      "start": 7,
+      "end": 2,
+      "upper_capacity": 2600,
+      "trans_time": 13,
+      "trans_cost": 0.008
+    },
+    {
+      "start": 7,
+      "end": 3,
+      "upper_capacity": 2300,
+      "trans_time": 6,
+      "trans_cost": 0.006
+    },
+    {
+      "start": 8,
+      "end": 7,
+      "upper_capacity": 2500,
+      "trans_time": 18,
+      "trans_cost": 0.008
+    },
+    {
+      "start": 9,
+      "end": 7,
+      "upper_capacity": 2900,
+      "trans_time": 10,
+      "trans_cost": 0.012
+    }
+  ]
+}

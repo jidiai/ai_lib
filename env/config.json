@@ -319,9 +319,9 @@
     "obs_type": ["grid"]
   },
   "ParticleEnv-simple": {
-    "class_literal": "ParticleEnv",
+    "class_literal": "MPE_Jidi",
     "n_player": 1,
-    "max_step": 500,
+    "max_step": 25,
     "game_name": "ParticleEnv-simple",
     "is_obs_continuous": true,
     "is_act_continuous": false,
@@ -329,9 +329,9 @@
     "obs_type": ["vector"]
   },
   "ParticleEnv-simple_adversary": {
-    "class_literal": "ParticleEnv",
+    "class_literal": "MPE_Jidi",
     "n_player": 3,
-    "max_step": 500,
+    "max_step": 25,
     "game_name": "ParticleEnv-simple_adversary",
     "is_obs_continuous": true,
     "is_act_continuous": false,
@@ -339,9 +339,9 @@
     "obs_type": ["vector","vector"]
   },
   "ParticleEnv-simple_crypto": {
-    "class_literal": "ParticleEnv",
+    "class_literal": "MPE_Jidi",
     "n_player": 3,
-    "max_step": 500,
+    "max_step": 25,
     "game_name": "ParticleEnv-simple_crypto",
     "is_obs_continuous": true,
     "is_act_continuous": false,
@@ -349,9 +349,9 @@
     "obs_type": ["vector", "vector"]
   },
   "ParticleEnv-simple_push": {
-    "class_literal": "ParticleEnv",
+    "class_literal": "MPE_Jidi",
     "n_player": 2,
-    "max_step": 500,
+    "max_step": 25,
     "game_name": "ParticleEnv-simple_push",
     "is_obs_continuous": true,
     "is_act_continuous": false,
@@ -359,9 +359,9 @@
     "obs_type": ["vector","vector"]
   },
   "ParticleEnv-simple_reference": {
-    "class_literal": "ParticleEnv",
+    "class_literal": "MPE_Jidi",
     "n_player": 2,
-    "max_step": 500,
+    "max_step": 25,
     "game_name": "ParticleEnv-simple_reference",
     "is_obs_continuous": true,
     "is_act_continuous": false,
@@ -369,9 +369,9 @@
     "obs_type": ["vector"]
   },
   "ParticleEnv-simple_speaker_listener": {
-    "class_literal": "ParticleEnv",
+    "class_literal": "MPE_Jidi",
     "n_player": 2,
-    "max_step": 500,
+    "max_step": 25,
     "game_name": "ParticleEnv-simple_speaker_listener",
     "is_obs_continuous": true,
     "is_act_continuous": false,
@@ -379,9 +379,9 @@
     "obs_type": ["vector"]
   },
   "ParticleEnv-simple_spread": {
-    "class_literal": "ParticleEnv",
+    "class_literal": "MPE_Jidi",
     "n_player": 3,
-    "max_step": 500,
+    "max_step": 25,
     "game_name": "ParticleEnv-simple_spread",
     "is_obs_continuous": true,
     "is_act_continuous": false,
@@ -389,9 +389,9 @@
     "obs_type": ["vector"]
   },
   "ParticleEnv-simple_tag": {
-    "class_literal": "ParticleEnv",
+    "class_literal": "MPE_Jidi",
     "n_player": 4,
-    "max_step": 500,
+    "max_step": 25,
     "game_name": "ParticleEnv-simple_tag",
     "is_obs_continuous": true,
     "is_act_continuous": false,
@@ -399,9 +399,9 @@
     "obs_type": ["vector","vector"]
   },
   "ParticleEnv-simple_world_comm": {
-    "class_literal": "ParticleEnv",
+    "class_literal": "MPE_Jidi",
     "n_player": 6,
-    "max_step": 500,
+    "max_step": 25,
     "game_name": "ParticleEnv-simple_world_comm",
     "is_obs_continuous": true,
     "is_act_continuous": false,
@@ -526,6 +526,7 @@
     "n_player": 1,
     "max_step": 1000,
     "game_name": "smarts_loop",
+    "scenario_name": "loop",
     "is_obs_continuous": true,
     "is_act_continuous": false,
     "agent_nums": [1],
@@ -801,12 +802,223 @@
   },
   "Logistics_Transportation": {
     "class_literal": "LogisticsEnv",
-    "n_player": 5,
-    "max_step": 1000,
+    "n_player": 10,
+    "max_step": 100,
     "game_name": "logistics_transportation",
     "is_obs_continuous": true,
     "is_act_continuous": true,
-    "agent_nums": [5],
+    "agent_nums": [10],
+    "obs_type": ["dict"]
+  },
+  "football_5v5_malib": {
+    "class_literal": "Football",
+    "n_player": 8,
+    "max_step": 3000,
+    "game_name": "malib_5_vs_5",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [4,4],
+    "obs_type": ["dict", "dict"],
+    "act_box": {"discrete_n": 19}
+  },
+  "olympics-tablehockey": {
+    "class_literal": "OlympicsTablehockey",
+    "n_player": 2,
+    "max_step": 500,
+    "game_name": "tablehockey",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [1,1],
+    "obs_type": ["vector", "vector"]
+  },
+  "olympics-football": {
+    "class_literal": "OlympicsFootball",
+    "n_player": 2,
+    "max_step": 500,
+    "game_name": "football",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [1,1],
+    "obs_type": ["vector", "vector"]
+  },
+  "olympics-wrestling": {
+    "class_literal": "OlympicsWrestling",
+    "n_player": 2,
+    "max_step": 500,
+    "game_name": "wrestling",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [1,1],
+    "obs_type": ["vector", "vector"]
+  },
+  "olympics-billiard": {
+    "class_literal": "OlympicsBilliard",
+    "n_player": 2,
+    "max_step": 500,
+    "game_name": "billiard",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [1, 1],
+    "obs_type": ["vector", "vector"]
+  },
+  "ParticleEnv-simple-continuous": {
+    "class_literal": "MPE_Jidi",
+    "n_player": 1,
+    "max_step": 25,
+    "game_name": "ParticleEnv-simple-continuous",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [1],
+    "obs_type": ["vector"]
+  },
+  "ParticleEnv-simple_adversary-continuous": {
+    "class_literal": "MPE_Jidi",
+    "n_player": 3,
+    "max_step": 25,
+    "game_name": "ParticleEnv-simple_adversary-continuous",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [1,2],
+    "obs_type": ["vector","vector"]
+  },
+  "ParticleEnv-simple_crypto-continuous": {
+    "class_literal": "MPE_Jidi",
+    "n_player": 3,
+    "max_step": 25,
+    "game_name": "ParticleEnv-simple_crypto-continuous",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [2,1],
+    "obs_type": ["vector", "vector"]
+  },
+  "ParticleEnv-simple_push-continuous": {
+    "class_literal": "MPE_Jidi",
+    "n_player": 2,
+    "max_step": 25,
+    "game_name": "ParticleEnv-simple_push-continuous",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [1,1],
+    "obs_type": ["vector","vector"]
+  },
+  "ParticleEnv-simple_reference-continuous": {
+    "class_literal": "MPE_Jidi",
+    "n_player": 2,
+    "max_step": 25,
+    "game_name": "ParticleEnv-simple_reference-continuous",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [2],
+    "obs_type": ["vector"]
+  },
+  "ParticleEnv-simple_speaker_listener-continuous": {
+    "class_literal": "MPE_Jidi",
+    "n_player": 2,
+    "max_step": 25,
+    "game_name": "ParticleEnv-simple_speaker_listener-continuous",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [2],
+    "obs_type": ["vector"]
+  },
+  "ParticleEnv-simple_spread-continuous": {
+    "class_literal": "MPE_Jidi",
+    "n_player": 3,
+    "max_step": 25,
+    "game_name": "ParticleEnv-simple_spread-continuous",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [3],
+    "obs_type": ["vector"]
+  },
+  "ParticleEnv-simple_tag-continuous": {
+    "class_literal": "MPE_Jidi",
+    "n_player": 4,
+    "max_step": 25,
+    "game_name": "ParticleEnv-simple_tag-continuous",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [3,1],
+    "obs_type": ["vector","vector"]
+  },
+  "ParticleEnv-simple_world_comm-continuous": {
+    "class_literal": "MPE_Jidi",
+    "n_player": 6,
+    "max_step": 25,
+    "game_name": "ParticleEnv-simple_world_comm-continuous",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [4,2],
+    "obs_type": ["vector","vector"]
+  },
+  "olympics-curling": {
+      "class_literal": "OlympicsCurling",
+      "n_player": 2,
+      "max_step": 1000,
+      "game_name": "curling",
+      "is_obs_continuous": true,
+      "is_act_continuous": true,
+      "agent_nums": [1,1],
+      "obs_type": ["vector", "vector"]
+  },
+  "delivery_two_agents": {
+    "class_literal": "DeliveryGame",
+    "n_player": 2,
+    "max_step": 500,
+    "game_name": "delivery_two_agents",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [1,1],
+    "obs_type": ["dict","dict"]
+  },
+  "Logistics_Transportation2": {
+    "class_literal": "LogisticsEnv2",
+    "n_player": 31,
+    "max_step": 100,
+    "game_name": "logistics_transportation2",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [31],
+    "obs_type": ["dict"]
+  },
+  "olympics-integrated": {
+    "class_literal": "OlympicsIntegrated",
+    "n_player": 2,
+    "max_step": 2000,
+    "game_name": "integrated",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [1,1],
+    "obs_type": ["vector", "vector"]
+  },
+  "wilderness-navigation": {
+    "class_literal": "Wilderness",
+    "n_player": 1,
+    "max_step": 2000,
+    "game_name": "wilderness-navigation",
+    "is_obs_continuous": true,
+    "is_act_continuous": false,
+    "agent_nums": [1],
+    "obs_type": ["vector"]
+  },
+  "chessandcard-leduc_holdem_v3": {
+    "class_literal": "ChessAndCard",
+    "n_player": 2,
+    "max_step": 10000,
+    "game_name": "leduc_holdem_v3",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [1,1],
+    "obs_type": ["dict", "dict"]
+  },
+  "revive-refrigerator": {
+    "class_literal": "Refrigerator",
+    "n_player": 1,
+    "max_step": 2000,
+    "game_name": "refrigerator",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [1],
     "obs_type": ["dict"]
   }
 }

@@ -41,6 +41,8 @@ def sample_single_dim(action_space_list_each, is_act_continuous):
                 each.extend(new_action)
         elif action_space_list_each.__class__.__name__ == "Discrete_SC2":
             each = action_space_list_each.sample()
+        elif action_space_list_each.__class__.__name__ == "Box":
+            each = action_space_list_each.sample()
     return each
 
 

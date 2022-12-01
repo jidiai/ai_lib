@@ -56,9 +56,17 @@ Apart from the necessary dependency in `requirements.txt`, some environments req
 - `Python 3.7.5`
 - `gym` https://github.com/openai/gym
 - `gfootball` https://github.com/google-research/football
+  
+  (If want to use `football_5v5_malib`, put the `env/football_scenarios/malib_5_vs_5.py` file under folder like 
+  `~/anaconda3/envs/env_name/lib/python3.x/site-packages/gfootball/scenarios`using environment `env_name` or
+  `~/anaconda3/lib/python3.x/site-packages/gfootball/scenarios` using base environment.)
 - `miniworld` https://github.com/maximecb/gym-miniworld#installation
 - `minigrid` https://github.com/maximecb/gym-minigrid
-- `Multi-Agent Particle Environment` https://github.com/openai/multiagent-particle-envs
+- `Multi-Agent Particle Environment` https://www.pettingzoo.ml/mpe
+
+  `pip install pettingzoo[mpe]==1.10.0`
+  
+  (Using `pip install 'pettingzoo[mpe]==1.10.0'` if you are using zsh.)
 - `Overcooked-AI` https://github.com/HumanCompatibleAI/overcooked_ai
 - `MAgent` https://www.pettingzoo.ml/magent
   
@@ -76,15 +84,22 @@ Apart from the necessary dependency in `requirements.txt`, some environments req
   
   If not using smarts NGSIM, comment out `from .smarts_ngsim import *` in `env/__init__.py`.)
 - `StartCraft II` https://github.com/deepmind/pysc2
-- `Olympics Engine` https://github.com/jidiai/Competition_Olympics-Running/tree/main/olympics
+- `olympics-running` https://github.com/jidiai/Competition_Olympics-Running
+
+  (Notice: Put folder `olympics` and `jidi` under the same folder)
   
-    (Notice: Put `olympics` and `ai_lib` under the same folder)
+- `olympics-tablehockey olympics-football olympics-wrestling` https://github.com/jidiai/olympics_engine
+  
+  (Notice: Put repo `olympics_engine` and `jidi` under the same folder)
 - `mujoco-py` https://github.com/openai/mujoco-py
 - `Classic` https://www.pettingzoo.ml/classic 
   
   `pip install pettingzoo[classic]==1.10.0`
   
   (Using `pip install 'pettingzoo[classic]==1.10.0'` if you are using zsh.)
+- `gym-chinese-chess` https://github.com/bupticybee/gym_chinese_chess
+- `Wilderness Scavenger` https://github.com/inspirai/wilderness-scavenger
+- `REVIVE SDK` https://www.revive.cn/help/polixir-revive-sdk/text/introduction.html
   
 - `Torch 1.7.0` 可选
   - 支持提交Torch训练后的模型.pth附属文件

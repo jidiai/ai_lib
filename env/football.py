@@ -24,8 +24,8 @@ class Football(Game, DictObservation):
         self.env_core = football_env.create_environment(
             env_name=conf["game_name"], stacked=False,
             representation='raw',
-            logdir='/tmp/rllib_test',
-            write_goal_dumps=False, write_full_episode_dumps=False, render=False,
+            logdir='/tmp/football_render',
+            write_goal_dumps=False, write_full_episode_dumps=True, render=False,
             dump_frequency=0,
             number_of_left_players_agent_controls=self.agent_nums[0],
             number_of_right_players_agent_controls=self.agent_nums[1])
@@ -36,7 +36,8 @@ class Football(Game, DictObservation):
         self.joint_action_space = self.set_action_space()
         self.current_state = self.get_sorted_next_state(obs_list)
         self.all_observes = self.current_state
-        self.n_return = [0] * self.n_player
+        self.n_return_temp = [0.0] * self.n_player
+        self.n_return = [0.0] * self.n_player
 
         self.action_dim = self.get_action_dim()
         self.input_dimension = self.env_core.observation_space
@@ -88,7 +89,13 @@ class Football(Game, DictObservation):
         r = [0] * self.n_player
         for i in range(self.n_player):
             r[i] = reward[i]
-            self.n_return[i] += r[i]
+            self.n_return_temp[i] += r[i]
+
+        # left n_return
+        self.n_return[0] = self.n_return_temp[0]
+        # right n_return
+        self.n_return[self.agent_nums[0]] = self.n_return_temp[self.agent_nums[0]]
+
         return r
 
     def step_before_info(self, info=''):
@@ -98,6 +105,9 @@ class Football(Game, DictObservation):
         if self.step_cnt >= self.max_step:
             self.done = True
 
+        if self.done:
+            self.env_core.close()
+
         return self.done
 
     def set_action_space(self):
@@ -105,8 +115,8 @@ class Football(Game, DictObservation):
         return action_space
 
     def check_win(self):
-        left_sum = sum(self.n_return[:self.agent_nums[0]])
-        right_sum = sum(self.n_return[self.agent_nums[0]:])
+        left_sum = self.n_return[0]
+        right_sum = self.n_return[self.agent_nums[0]]
         if left_sum > right_sum:
             return '0'
         elif left_sum < right_sum:
