@@ -1,5 +1,5 @@
 
-<img src="imgs/jidi logo.png" width='300px'>
+<img src="imgs/Jidi%20logo.png" width='300px'>
 
 
 # Jidi AiLib V2: A general reinforcement learning library
