@@ -10,7 +10,11 @@
 
 This repo provides a reinforcement learning library designed for our online submission evaluation platform [Jidi(及第)](http://www.jidiai.cn/) which aims to offer fair benchmarking over various RL environments and host AI competitions on problems worth exploring.
 
-In the current version, the repo contains the code of all the benchmark RL environment we included on [Jidi(及第)](http://www.jidiai.cn/) and simple-to-use training examples covering some classic baseline RL algorithms.
+**Version 2.0 (branch [V2](https://github.com/jidiai/ai_lib/tree/V2))**
+New version of Jidi AiLib which supports Population-Based Training! Still under construction and stay tuned. PRs are welcome!
+
+**Version 1.0 (branch master)**:
+In the version V1.0, the repo contains the code of all the benchmark RL environment we included on [Jidi(及第)](http://www.jidiai.cn/) and simple-to-use training examples covering some classic baseline RL algorithms.
 
 
 ## **平台地址 (Our Website)**
