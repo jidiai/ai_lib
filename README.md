@@ -1,7 +1,57 @@
-## 平台地址
+
+<img src="imgs/jidi logo.png" width='300px'>
+
+# **Jidi (及第) AiLib**            
+
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
+[![Release Version](https://img.shields.io/badge/release-1.0-red.svg)]()
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)]()
+
+This repo provides a reinforcement learning library designed for our online submission evaluation platform [Jidi(及第)](http://www.jidiai.cn/) which aims to offer fair benchmarking over various RL environments and host AI competitions on problems worth exploring.
+
+In the current version, the repo contains the code of all the benchmark RL environment we included on [Jidi(及第)](http://www.jidiai.cn/) and simple-to-use training examples covering some classic baseline RL algorithms.
+
+
+## **平台地址 (Our Website)**
 [jidi_ai](http://www.jidiai.cn/)
 
-## 项目依赖
+## **快速开始 (Quick Start)**
+You can install Jidi AiLib on your own personal computer or workstation. To install it, please follow the instruction below.
+
+**Clone the repo**
+```bash
+git clone https://github.com/jidiai/ai_lib.git
+cd ailib
+```
+**Build virtual environment**
+```bash
+python3 -m venv ailib-venv
+source ailib-venv/bin/activate
+python3 -m pip install -e .
+```
+or 
+```bash
+conda create -n ailib-venv python==3.7.5
+conda activate ailib-venv
+```
+**Install necessary dependencies**
+```bash
+pip install -r requirement.txt
+```
+
+**Now have a go**
+```bash
+python examples/main.py --scenario classic_CartPole-v0 --algo dqn --reload_config 
+```
+
+## **训练例子 (Training Examples)**
+We provide implementations and tuned training configurations of vairous baseline reinforcement learning algorithms. More details can be found in [./examples/](examples/README.md). Feel free to try it yourself.
+
+
+## **额外项目依赖 (Extra Dependencies)**
+
+Apart from the necessary dependency in `requirements.txt`, some environments require extra dependencies and we list all of them here.
 
 - `Python 3.7.5`
 - `gym` https://github.com/openai/gym
@@ -39,7 +89,7 @@
 - `Torch 1.7.0` 可选
   - 支持提交Torch训练后的模型.pth附属文件
 
-## 目录结构
+## **目录结构 (Code structure)**
 
 ```
 |-- platform_lib
@@ -64,7 +114,7 @@
 
 ```
 
-## 平台提交说明
+## **平台提交说明**
 1. 填写算法名称或描述，选择提交环境
 2. 上传一个或多个文件。
 - 其中必须包含一个运行文件，运行文件需包含`my_controller` 函数的一个`submission.py`文件。
