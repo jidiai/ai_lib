@@ -1,5 +1,5 @@
 
-<img src="imgs/jidi logo.png" width='300px'>
+<img src="imgs/Jidi%20logo.png" width='300px'>
 
 # **Jidi (及第) AiLib**            
 
