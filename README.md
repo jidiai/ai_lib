@@ -1,6 +1,11 @@
-# Jidi AiLib: A general reinforcement learning library
-[![GitHub license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/KornbergFresnel/Expground/blob/master/LICENSE)
-[![Awesome](https://awesome.re/badge.svg)](https://awesome.re)
+
+<img src="imgs/jidi logo.png" width='300px'>
+
+
+# Jidi AiLib V2: A general reinforcement learning library
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
+[![Release Version](https://img.shields.io/badge/release-2.0-red.svg)]()
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)]()
 
 Jidi AiLib is a library that integrates many (MA)RL-related benchmarking environments and baselines to support various training and evaluation demands. 
 
