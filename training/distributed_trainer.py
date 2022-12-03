@@ -36,6 +36,13 @@ class DistributedPolicyWrapper:
             self.actor = DistributedDataParallel(actor, device_ids=[0])
 
         if (
+            hasattr(self.policy, "target_actor")
+            and len(list(self.policy.target_actor.parameters())) > 0
+        ):
+            target_actor = self.policy.target_actor
+            self.target_actor = DistributedDataParallel(target_actor, device_ids=[0])
+
+        if (
             hasattr(self.policy, "target_critic")
             and len(list(self.policy.target_critic.parameters())) > 0
         ):
@@ -48,6 +55,38 @@ class DistributedPolicyWrapper:
         ):
             critic = self.policy.critic
             self.critic = DistributedDataParallel(critic, device_ids=[0])
+
+        if (
+            hasattr(self.policy, "critic_1")
+            and len(list(self.policy.critic_1.parameters())) > 0
+        ):
+            critic_1 = self.policy.critic_1
+            self.critic_1 = DistributedDataParallel(critic_1, device_ids=[0])
+
+        if (
+            hasattr(self.policy, "target_critic_1")
+            and len(list(self.policy.target_critic_1.parameters())) > 0
+        ):
+            target_critic_1 = self.policy.target_critic_1
+            self.target_critic_1 = DistributedDataParallel(
+                target_critic_1, device_ids=[0]
+            )
+
+        if (
+            hasattr(self.policy, "critic_2")
+            and len(list(self.policy.critic_2.parameters())) > 0
+        ):
+            critic_2 = self.policy.critic_2
+            self.critic_2 = DistributedDataParallel(critic_2, device_ids=[0])
+
+        if (
+            hasattr(self.policy, "target_critic_2")
+            and len(list(self.policy.target_critic_2.parameters())) > 0
+        ):
+            target_critic_2 = self.policy.target_critic_2
+            self.target_critic_2 = DistributedDataParallel(
+                target_critic_2, device_ids=[0]
+            )
 
         if hasattr(self.policy, "value_normalizer"):
             # TODO jh: we need a distributed version of value_normalizer

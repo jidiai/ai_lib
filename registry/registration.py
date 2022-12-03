@@ -10,6 +10,11 @@ from algorithm.mappo.loss import MAPPOLoss
 from algorithm.mappo.trainer import MAPPOTrainer
 from algorithm.mappo.policy import MAPPO
 
+from algorithm.discrete_sac.loss import DiscreteSACLoss
+from algorithm.discrete_sac.trainer import DiscreteSACTrainer
+from algorithm.discrete_sac.policy import DiscreteSAC
+
+
 from envs.gr_football.env import GRFootballEnv
 from envs.kuhn_poker.env import KuhnPokerEnv
 from envs.connect_four.env import ConnectFourEnv

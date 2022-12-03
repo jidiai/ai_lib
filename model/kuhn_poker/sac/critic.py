@@ -33,7 +33,7 @@ class Critic(nn.Module):
 
         in_dim = observation_space.shape[0]
         out_dim = action_space.n
-        hidden_size = 64
+        hidden_size = 256
 
         self.q_net = nn.Sequential(
             nn.Linear(in_dim, hidden_size), nn.ReLU(), nn.Linear(hidden_size, out_dim)
@@ -50,8 +50,14 @@ class Critic(nn.Module):
                 pass
 
     def forward(self, **kwargs):
-        observations = to_tensor(kwargs[EpisodeKey.CUR_OBS])
-        action_masks = to_tensor(kwargs[EpisodeKey.ACTION_MASK])
+        if EpisodeKey.CUR_OBS in kwargs:
+            observations = to_tensor(kwargs[EpisodeKey.CUR_OBS])
+            action_masks = to_tensor(kwargs[EpisodeKey.ACTION_MASK])
+        elif EpisodeKey.NEXT_OBS in kwargs:
+            observations = to_tensor(kwargs[EpisodeKey.NEXT_OBS])
+            action_masks = to_tensor(kwargs[EpisodeKey.NEXT_ACTION_MASK])
+        else:
+            raise NotImplementedError
         # print(observations.shape,action_masks.shape)
 
         # observations are encoded as index to q_table

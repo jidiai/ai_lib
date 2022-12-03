@@ -261,9 +261,9 @@ def convert_to_official_tabular_policy(policy):
     action_probs = ret[EpisodeKey.ACTION_PROBS]
     assert official_tabular_policy.action_probability_array.shape == action_probs.shape
     official_tabular_policy.action_probability_array = action_probs
-    assert np.all(action_probs.sum(axis=-1) == 1), "{} {}".format(
+    assert np.all(np.round(action_probs.sum(axis=-1)) == 1), "{} {}".format(
         action_probs.shape, action_probs.sum(axis=-1)
-    )
+    )  # TODO: round for SAC cases (during evaluation), need to check
     # print_policy(official_tabular_policy)
     return official_tabular_policy
 
