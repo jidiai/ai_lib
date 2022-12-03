@@ -1,5 +1,5 @@
 expr_group: kuhn_poker
-expr_name: SAC
+expr_name: Discrete_SAC
 log_dir: logs
 log_name: 'psro'
 seed: 0
@@ -167,7 +167,7 @@ populations:
     algorithm:
       name: "DiscreteSAC"
       model_config:
-        model: "kuhn_poker.sac"
+        model: "kuhn_poker.discrete_sac"
         initialization:
           use_orthogonal: True
           gain: 1.
