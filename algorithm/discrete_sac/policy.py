@@ -86,6 +86,8 @@ class DiscreteSAC(nn.Module):
         model = importlib.import_module("model.{}".format(model_type))
 
         self.encoder = model.Encoder()
+        if hasattr(model, "Rewarder"):
+            self._rewarder = model.Rewarder()
 
         self.observation_space = self.encoder.observation_space
         self.action_space = self.encoder.action_space
@@ -158,6 +160,10 @@ class DiscreteSAC(nn.Module):
     def feature_encoder(self):  # legacy
         return self.encoder
 
+    @property
+    def rewarder(self):
+        return self._rewarder
+
     # @property
     # def rewarder(self):
     #     return self._rewarder
@@ -190,7 +196,7 @@ class DiscreteSAC(nn.Module):
             logits = logits * action_masks
             m = Categorical(logits=logits)
             action_probs = m.probs.detach().cpu().numpy()
-            actions = m.sample().detach().cpu().numpy()
+            actions = m.sample().detach().unsqueeze(-1).cpu().numpy()
 
             return {EpisodeKey.ACTION: actions, EpisodeKey.ACTION_PROBS: action_probs}
 

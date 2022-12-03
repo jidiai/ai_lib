@@ -12,3 +12,4 @@ export PYTHONPATH=$SCRIPT_DIR
 #python main_marl.py --config expr/gym/Acrobot_DQN_marl.yaml
 
 python main_pbt.py --config expr/kuhn_poker/expr_sac_psro.yaml
+#python main_marl.py --config expr/gym/CartPole_SAC_marl.yaml

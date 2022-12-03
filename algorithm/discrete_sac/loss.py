@@ -105,7 +105,7 @@ class DiscreteSACLoss(LossFunc):
         pred_q_1 = self.policy.critic_1(
             **{EpisodeKey.CUR_OBS: observations, EpisodeKey.ACTION_MASK: action_masks}
         )
-        pred_q_1 = pred_q_1.gather(1, actions.unsqueeze(-1)).flatten()
+        pred_q_1 = pred_q_1.gather(1, actions).flatten()
 
         pred_q_2 = (
             self.policy.critic_2(
@@ -114,7 +114,7 @@ class DiscreteSACLoss(LossFunc):
                     EpisodeKey.ACTION_MASK: action_masks,
                 }
             )
-            .gather(1, actions.unsqueeze(-1))
+            .gather(1, actions)
             .flatten()
         )
         next_action_logits = self.policy.target_actor(
