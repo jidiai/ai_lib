@@ -19,6 +19,7 @@ Come and play these games together~
         <td>Leduc Poker</td>
         <td>ConnectFour</td>
         <td>GRF</td>
+        <td>MPE</td>
     </tr>
 
 [comment]: <> (   <tr>)
