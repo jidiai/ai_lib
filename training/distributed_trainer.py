@@ -93,6 +93,9 @@ class DistributedPolicyWrapper:
             value_normalizer = self.policy.value_normalizer
             self.value_normalizer = value_normalizer
 
+        if hasattr(self.policy, "discrete_action"):
+            self.discrete_action = self.policy.discrete_action
+
     @property
     def custom_config(self):
         return self.policy.custom_config

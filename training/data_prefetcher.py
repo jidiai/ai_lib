@@ -108,9 +108,10 @@ class DataPrefetcher:
                     for i in range(len(v))
                 ]
             else:
-                raise NotImplementedError(
-                    f"v = {v}, k={k}, ret = {[sample[k] for sample in samples]}"
-                )
+                for k, v in samples[0].items():
+                    print(f"Tag {k}, shape = {v.shape}")
+
+                raise NotImplementedError(f"v = {v}, k={k}")
         return ret
 
     def concat(self, samples):

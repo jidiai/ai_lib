@@ -14,6 +14,10 @@ from algorithm.discrete_sac.loss import DiscreteSACLoss
 from algorithm.discrete_sac.trainer import DiscreteSACTrainer
 from algorithm.discrete_sac.policy import DiscreteSAC
 
+from algorithm.ddpg.loss import DDPGLoss
+from algorithm.ddpg.trainer import DDPGTrainer
+from algorithm.ddpg.policy import DDPG
+
 
 from envs.gr_football.env import GRFootballEnv
 from envs.kuhn_poker.env import KuhnPokerEnv

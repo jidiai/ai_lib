@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 from utils.typing import Dict, Any, List, Union, DataTransferType
-from utils.episode import Episode
+from utils.episode import EpisodeKey
 
 
 def soft_update(target, source, tau):
@@ -139,24 +139,24 @@ def v_trace(
     """
 
     # compute importance sampling along the horizon
-    old_policy_dist = batch[Episode.ACTION_DIST]
-    old_action_dist = old_policy_dist[batch[Episode.ACTIONS]]
-    cur_dist = policy.actor()(batch[Episode.CUR_OBS])
-    cur_action_dist = cur_dist[batch[Episode.ACTIONS]]
+    old_policy_dist = batch[EpisodeKey.ACTION_DIST]
+    old_action_dist = old_policy_dist[batch[EpisodeKey.ACTIONS]]
+    cur_dist = policy.actor()(batch[EpisodeKey.CUR_OBS])
+    cur_action_dist = cur_dist[batch[EpisodeKey.ACTIONS]]
 
     # NOTE(ming): we should avoid zero division here
     clipped_is_ratio = np.minimum(ratio_clip, cur_action_dist / old_action_dist)
     # calculate new state value
-    state_values = batch[Episode.STATE_VALUE]
-    rewards = batch[Episode.REWARDS]
-    dones = batch[Episode.DONES]
+    state_values = batch[EpisodeKey.STATE_VALUE]
+    rewards = batch[EpisodeKey.REWARDS]
+    dones = batch[EpisodeKey.DONES]
 
     # ignore the last one state value?
     td_errors = np.zeros_like(rewards)
     td_errors[:-1] = (
         rewards[:-1] + policy.config["gamma"] * state_values[1:] - state_values[:-1]
     )
-    terminal_state_value = policy.critic()(batch[Episode.NEXT_OBS][-1])
+    terminal_state_value = policy.critic()(batch[EpisodeKey.NEXT_OBS][-1])
     # we support infinite episode mode
     td_errors[-1] = (
         rewards[-1]
@@ -165,7 +165,7 @@ def v_trace(
     )
     discounted_td_errors = clipped_is_ratio * td_errors
 
-    batch[Episode.STATE_VALUE] = cumulative_td_errors(
+    batch[EpisodeKey.STATE_VALUE] = cumulative_td_errors(
         start=0,
         end=len(rewards),
         offset=1,

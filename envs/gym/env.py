@@ -105,10 +105,17 @@ class GymEnv(BaseAECEnv):
         init_obs = self._env.reset()
         dones = {k: np.zeros((v), dtype=bool) for k, v in self.num_players.items()}
 
+        if isinstance(self.action_space, Discrete):
+            action_mask = np.ones(self.action_space.n, dtype=np.float32)
+        elif isinstance(self.action_space, Box):
+            action_mask = np.ones(self.action_space.shape)
+        else:
+            action_mask = None
+
         rets = {
             agent_id: {
                 EpisodeKey.CUR_OBS: init_obs,
-                EpisodeKey.ACTION_MASK: np.ones(self.action_space.n, dtype=np.float32),
+                EpisodeKey.ACTION_MASK: action_mask,
                 EpisodeKey.DONE: dones[agent_id],
             }
             for agent_id in self.agent_ids
@@ -143,6 +150,8 @@ class GymEnv(BaseAECEnv):
             assert action is None, "{} {}".format(self._is_terminated, actions)
         else:
             action = int(action)
+            if isinstance(self.action_space, Box):
+                action = np.array([action])
 
         observation, _reward, done, info = self._env.step(action)
 
@@ -165,12 +174,17 @@ class GymEnv(BaseAECEnv):
             for k, v in self.num_players.items()
         }
 
+        if isinstance(self.action_space, Discrete):
+            action_mask = np.ones(self.action_space.n, dtype=np.float32)
+        elif isinstance(self.action_space, Box):
+            action_mask = np.ones(self.action_space.shape)
+        else:
+            action_mask = None
+
         rets = {
             agent_id: {
                 EpisodeKey.NEXT_OBS: observation,
-                EpisodeKey.NEXT_ACTION_MASK: np.ones(
-                    self.action_space.n, dtype=np.float32
-                ),
+                EpisodeKey.NEXT_ACTION_MASK: action_mask,
                 EpisodeKey.REWARD: rewards,
                 EpisodeKey.DONE: dones[agent_id],
             }

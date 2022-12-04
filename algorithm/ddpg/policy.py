@@ -21,19 +21,11 @@ import importlib
 from utils.logger import Logger
 from registry import registry
 
+from torch.distributions import Categorical, Normal
+import torch.nn.functional as F
+from torch.autograd import Variable
 
-def hard_update(target, source):
-    """Copy network parameters from source to target.
-
-    Reference:
-        https://github.com/ikostrikov/pytorch-ddpg-naf/blob/master/ddpg.py#L15
-
-    :param torch.nn.Module target: Net to copy parameters to.
-    :param torch.nn.Module source: Net whose parameters to copy
-    """
-
-    for target_param, param in zip(target.parameters(), source.parameters()):
-        target_param.data.copy_(param.data)
+from ..common.misc import onehot_from_logits, gumbel_softmax
 
 
 @wrapt.decorator
@@ -44,7 +36,7 @@ def shape_adjusting(wrapped, instance, args, kwargs):
         given inputs with shape (n_rollout_threads, n_agent, ...)
         reshape it to (n_rollout_threads * n_agent, ...)
     """
-    offset = len(instance.preprocessor.shape)
+    offset = len(instance.observation_space.shape)
     original_shape_pre = kwargs[EpisodeKey.CUR_OBS].shape[:-offset]
     num_shape_ahead = len(original_shape_pre)
 
@@ -71,7 +63,7 @@ def shape_adjusting(wrapped, instance, args, kwargs):
 
 
 @registry.registered(registry.POLICY)
-class DDPG(Policy):
+class DDPG(nn.Module):
     def __init__(
         self,
         registered_name: str,
@@ -119,6 +111,8 @@ class DDPG(Policy):
         )
 
         self.target_critic = deepcopy(self.critic)
+        self.target_actor = deepcopy(self.actor)
+        self.discrete_action = self.custom_config["discrete_action"]
 
     @property
     def description(self):
@@ -169,15 +163,37 @@ class DDPG(Policy):
     def compute_action(self, **kwargs):
         step = kwargs.get("step", 0)
         to_numpy = kwargs.get("to_numpy", True)
+        explore = kwargs["explore"]
         with torch.no_grad():
             obs = kwargs[EpisodeKey.CUR_OBS]
             action_masks = kwargs[EpisodeKey.ACTION_MASK]
-            actions = self.actor(
-                **{EpisodeKey.CUR_OBS: obs, EpisodeKey.ACTION_MASK: action_masks}
-            )
-        if to_numpy:
-            actions = actions.cpu().numpy()
-        return {EpisodeKey.ACTION: actions}
+            if self.discrete_action:
+                pi = self.actor(
+                    **{EpisodeKey.CUR_OBS: obs, EpisodeKey.ACTION_MASK: action_masks}
+                )
+                if explore:
+                    pi = gumbel_softmax(pi, temperature=1.0, hard=True)
+                else:
+                    pi = onehot_from_logits(pi)
+            else:
+                pi = self.actor(
+                    **{EpisodeKey.CUR_OBS: obs, EpisodeKey.ACTION_MASK: action_masks}
+                )
+                # if explore:
+                #     logits += torch.autograd.Variable(
+                #         torch.Tensor(np.random.standard_normal(logits.shape)),
+                #         requires_grad=False,
+                #     )
+                pi = pi.detach().cpu().numpy()
+
+        return {EpisodeKey.ACTION: pi}
+
+    def compute_actions_by_target_actor(self, obs):
+        with torch.no_grad():
+            pi = self.target_actor(obs)
+            if self.discrete_action:
+                pi = onehot_from_logits(pi)
+        return pi
 
     @shape_adjusting
     def value_function(self, **kwargs):
@@ -188,11 +204,10 @@ class DDPG(Policy):
         else:
             critic = self.target_critic
         with torch.no_grad():
-            obs = kwargs[EpisodeKey.CUR_OBS]
-            action_masks = kwargs[EpisodeKey.ACTION_MASK]
-            q_values = critic(
-                **{EpisodeKey.CUR_OBS: obs, EpisodeKey.ACTION_MASK: action_masks}
-            )
+            # obs = kwargs[EpisodeKey.CUR_OBS]
+            # action_masks = kwargs[EpisodeKey.ACTION_MASK]
+            obs_action = kwargs[EpisodeKey.OBS_ACTION]
+            q_values = critic(**{EpisodeKey.OBS_ACTION: obs_action})
             # denormalize
             # if hasattr(self,"value_normalizer"):
             #     q_values=self.value_normalizer.denormalize(q_values)
@@ -200,7 +215,6 @@ class DDPG(Policy):
                 q_values = q_values.cpu().numpy()
         return {
             EpisodeKey.STATE_ACTION_VALUE: q_values,
-            EpisodeKey.ACTION_MASK: action_masks,
         }
 
     def dump(self, dump_dir):
@@ -233,6 +247,15 @@ class DDPG(Policy):
             )
             policy.critic.load_state_dict(critic_state_dict)
             policy.target_critic = deepcopy(policy.critic)
+
+        actor_path = os.path.join(dump_dir, "actor_state_dict.pt")
+        if os.path.exists(actor_path):
+            actor_state_dict = torch.load(
+                os.path.join(dump_dir, "actor_state_dict.pt"), policy.device
+            )
+            policy.actor.load_state_dict(actor_state_dict)
+            policy.target_actor = deepcopy(policy.actor)
+
         return policy
 
     # def compute_actions_by_target_actor(
