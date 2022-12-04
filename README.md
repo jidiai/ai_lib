@@ -39,20 +39,22 @@ python3 -m pip install -e .
 
 ## Supported Training environments
 - [x] **Discrete Gym Envs**
-- [ ] **Continuous Gym Envs**
-- [ ] **Pettingzoo Envs**
+- [x] **Continuous Gym Envs**
+- [x] **Pettingzoo Envs**
 - [x] **GRFootball**
 - [x] **Open-spiel Kuhn Poker**
 - [x] **Open-spiel Leduc Poker**
 - [x] **Connect-Four**
-
+- [ ] **MPE**
 
 ## Supported Baseline Algorithms
 - [x] **PPO**
 - [x] **table-q learning**
 - [x] **DQN**
-- [ ] **DDPG**
-- [ ] **SAC**
+- [x] **DDPG**
+- [x] **SAC**
+- [ ] **QMIX**
+
 
 ## Supported Benchmarking
 - [x] **table-q learning in Kuhn Poker**
