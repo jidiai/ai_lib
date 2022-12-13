@@ -28,6 +28,10 @@ source ailib-venv/bin/activate
 python3 -m pip install -e .
 ```
 
+## Navigation
+
+<img src='https://github.com/jidiai/ai_lib/blob/V2/imgs/Jidi%20Ailib.svg'>
+
 
 ## Supported Learing Paradims
 - [x] **BC**: serves for behavior cloning
