@@ -32,12 +32,15 @@ class Dueling_Critic(nn.Module):
         self.input_size = input_size
         self.output_size = output_size
         self.linear1 = nn.Linear(input_size, hidden_size)
+        self.linear_hid = nn.Linear(hidden_size, hidden_size)
         self.linear2 = nn.Linear(hidden_size, 1)
         self.linear3 = nn.Linear(hidden_size, output_size)
 
     def forward(self, x):
         x1 = F.relu(self.linear1(x))
+        x1 = F.relu(self.linear_hid(x1))
         x2 = F.relu(self.linear1(x))
+        x2 = F.relu(self.linear_hid(x2))
 
         # value
         y1 = self.linear2(x1)

@@ -30,7 +30,8 @@ class AC(object):
         self.lr = args.c_lr
         self.gamma = args.gamma
 
-        self.policy = ActorCritic(self.state_dim, self.action_dim, self.hidden_size)
+        self.policy = ActorCritic(self.state_dim, self.action_dim, self.hidden_size,
+                                  num_hidden_layer=args.num_hidden_layer)
         self.optimizer = optim.Adam(self.policy.parameters(), lr=self.lr)
 
         self.save_actions = []
@@ -96,11 +97,23 @@ class AC(object):
         self.optimizer.zero_grad()
         loss = torch.stack(policy_loss).sum() + torch.stack(value_loss).sum()
         loss.backward()
+
+        grad_dict={}
+        for name, param in self.policy.named_parameters():
+            grad_dict[f"policy/{name} gradient"] = param.grad.mean().item()
+
         self.optimizer.step()
 
         del self.rewards[:]
         del self.save_actions[:]
         del self.save_value[:]
+
+        training_results = {"policy_loss":torch.stack(policy_loss).sum().detach().cpu().numpy(),
+                            "value_loss": torch.stack(value_loss).sum().detach().cpu().numpy()}
+        training_results.update(grad_dict)
+        return training_results
+
+
 
     def save(self, save_path, episode):
         base_path = os.path.join(save_path, 'trained_model')

@@ -11,16 +11,32 @@ def weights_init_(m):
         torch.nn.init.constant_(m.bias, 0)
 
 class Actor(nn.Module):
-    def __init__(self, input_size, output_size):
+    def __init__(self, input_size, output_size, hidden_size, num_hidden_layer=0):
         super().__init__()
         self.input_size = input_size
         self.output_size = output_size
-        self.affine1 = nn.Linear(self.input_size, 128)
-        self.affine2 = nn.Linear(128, self.output_size)
+        self.num_hidden_layer = num_hidden_layer
+
+        self.linear_in = nn.Linear(input_size, hidden_size)
+        self.linear_out = nn.Linear(hidden_size, output_size)
+        if self.num_hidden_layer > 0:
+            hid_net = []
+            for _ in range(self.num_hidden_layer):
+                hid_net.append(nn.Linear(hidden_size, hidden_size))
+                hid_net.append(nn.ReLU())
+            self.linear_hid = nn.Sequential(*hid_net)
+
+        # self.affine1 = nn.Linear(self.input_size, 128)
+        # self.affine2 = nn.Linear(128, self.output_size)
 
     def forward(self, x):
-        x = F.relu(self.affine1(x))
-        action_scores = self.affine2(x)
+        # x = F.relu(self.affine1(x))
+        # action_scores = self.affine2(x)
+        x = F.relu(self.linear_in(x))
+        if self.num_hidden_layer > 0:
+            x = self.linear_hid(x)
+        action_scores = self.linear_out(x)
+
         return F.softmax(action_scores, dim=1)
 
 

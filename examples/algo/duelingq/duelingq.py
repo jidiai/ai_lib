@@ -77,7 +77,7 @@ class DUELINGQ(object):
 
         data_length = len(self.memory.item_buffers["rewards"].data)
         if data_length < self.buffer_size:
-            return
+            return {}
 
         data = self.memory.sample(self.batch_size)
 
@@ -109,7 +109,7 @@ class DUELINGQ(object):
             self.critic_target.load_state_dict(self.critic_eval.state_dict())
         self.learn_step_counter += 1
 
-        return loss
+        return {"value_loss": loss.detach().cpu().numpy()}
 
     def save(self, save_path, episode):
         base_path = os.path.join(save_path, 'trained_model')

@@ -39,12 +39,12 @@ class DDPG(object):
 
         self.update_freq = args.update_freq
 
-        self.actor = Actor(self.state_dim, self.action_dim, self.hidden_size)
-        self.actor_target = Actor(self.state_dim, self.action_dim, self.hidden_size)
+        self.actor = Actor(self.state_dim, self.action_dim, self.hidden_size, args.num_hidden_layer)
+        self.actor_target = Actor(self.state_dim, self.action_dim, self.hidden_size, args.num_hidden_layer)
         self.actor_target.load_state_dict(self.actor.state_dict())
 
-        self.critic = Critic(self.state_dim, self.action_dim, self.hidden_size)
-        self.critic_target = Critic(self.state_dim, self.action_dim, self.hidden_size)
+        self.critic = Critic(self.state_dim, self.action_dim, self.hidden_size, args.num_hidden_layer)
+        self.critic_target = Critic(self.state_dim, self.action_dim, self.hidden_size, args.num_hidden_layer)
         self.critic_target.load_state_dict(self.critic.state_dict())
 
         self.actor_optim = optimizer.Adam(self.actor.parameters(), lr=self.actor_lr)
@@ -84,7 +84,7 @@ class DDPG(object):
     def learn(self):
         data_length = len(self.memory.item_buffers["rewards"].data)
         if data_length < self.buffer_size:
-            return
+            return {}
 
         for _ in range(self.update_freq):
 
@@ -110,18 +110,33 @@ class DDPG(object):
             y_pred = self.critic(obs, action)
 
             loss_fn = nn.MSELoss()
-            loss = loss_fn(y_pred, y_true)
+            value_loss = loss_fn(y_pred, y_true)
             self.critic_optim.zero_grad()
-            loss.backward()
+            value_loss.backward()
+
+            grad_dict = {}
+            # for name, param in self.critic.named_parameters():
+            #     grad_dict[f'Critic/{name} gradient']=param.grad.mean().item()
+
             self.critic_optim.step()
 
-            loss = -torch.mean(self.critic(obs, self.actor(obs)))
+            actor_loss = -torch.mean(self.critic(obs, self.actor(obs)))
             self.actor_optim.zero_grad()
-            loss.backward()
+            actor_loss.backward()
+
+            # for name, param in self.actor.named_parameters():
+            #     grad_dict[f'Actor/{name} gradient']=param.grad().mean().item()
+
             self.actor_optim.step()
 
             self.soft_update(self.critic_target, self.critic, self.tau)
             self.soft_update(self.actor_target, self.actor, self.tau)
+
+            training_results={'policy_loss': actor_loss.detach().cpu().numpy(),
+                              "value_loss": value_loss.detach().cpu().numpy()}
+            training_results.update(grad_dict)
+            return training_results
+
 
     def soft_update(self, net_target, net, tau):
         for target_param, param in zip(net_target.parameters(), net.parameters()):

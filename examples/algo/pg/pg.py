@@ -28,7 +28,7 @@ class PG(object):
         self.lr = args.lr
         self.gamma = args.gamma
 
-        self.policy = Actor(self.state_dim, self.action_dim)
+        self.policy = Actor(self.state_dim, self.action_dim, args.hidden_size,args.num_hidden_layer)
         self.optimizer = optim.Adam(self.policy.parameters(), lr=self.lr)
 
         self.saved_log_probs = []
@@ -78,9 +78,18 @@ class PG(object):
         self.optimizer.zero_grad()
         policy_loss = torch.cat(policy_loss).sum()
         policy_loss.backward()
+
+        grad_dict = {}
+        for name, param in self.policy.named_parameters():
+            grad_dict[f"policy/{name} gradient"] = param.grad.mean().item()
+
         self.optimizer.step()
         del self.rewards[:]
         del self.saved_log_probs[:]
+
+        training_results = {"policy_loss": policy_loss.detach().cpu().numpy()}
+        training_results.update(grad_dict)
+        return training_results
 
     def save(self, save_path, episode):
         base_path = os.path.join(save_path, 'trained_model')

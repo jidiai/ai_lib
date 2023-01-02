@@ -237,6 +237,10 @@ class SAC(object):
 
     def learn(self):
 
+        data_length = len(self.memory.item_buffers["rewards"].data)
+        if data_length < self.buffer_size:
+            return {}
+
         data = self.memory.sample(self.batch_size)
 
         transitions = {
@@ -270,6 +274,10 @@ class SAC(object):
                 self.q2_target.load_state_dict(self.q2.state_dict())
 
             self.learn_step_counter += 1
+
+            return {'policy_loss': policy_loss.detach().cpu().numpy(),
+                    "value_loss": qf_loss.detach().cpu().numpy(),
+                    "alpha_loss": alpha_loss.detach().cpu().numpy()}
 
         elif self.policy_type == 'deterministic':
 

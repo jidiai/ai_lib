@@ -116,6 +116,7 @@ class PPO(object):
                 self.critic_net_optimizer.step()
                 self.training_step += 1
         self.memory.item_buffer_clear()
+        return {}
 
     def save(self, save_path, episode):
         base_path = os.path.join(save_path, 'trained_model')
