@@ -8,19 +8,20 @@ envparameters:
   scenario: classic_CartPole-v0
 hyperparameters:
   batch_size: 64
-  buffer_capacity: 256
+  buffer_capacity: 1024
   gamma: 0.99
   hidden_size: 64
   learn_terminal: true
-  lr: 0.001
+  lr: 0.0008
   marl: false
+  num_hidden_layer: 1
   use_network: true
 seedparameters:
   seed_nn: 1
   seed_np: 1
   seed_random: 1
 trainingparameters:
-  evaluate_rate: 50
+  evaluate_rate: 20
   max_episodes: 1000
   render: false
   save_interval: 100
