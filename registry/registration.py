@@ -24,6 +24,7 @@ from envs.kuhn_poker.env import KuhnPokerEnv
 from envs.connect_four.env import ConnectFourEnv
 from envs.leduc_poker.env import LeducPokerEnv
 from envs.gym.env import GymEnv
+from envs.mpe.env import MPE
 
 from framework.scheduler.stopper.common.win_rate_stopper import WinRateStopper
 from framework.scheduler.stopper.poker.oracle_exploitability_stopper import (

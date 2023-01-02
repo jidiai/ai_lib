@@ -150,6 +150,12 @@ class DeepQLearningLoss(LossFunc):
 
         self.optimizers["critic"].zero_grad()
         value_loss.backward()
+
+        grad_dict = {}
+        for name, param in policy.named_parameters():
+            if param.grad is not None:
+                grad_dict[name] = param.grad.mean().item()
+
         if self._use_max_grad_norm:
             torch.nn.utils.clip_grad_norm_(
                 self._policy.critic.parameters(), self.max_grad_norm
@@ -162,7 +168,12 @@ class DeepQLearningLoss(LossFunc):
                 self._policy.target_critic, self._policy.critic, tau=target_update_lr
             )
 
-        stats = {"value_loss": float(value_loss.detach().cpu().numpy())}
+
+        stats = {"value_loss": float(value_loss.detach().cpu().numpy()),
+                 'target value': float(targets.detach().mean().cpu().numpy()),
+                 "selected Q": float(selected_q_values.detach().mean().cpu().numpy())}
+        stats.update(grad_dict)
+
         return stats
 
     def zero_grad(self):

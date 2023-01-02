@@ -120,16 +120,23 @@ def rollout_func(
     global_timer.record("env_step_start")
     env_rets = env.reset(custom_reset_config)
 
+    env_rets=merge_rets(env_rets)
+    # if share_policies:
+    #     env_agent_ids = ['agent_0']
+    # else:
+    #     env_agent_ids = env.agent_ids
+    #     env_rets = merge_rets(env_rets)
+
     if render:
         env.render()
 
     global_timer.time("env_step_start", "env_step_end", "env_step")
-
+    # breakpoint()
     init_rnn_states = {
         agent_id: behavior_policies[agent_id][1].get_initial_state(
             batch_size=env.num_players[agent_id]
         )
-        for agent_id in env.agent_ids
+        for agent_id in [rollout_desc.agent_id]
     }
 
     # TODO(jh): support multi-dimensional batched data based on dict & list using sth like NamedIndex.
@@ -141,17 +148,22 @@ def rollout_func(
         not env.is_terminated()
     ):  # XXX(yan): terminate only when step_length >= fragment_length
         # prepare policy input
-        policy_inputs = rename_field(step_data, EpisodeKey.NEXT_OBS, EpisodeKey.CUR_OBS)
+        policy_inputs = step_data   #rename_field(step_data, EpisodeKey.NEXT_OBS, EpisodeKey.CUR_OBS)
         policy_outputs = {}
         global_timer.record("inference_start")
         for agent_id, (policy_id, policy) in behavior_policies.items():
-            policy_outputs[agent_id] = policy.compute_action(**policy_inputs[agent_id])
+            policy_outputs[agent_id] = policy.compute_action(explore=not eval,
+                                                             **policy_inputs[agent_id])
         global_timer.time("inference_start", "inference_end", "inference")
 
         actions = select_fields(policy_outputs, [EpisodeKey.ACTION])
+        splitted_actions = {agent_id: actions[rollout_desc.agent_id][EpisodeKey.ACTION][i]
+                            for i,agent_id in enumerate(env.agent_ids)}
 
         global_timer.record("env_step_start")
-        env_rets = env.step(actions)
+        env_rets = env.step(splitted_actions)
+        env_rets = merge_rets(env_rets)
+
         global_timer.time("env_step_start", "env_step_end", "env_step")
 
         if render:
@@ -159,74 +171,59 @@ def rollout_func(
 
         # record data after env step
         step_data = update_fields(
-            step_data, select_fields(env_rets, [EpisodeKey.REWARD, EpisodeKey.DONE])
+            step_data, select_fields(env_rets,
+            [
+                EpisodeKey.NEXT_OBS,
+                EpisodeKey.REWARD,
+                EpisodeKey.DONE,
+                EpisodeKey.NEXT_ACTION_MASK
+            ])
         )
         step_data = update_fields(
             step_data,
             select_fields(
                 policy_outputs,
-                [EpisodeKey.ACTION, EpisodeKey.ACTION_DIST, EpisodeKey.STATE_VALUE],
+                [
+                 EpisodeKey.ACTION,
+                 EpisodeKey.ACTION_DIST,
+                 EpisodeKey.STATE_VALUE
+                 ],
             ),
         )
 
         # save data of trained agent for training
-        if share_policies:
-            step_data_list.append(merge_rets(step_data))
-        else:
-            step_data_list.append(step_data[rollout_desc.agent_id])
+        # if share_policies:
+        #     step_data_list.append(merge_rets(step_data))
+        # else:
+        step_data_list.append(step_data[rollout_desc.agent_id])
+
+        env_rets=rename_field(env_rets, EpisodeKey.NEXT_OBS, EpisodeKey.CUR_OBS)
+        env_rets=rename_field(env_rets, EpisodeKey.NEXT_ACTION_MASK, EpisodeKey.ACTION_MASK)
 
         # record data for next step
         step_data = update_fields(
             env_rets,
             select_fields(
                 policy_outputs,
-                [EpisodeKey.ACTOR_RNN_STATE, EpisodeKey.CRITIC_RNN_STATE],
+                [
+                 EpisodeKey.CUR_OBS,
+                 EpisodeKey.ACTION_MASK,
+                 EpisodeKey.ACTOR_RNN_STATE,
+                 EpisodeKey.CRITIC_RNN_STATE],
             ),
         )
 
         step += 1
-        if not eval:
-            assert data_server is not None
-            if step % sample_length == 0:
-
-                submit_ctr = step // sample_length
-                submit_max_num = rollout_length // sample_length
-
-                s_idx = sample_length * (submit_ctr - 1)
-                e_idx = sample_length * submit_ctr
-
-                bootstrap_data = select_fields(
-                    step_data,
-                    [
-                        EpisodeKey.NEXT_OBS,
-                        EpisodeKey.DONE,
-                        EpisodeKey.CRITIC_RNN_STATE,
-                        EpisodeKey.CUR_STATE,
-                    ],
-                )
-                bootstrap_data = bootstrap_data[rollout_desc.agent_id]
-                bootstrap_data[EpisodeKey.CUR_OBS] = bootstrap_data[EpisodeKey.NEXT_OBS]
-
-                episode = stack_step_data(
-                    step_data_list[s_idx:e_idx],
-                    # TODO CUR_STATE is not supported now
-                    bootstrap_data,
-                )
-
-                # submit data:
-                data_server.save.remote(
-                    default_table_name(
-                        rollout_desc.agent_id,
-                        rollout_desc.policy_id,
-                        rollout_desc.share_policies,
-                    ),
-                    [episode],
-                )
-
-                if submit_ctr != submit_max_num:
-                    # update model:
-                    rollout_worker.pull_policies(policy_ids)
-                    behavior_policies = rollout_worker.get_policies(policy_ids)
+    if not eval:
+        episode = step_data_list
+        data_server.save.remote(
+            default_table_name(
+                rollout_desc.agent_id,
+                rollout_desc.policy_id,
+                rollout_desc.share_policies,
+            ),
+            episode,
+        )
 
     stats = env.get_episode_stats()
 

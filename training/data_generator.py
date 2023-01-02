@@ -6,10 +6,12 @@ from utils.timer import global_timer
 
 
 def simple_data_generator(data, num_mini_batch, device, shuffle=False):
-    if len(data[EpisodeKey.CUR_OBS].shape) == 3:  # gym
+    if len(data[EpisodeKey.CUR_OBS].shape) == 3:  # gym, fixme(yan): where is next_obs
         data[EpisodeKey.CUR_OBS] = data[EpisodeKey.CUR_OBS].unsqueeze(-2)
         data[EpisodeKey.ACTION] = data[EpisodeKey.ACTION].unsqueeze(-2)
         data[EpisodeKey.ACTION_MASK] = data[EpisodeKey.ACTION_MASK].unsqueeze(-2)
+        data[EpisodeKey.NEXT_OBS] = data[EpisodeKey.NEXT_OBS].unsqueeze(-2)
+        data[EpisodeKey.NEXT_ACTION_MASK] = data[EpisodeKey.NEXT_ACTION_MASK].unsqueeze(-2)
     elif len(data[EpisodeKey.CUR_OBS].shape) == 2:
         for k, v in data.items():
             data[k] = v.unsqueeze(-2).unsqueeze(-2)
