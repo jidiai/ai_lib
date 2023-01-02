@@ -8,10 +8,7 @@ import os
 import yaml
 from types import SimpleNamespace as SN
 
-from typing import (
-    Dict,
-    Any
-)
+from typing import Dict, Any
 
 
 @attr.s(auto_attribs=True)
@@ -285,7 +282,8 @@ if __name__ == "__main__":
         hyperparameters=DQNSettings(),
         envparameters=EnvSettingDefault(),
         trainingparameters=TrainingDefault(),
-        seedparameters=SeedSetting())
+        seedparameters=SeedSetting(),
+    )
 
     # 打印当前参数
     print("----------------------------- 打印当前参数 --------------------------------")
@@ -303,7 +301,9 @@ if __name__ == "__main__":
     # ----------------------------------------------------------------
     # load 参数
     else:
-        print("----------------------------- load 当前参数 --------------------------------")
+        print(
+            "----------------------------- load 当前参数 --------------------------------"
+        )
         config_path = "config.yaml"
         # Load YAML
         configured_dict: Dict[str, Any] = {
@@ -312,8 +312,7 @@ if __name__ == "__main__":
             "trainingparameters": {},
             "seedparameters": {},
             "agent_name": {},
-            "env_name":{}
-
+            "env_name": {},
         }
         _require_all_behaviors = True
         if config_path is not None:
@@ -324,9 +323,9 @@ if __name__ == "__main__":
         print("configured_dict: ", configured_dict)
         # print(cattr.unstructure(TrainerSettings))
         print(cattr.structure(configured_dict, TrainerSettings))
-        print("-------------------------------------------------------------------------")
+        print(
+            "-------------------------------------------------------------------------"
+        )
         my_args = load_config2("config.yaml")
         print("args: ", my_args)
         print("max_steps: ", my_args.max_episodes)
-
-

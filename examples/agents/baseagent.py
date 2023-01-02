@@ -1,4 +1,3 @@
-
 class Baseagent(object):
     def __init__(self, args):
         self.args = args
@@ -15,13 +14,16 @@ class Baseagent(object):
 
     # update algo
     def learn(self, **kwargs):
-        writer = kwargs.get('writer', None)
+        writer = kwargs.get("writer", None)
         for idx, agent in enumerate(self.agent):
             training_results = agent.learn()
             if writer is not None:
                 for tag, value in training_results.items():
-                    writer.add_scalar(f"Training/agent {idx} {tag}", value ,global_step=kwargs.get('epoch'))
-
+                    writer.add_scalar(
+                        f"Training/agent {idx} {tag}",
+                        value,
+                        global_step=kwargs.get("epoch"),
+                    )
 
     def save(self, save_path, episode):
         for agent in self.agent:

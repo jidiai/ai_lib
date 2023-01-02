@@ -9,6 +9,7 @@ from networks.actor_critic import ActorCritic
 import os
 from pathlib import Path
 import sys
+
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
 from common.buffer import Replay_buffer as buffer
@@ -17,7 +18,7 @@ eps = np.finfo(np.float32).eps.item()
 
 
 def get_trajectory_property():
-    return ["action", 'log_prob', 'value']
+    return ["action", "log_prob", "value"]
 
 
 class AC(object):
@@ -30,8 +31,12 @@ class AC(object):
         self.lr = args.c_lr
         self.gamma = args.gamma
 
-        self.policy = ActorCritic(self.state_dim, self.action_dim, self.hidden_size,
-                                  num_hidden_layer=args.num_hidden_layer)
+        self.policy = ActorCritic(
+            self.state_dim,
+            self.action_dim,
+            self.hidden_size,
+            num_hidden_layer=args.num_hidden_layer,
+        )
         self.optimizer = optim.Adam(self.policy.parameters(), lr=self.lr)
 
         self.save_actions = []
@@ -65,11 +70,7 @@ class AC(object):
             probs, value = self.policy(state)
             m = Categorical(probs)
             action = torch.argmax(probs)
-        return {
-            "action": action.item(),
-            "log_prob": m.log_prob(action),
-            "value": value
-        }
+        return {"action": action.item(), "log_prob": m.log_prob(action), "value": value}
 
     def learn(self):
         self.rewards = self.memory.item_buffers["rewards"].data
@@ -98,7 +99,7 @@ class AC(object):
         loss = torch.stack(policy_loss).sum() + torch.stack(value_loss).sum()
         loss.backward()
 
-        grad_dict={}
+        grad_dict = {}
         for name, param in self.policy.named_parameters():
             grad_dict[f"policy/{name} gradient"] = param.grad.mean().item()
 
@@ -108,15 +109,15 @@ class AC(object):
         del self.save_actions[:]
         del self.save_value[:]
 
-        training_results = {"policy_loss":torch.stack(policy_loss).sum().detach().cpu().numpy(),
-                            "value_loss": torch.stack(value_loss).sum().detach().cpu().numpy()}
+        training_results = {
+            "policy_loss": torch.stack(policy_loss).sum().detach().cpu().numpy(),
+            "value_loss": torch.stack(value_loss).sum().detach().cpu().numpy(),
+        }
         training_results.update(grad_dict)
         return training_results
 
-
-
     def save(self, save_path, episode):
-        base_path = os.path.join(save_path, 'trained_model')
+        base_path = os.path.join(save_path, "trained_model")
         if not os.path.exists(base_path):
             os.makedirs(base_path)
 

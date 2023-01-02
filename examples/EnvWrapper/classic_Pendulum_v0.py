@@ -2,9 +2,11 @@ import numpy as np
 from EnvWrapper.BaseWrapper import BaseWrapper
 from pathlib import Path
 import sys
+
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
 from env.chooseenv import make
+
 env = make("classic_Pendulum-v0")
 
 
@@ -20,9 +22,9 @@ class classic_Pendulum_v0(BaseWrapper):
         return self.env.input_dimension.shape[0]
 
     def step(self, action, train=True):
-        '''
+        """
         return: next_state, reward, done, _, _
-        '''
+        """
         next_state, reward, done, _, _ = self.env.step(action)
         reward = np.array(reward)
         return next_state, reward, done, _, _
@@ -39,8 +41,3 @@ class classic_Pendulum_v0(BaseWrapper):
 
     def make_render(self):
         self.env.env_core.render()
-
-
-
-
-

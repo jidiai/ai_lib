@@ -31,10 +31,10 @@ class SingleRLAgent(Baseagent):
         self.agent.append(self.algo)
 
     def action_from_algo_to_env(self, joint_action):
-        '''
+        """
         :param joint_action:
         :return: wrapped joint action: one-hot
-        '''
+        """
 
         joint_action_ = []
         for a in range(self.args.n_player):
@@ -43,6 +43,3 @@ class SingleRLAgent(Baseagent):
             each[action_a] = 1
             joint_action_.append(each)
         return joint_action_
-
-
-

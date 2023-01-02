@@ -9,6 +9,7 @@ from networks.critic import Critic
 import os
 from pathlib import Path
 import sys
+
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
 from common.buffer import Replay_buffer as buffer
@@ -29,10 +30,12 @@ class DDQN(object):
         self.batch_size = args.batch_size
         self.gamma = args.gamma
 
-        self.critic_eval = Critic(self.state_dim, self.action_dim, self.hidden_size,
-                                  args.num_hidden_layer)
-        self.critic_target = Critic(self.state_dim, self.action_dim, self.hidden_size,
-                                    args.num_hidden_layer)
+        self.critic_eval = Critic(
+            self.state_dim, self.action_dim, self.hidden_size, args.num_hidden_layer
+        )
+        self.critic_target = Critic(
+            self.state_dim, self.action_dim, self.hidden_size, args.num_hidden_layer
+        )
         self.optimizer = optimizer.Adam(self.critic_eval.parameters(), lr=self.lr)
 
         # exploration
@@ -83,16 +86,18 @@ class DDQN(object):
         data = self.memory.sample(self.batch_size)
 
         transitions = {
-            "o_0": np.array(data['states']),
-            "o_next_0": np.array(data['states_next']),
-            "r_0": np.array(data['rewards']).reshape(-1, 1),
-            "u_0": np.array(data['action']),
-            "d_0": np.array(data['dones']).reshape(-1, 1),
+            "o_0": np.array(data["states"]),
+            "o_next_0": np.array(data["states_next"]),
+            "r_0": np.array(data["rewards"]).reshape(-1, 1),
+            "u_0": np.array(data["action"]),
+            "d_0": np.array(data["dones"]).reshape(-1, 1),
         }
 
         obs = torch.tensor(transitions["o_0"], dtype=torch.float)
         obs_ = torch.tensor(transitions["o_next_0"], dtype=torch.float)
-        action = torch.tensor(transitions["u_0"], dtype=torch.long).view(self.batch_size, -1)
+        action = torch.tensor(transitions["u_0"], dtype=torch.long).view(
+            self.batch_size, -1
+        )
         reward = torch.tensor(transitions["r_0"], dtype=torch.float)
         done = torch.tensor(transitions["d_0"], dtype=torch.float)
 
@@ -123,7 +128,7 @@ class DDQN(object):
         return training_results
 
     def save(self, save_path, episode):
-        base_path = os.path.join(save_path, 'trained_model')
+        base_path = os.path.join(save_path, "trained_model")
         if not os.path.exists(base_path):
             os.makedirs(base_path)
 
@@ -132,5 +137,3 @@ class DDQN(object):
 
     def load(self, file):
         self.critic_eval.load_state_dict(torch.load(file))
-
-

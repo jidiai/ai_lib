@@ -1,6 +1,7 @@
 import importlib
 from pathlib import Path
 import sys
+
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
 import os
@@ -13,9 +14,9 @@ import numpy as np
 def make_env(args):
     base_dir = Path(__file__).resolve().parent.parent.parent
     sys.path.append(str(base_dir))
-    env_wrapper_file_name = str("EnvWrapper." + str(args.scenario.replace('-', '_')))
+    env_wrapper_file_name = str("EnvWrapper." + str(args.scenario.replace("-", "_")))
     env_wrapper_file_import = importlib.import_module(env_wrapper_file_name)
-    env = getattr(env_wrapper_file_import, str(args.scenario.replace('-', '_')))()
+    env = getattr(env_wrapper_file_import, str(args.scenario.replace("-", "_")))()
     return env
 
 
@@ -30,19 +31,27 @@ def action_wrapper(action):
 
 
 def save_config(args, save_path, file_name):
-    file = open(os.path.join(str(save_path), str(file_name) + '.yaml'), mode='w', encoding='utf-8')
+    file = open(
+        os.path.join(str(save_path), str(file_name) + ".yaml"),
+        mode="w",
+        encoding="utf-8",
+    )
     yaml.dump(args, file)
     file.close()
 
 
 def save_new_paras(args, save_path, file_name):
-    file = open(os.path.join(str(save_path), str(file_name) + '.yaml'), mode='w', encoding='utf-8')
+    file = open(
+        os.path.join(str(save_path), str(file_name) + ".yaml"),
+        mode="w",
+        encoding="utf-8",
+    )
     yaml.dump(args.as_dict(), file)
     file.close()
 
 
 def load_config(log_path, file_name):
-    file = open(os.path.join(str(log_path), str(file_name) + '.yaml'), "r")
+    file = open(os.path.join(str(log_path), str(file_name) + ".yaml"), "r")
     config_dict = yaml.load(file, Loader=yaml.FullLoader)
     return config_dict
 
@@ -64,8 +73,14 @@ def config_reformat(my_dict):
     return dummy_dict
 
 
-def plot_values(grid, values, colormap='pink', vmin=0, vmax=10):
-    plt.imshow(values - 1000 * (grid < 0), interpolation="nearest", cmap=colormap, vmin=vmin, vmax=vmax)
+def plot_values(grid, values, colormap="pink", vmin=0, vmax=10):
+    plt.imshow(
+        values - 1000 * (grid < 0),
+        interpolation="nearest",
+        cmap=colormap,
+        vmin=vmin,
+        vmax=vmax,
+    )
     plt.yticks([])
     plt.xticks([])
     plt.colorbar(ticks=[vmin, vmax])
@@ -101,7 +116,17 @@ def plot_action_values(algo, grid, action_values, vmin=-5, vmax=5):
                     y = row
                     dx = -0.8
                     dy = 0
-                plt.arrow(x, y, dx, dy, width=0.02, head_width=0.4, head_length=0.4, length_includes_head=True, fc='k',
-                          ec='k')
+                plt.arrow(
+                    x,
+                    y,
+                    dx,
+                    dy,
+                    width=0.02,
+                    head_width=0.4,
+                    head_length=0.4,
+                    length_includes_head=True,
+                    fc="k",
+                    ec="k",
+                )
     plt.savefig("./assets/" + "grid_" + algo + ".png")
     plt.show()

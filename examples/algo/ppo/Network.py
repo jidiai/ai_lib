@@ -17,11 +17,13 @@ class Actor(nn.Module):
             for _ in range(num_hidden_layer):
                 actor_hidden_list.append(nn.Linear(hidden_size, hidden_size))
                 actor_hidden_list.append(nn.ReLU())
-        self.net = nn.Sequential(actor_linear_in,
-                                 nn.ReLU(),
-                                 *actor_hidden_list,
-                                 actor_linear_out,
-                                 nn.Softmax(dim=1))
+        self.net = nn.Sequential(
+            actor_linear_in,
+            nn.ReLU(),
+            *actor_hidden_list,
+            actor_linear_out,
+            nn.Softmax(dim=1)
+        )
 
     def forward(self, x):
         x = self.net(x)
@@ -44,10 +46,10 @@ class Critic(nn.Module):
             for _ in range(num_hidden_layer):
                 critic_hidden_list.append(nn.Linear(hidden_size, hidden_size))
                 critic_hidden_list.append(nn.ReLU())
-        self.net = nn.Sequential(critic_linear_in,
-                                 nn.ReLU(),
-                                 *critic_hidden_list,
-                                 critic_linear_out)
+        self.net = nn.Sequential(
+            critic_linear_in, nn.ReLU(), *critic_hidden_list, critic_linear_out
+        )
+
     def forward(self, x):
         x = self.net(x)
         return x

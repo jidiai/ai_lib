@@ -1,12 +1,13 @@
 import torch
 
+
 class DQN(object):
     def __init__(self, args, Critic):
 
         self.state_dim = args.obs_space
         self.action_dim = args.action_space
         self.hidden_size = args.hidden_size
-        self.critic_eval = Critic(self.state_dim,  self.action_dim, self.hidden_size)
+        self.critic_eval = Critic(self.state_dim, self.action_dim, self.hidden_size)
 
     def choose_action(self, observation):
         inference_output = self.inference(observation)

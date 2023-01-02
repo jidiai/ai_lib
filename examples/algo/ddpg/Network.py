@@ -18,16 +18,17 @@ class Actor(nn.Module):
             for _ in range(num_hidden_layer):
                 actor_hidden_list.append(nn.Linear(hidden_size, hidden_size))
                 actor_hidden_list.append(nn.ReLU())
-        self.net = nn.Sequential(actor_linear_in,
-                                 nn.ReLU(),
-                                 *actor_hidden_list,
-                                 actor_linear_out,
-                                 nn.Softmax(dim=1))
+        self.net = nn.Sequential(
+            actor_linear_in,
+            nn.ReLU(),
+            *actor_hidden_list,
+            actor_linear_out,
+            nn.Softmax(dim=1)
+        )
 
         # self.l1 = nn.Linear(self.input_size, self.hidden_size)
         # self.l2 = nn.Linear(self.hidden_size, self.hidden_size)
         # self.l3 = nn.Linear(self.hidden_size, action_dim)
-
 
     def forward(self, x):
         # x = F.relu(self.l1(x))
@@ -52,10 +53,9 @@ class Critic(nn.Module):
             for _ in range(num_hidden_layer):
                 critic_hidden_list.append(nn.Linear(hidden_size, hidden_size))
                 critic_hidden_list.append(nn.ReLU())
-        self.net = nn.Sequential(critic_linear_in,
-                                 nn.ReLU(),
-                                 *critic_hidden_list,
-                                 critic_linear_out)
+        self.net = nn.Sequential(
+            critic_linear_in, nn.ReLU(), *critic_hidden_list, critic_linear_out
+        )
 
         # self.l1 = nn.Linear(self.input_size, self.hidden_size)
         # self.l2 = nn.Linear(self.hidden_size, self.hidden_size)
@@ -65,5 +65,5 @@ class Critic(nn.Module):
         # x = F.relu(self.l1(torch.cat([x, u], 1)))
         # x = F.relu(self.l2(x))
         # x = self.l3(x)
-        x = self.net(torch.cat([x,u], 1))
+        x = self.net(torch.cat([x, u], 1))
         return x

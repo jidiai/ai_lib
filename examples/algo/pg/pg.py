@@ -8,6 +8,7 @@ from networks.actor import Actor
 import os
 from pathlib import Path
 import sys
+
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
 from common.buffer import Replay_buffer as buffer
@@ -28,7 +29,9 @@ class PG(object):
         self.lr = args.lr
         self.gamma = args.gamma
 
-        self.policy = Actor(self.state_dim, self.action_dim, args.hidden_size,args.num_hidden_layer)
+        self.policy = Actor(
+            self.state_dim, self.action_dim, args.hidden_size, args.num_hidden_layer
+        )
         self.optimizer = optim.Adam(self.policy.parameters(), lr=self.lr)
 
         self.saved_log_probs = []
@@ -92,7 +95,7 @@ class PG(object):
         return training_results
 
     def save(self, save_path, episode):
-        base_path = os.path.join(save_path, 'trained_model')
+        base_path = os.path.join(save_path, "trained_model")
         if not os.path.exists(base_path):
             os.makedirs(base_path)
 
