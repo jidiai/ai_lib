@@ -113,6 +113,8 @@ class DDQN(object):
         self.optimizer.zero_grad()
         loss.backward()
 
+        torch.nn.utils.clip_grad_norm_(self.critic_eval.parameters(), 0.1)
+
         grad_dict = {}
         for name, param in self.critic_eval.named_parameters():
             grad_dict[f"critic_eval/{name} gradient"] = param.grad.mean().item()

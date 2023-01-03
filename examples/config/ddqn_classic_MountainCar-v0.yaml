@@ -8,7 +8,7 @@ envparameters:
   scenario: classic_MountainCar-v0
 hyperparameters:
   batch_size: 64
-  buffer_capacity: 10240
+  buffer_capacity: 1024
   c_lr: 0.001
   epsilon: 0.5
   epsilon_end: 0.05
@@ -17,6 +17,7 @@ hyperparameters:
   learn_freq: 1
   learn_terminal: false
   marl: false
+  num_hidden_layer: 1
   target_replace: 100
   use_network: true
 seedparameters:
@@ -24,7 +25,8 @@ seedparameters:
   seed_np: 1
   seed_random: 1
 trainingparameters:
-  evaluate_rate: 50
+  evaluate_rate: 20
   max_episodes: 1000
   render: false
   save_interval: 100
+  use_cuda: false

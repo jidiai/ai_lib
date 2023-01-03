@@ -144,7 +144,8 @@ class DQN(object):
             self.critic_target.load_state_dict(self.critic_eval.state_dict())
         self.learn_step_counter += 1
 
-        training_results = {"loss": loss.detach().cpu().numpy()}
+        training_results = {"loss": loss.detach().cpu().numpy(),
+                            "eps": self.eps}
         training_results.update(grad_dict)
         return training_results
 

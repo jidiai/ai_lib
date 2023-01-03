@@ -30,10 +30,12 @@ class DUELINGQ(object):
         self.buffer_size = args.buffer_capacity
         self.batch_size = args.batch_size
         self.gamma = args.gamma
+        self.use_cuda = args.use_cuda
 
         self.critic_eval = Critic(self.state_dim, self.action_dim, self.hidden_size)
         self.critic_target = Critic(self.state_dim, self.action_dim, self.hidden_size)
         self.optimizer = optimizer.Adam(self.critic_eval.parameters(), lr=self.lr)
+        self.to_cuda()
 
         # exploration
         self.eps = args.epsilon
@@ -48,6 +50,18 @@ class DUELINGQ(object):
         self.memory = buffer(self.buffer_size, trajectory_property)
         self.memory.init_item_buffers()
 
+    def to_cuda(self):
+        if self.use_cuda:
+            self.critic_eval.to('cuda')
+            self.critic_target.to('cuda')
+
+    def tensor_to_cuda(self, tensor):
+        if self.use_cuda:
+            return tensor.to('cuda')
+        else:
+            return tensor
+
+
     def choose_action(self, observation, train=True):
         inference_output = self.inference(observation, train)
         if train:
@@ -61,10 +75,12 @@ class DUELINGQ(object):
                 action = random.randrange(self.action_dim)
 
             else:
-                observation = torch.tensor(observation, dtype=torch.float).view(1, -1)
+                observation = self.tensor_to_cuda(torch.tensor(
+                    observation, dtype=torch.float).view(1, -1))
                 action = torch.argmax(self.critic_eval(observation)).item()
         else:
-            observation = torch.tensor(observation, dtype=torch.float).view(1, -1)
+            observation = self.tensor_to_cuda(torch.tensor(
+                observation, dtype=torch.float).view(1, -1))
             action = torch.argmax(self.critic_eval(observation)).item()
 
         return {"action": action}
@@ -90,13 +106,13 @@ class DUELINGQ(object):
             "d_0": np.array(data["dones"]).reshape(-1, 1),
         }
 
-        obs = torch.tensor(transitions["o_0"], dtype=torch.float)
-        obs_ = torch.tensor(transitions["o_next_0"], dtype=torch.float)
-        action = torch.tensor(transitions["u_0"], dtype=torch.long).view(
+        obs = self.tensor_to_cuda(torch.tensor(transitions["o_0"], dtype=torch.float))
+        obs_ = self.tensor_to_cuda(torch.tensor(transitions["o_next_0"], dtype=torch.float))
+        action = self.tensor_to_cuda(torch.tensor(transitions["u_0"], dtype=torch.long).view(
             self.batch_size, -1
-        )
-        reward = torch.tensor(transitions["r_0"], dtype=torch.float).squeeze()
-        done = torch.tensor(transitions["d_0"], dtype=torch.float).squeeze()
+        ))
+        reward = self.tensor_to_cuda(torch.tensor(transitions["r_0"], dtype=torch.float).squeeze())
+        done = self.tensor_to_cuda(torch.tensor(transitions["d_0"], dtype=torch.float).squeeze())
 
         q_eval = self.critic_eval(obs).gather(1, action)
         q_next = self.critic_target(obs_).detach()
@@ -108,13 +124,23 @@ class DUELINGQ(object):
 
         self.optimizer.zero_grad()
         loss.backward()
+
+        grad_dict = {}
+        for name, param in self.critic_eval.named_parameters():
+            grad_dict[f"Critic_eval/{name} gradient"] = param.grad.mean().item()
+
         self.optimizer.step()
 
         if self.learn_step_counter % self.target_replace_iter == 0:
             self.critic_target.load_state_dict(self.critic_eval.state_dict())
         self.learn_step_counter += 1
 
-        return {"value_loss": loss.detach().cpu().numpy()}
+        training_results = {"value_loss": loss.detach().cpu().numpy(),
+                "eps": self.eps}
+        training_results.update(grad_dict)
+
+        return training_results
+
 
     def save(self, save_path, episode):
         base_path = os.path.join(save_path, "trained_model")

@@ -195,22 +195,25 @@ class Runner:
                 self.agent.save(self.run_dir, i_epoch)
 
             if i_epoch % self.paras.evaluate_rate == 0 and i_epoch > 1:
-                Gt_real = self.evaluate(i_epoch)
+                eval_results = self.evaluate(i_epoch)
                 # self.writer.add_scalars('Eval/rewards', global_step=i_epoch,
                 #                         tag_scalar_dict={'return': Gt_real})
-                self.writer.add_scalar(
-                    "rollout/Eval_Reward", Gt_real, global_step=i_epoch
-                )
+                for tag, eval_value in eval_results.items():
+                    self.writer.add_scalar(
+                        f"rollout/{tag}", eval_value, global_step=i_epoch
+                    )
 
     def evaluate(self, i_epoch):
         multi_part_agent_ids, actions_space = self.get_players_and_action_space_list()
 
         record = []
-        for _ in range(10):
+        t_record = []
+        for _ in range(50):
             self.env.set_seed(random.randint(0, sys.maxsize))
             state = self.env.reset()
             Gt_real = 0
             for t in count():
+            # while not self.g_core.is_terminal():
                 # action = self.agent.choose_action(state, train=False)
                 joint_act = self.get_joint_action_eval(
                     self.env,
@@ -221,17 +224,21 @@ class Runner:
                     if_train=False,
                 )
 
-                next_state, reward, done, _, _ = self.env.step(joint_act, train=False)
+                next_state, reward, done, _, _ = self.env.step(joint_act, train=False)  #false train collect raw rewards
                 state = next_state
                 Gt_real += reward
                 if done:
                     record.append(Gt_real)
                     break
+            t_record.append(t)
         print(
             "===============",
             "i_epoch: ",
             i_epoch,
             "Gt_real: ",
             "%.2f" % np.mean(record),
+            "std %.2f" % np.std(record),
+            f"timestep: {np.mean(t_record)}"
         )
-        return np.mean(record)
+        return {"Eval_Reward":np.mean(record),
+                "Eval_Timestep": np.mean(t_record)}
