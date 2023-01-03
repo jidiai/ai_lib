@@ -25,3 +25,4 @@ trainingparameters:
   max_episodes: 1000
   render: false
   save_interval: 100
+  use_cuda: false

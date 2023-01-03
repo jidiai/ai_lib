@@ -51,13 +51,14 @@ class SAC(object):
         self.actor_lr = args.a_lr
         self.critic_lr = args.c_lr
         self.alpha_lr = args.alpha_lr
+        self.use_cuda = args.use_cuda
 
         self.buffer_size = args.buffer_capacity
 
         self.policy_type = (
             "discrete" if (not self.action_continuous) else args.policy_type
         )  # deterministic or gaussian policy
-        self.device = "cpu"
+        self.device = "cuda" if self.use_cuda else 'cpu'
 
         given_critic = Critic  # need to set a default value
         self.preset_alpha = args.alpha
@@ -105,7 +106,7 @@ class SAC(object):
                 self.state_dim, self.hidden_size, self.action_dim
             ).to(self.device)
 
-            hid_layer = args.num_hid_layer
+            hid_layer = args.num_hidden_layer
             self.q1 = given_critic(
                 self.state_dim, self.action_dim, self.hidden_size, hid_layer
             ).to(self.device)
@@ -177,15 +178,15 @@ class SAC(object):
             )
             self.log_alpha = torch.zeros(1, requires_grad=True, device=self.device)
             # self.alpha = self.log_alpha.exp()
-            self.alpha = torch.tensor([self.preset_alpha])
+            self.alpha = torch.tensor([self.preset_alpha]).to(self.device)
             self.alpha_optim = Adam([self.log_alpha], lr=self.alpha_lr)
         else:
             self.alpha = torch.tensor(
                 [self.preset_alpha]
-            )  # coefficiency for entropy term
+            ).to(self.device)  # coefficiency for entropy term
 
     def choose_action(self, state, train=True):
-        state = torch.tensor(state, dtype=torch.float).view(1, -1)
+        state = torch.tensor(state, dtype=torch.float).view(1, -1).to(self.device)
 
         if self.policy_type == "discrete":
             if train:
@@ -303,13 +304,13 @@ class SAC(object):
             "d_0": np.array(data["dones"]).reshape(-1, 1),
         }
 
-        obs = torch.tensor(transitions["o_0"], dtype=torch.float)
-        obs_ = torch.tensor(transitions["o_next_0"], dtype=torch.float)
+        obs = torch.tensor(transitions["o_0"], dtype=torch.float).to(self.device)
+        obs_ = torch.tensor(transitions["o_next_0"], dtype=torch.float).to(self.device)
         action = torch.tensor(transitions["u_0"], dtype=torch.long).view(
             self.batch_size, -1
-        )
-        reward = torch.tensor(transitions["r_0"], dtype=torch.float)
-        done = torch.tensor(transitions["d_0"], dtype=torch.float)
+        ).to(self.device)
+        reward = torch.tensor(transitions["r_0"], dtype=torch.float).to(self.device)
+        done = torch.tensor(transitions["d_0"], dtype=torch.float).to(self.device)
 
         if self.policy_type == "discrete":
             qf1_loss, qf2_loss = self.critic_loss(obs, action, obs_, reward, (1 - done))

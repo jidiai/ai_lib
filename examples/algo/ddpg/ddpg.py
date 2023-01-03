@@ -37,6 +37,7 @@ class DDPG(object):
         self.batch_size = args.batch_size
         self.gamma = args.gamma
         self.tau = args.tau
+        self.use_cuda = args.use_cuda
 
         self.update_freq = args.update_freq
 
@@ -56,6 +57,8 @@ class DDPG(object):
         )
         self.critic_target.load_state_dict(self.critic.state_dict())
 
+        self.to_cuda()
+
         self.actor_optim = optimizer.Adam(self.actor.parameters(), lr=self.actor_lr)
         self.critic_optim = optimizer.Adam(self.critic.parameters(), lr=self.critic_lr)
 
@@ -65,6 +68,19 @@ class DDPG(object):
 
         self.eps = args.epsilon
         self.epsilon_end = args.epsilon_end
+
+    def to_cuda(self):
+        if self.use_cuda:
+            self.actor.to('cuda')
+            self.actor_target.to('cuda')
+            self.critic.to('cuda')
+            self.critic_target.to('cuda')
+
+    def tensor_to_cuda(self, tensor):
+        if self.use_cuda:
+            return tensor.to('cuda')
+        else:
+            return tensor
 
     def choose_action(self, observation, train=True):
         inference_output = self.inference(observation, train)
@@ -77,8 +93,9 @@ class DDPG(object):
         self.eps *= 0.99999
         self.eps = max(self.eps, self.epsilon_end)
         if random.random() > self.eps:
-            state = torch.tensor(observation, dtype=torch.float).unsqueeze(0)
-            logits = self.actor(state).detach().numpy()
+            state = self.tensor_to_cuda(torch.tensor(
+                observation, dtype=torch.float).unsqueeze(0))
+            logits = self.actor(state).detach().cpu().numpy()
         else:
             logits = np.random.uniform(low=0, high=1, size=(1, 2))
         action = Categorical(torch.Tensor(logits)).sample()
@@ -106,13 +123,13 @@ class DDPG(object):
                 "d_0": np.array(data["dones"]).reshape(-1, 1),
             }
 
-            obs = torch.tensor(transitions["o_0"], dtype=torch.float)
-            obs_ = torch.tensor(transitions["o_next_0"], dtype=torch.float)
-            action = torch.tensor(transitions["u_0"], dtype=torch.float).squeeze()
-            reward = torch.tensor(transitions["r_0"], dtype=torch.float).view(
+            obs = self.tensor_to_cuda(torch.tensor(transitions["o_0"], dtype=torch.float))
+            obs_ = self.tensor_to_cuda(torch.tensor(transitions["o_next_0"], dtype=torch.float))
+            action = self.tensor_to_cuda(torch.tensor(transitions["u_0"], dtype=torch.float).squeeze())
+            reward = self.tensor_to_cuda(torch.tensor(transitions["r_0"], dtype=torch.float).view(
                 self.batch_size, -1
-            )
-            done = (
+            ))
+            done = self.tensor_to_cuda(
                 torch.tensor(transitions["d_0"], dtype=torch.float)
                 .squeeze()
                 .view(self.batch_size, -1)

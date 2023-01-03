@@ -36,11 +36,13 @@ class PPO(object):
         self.c_lr = args.c_lr
         self.gamma = args.gamma
         self.hidden_size = args.hidden_size
+        self.use_cuda = args.use_cuda
 
         self.actor = Actor(self.state_dim, self.action_dim, self.hidden_size)
         self.critic = Critic(self.state_dim, 1, self.hidden_size)
         self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=self.a_lr)
         self.critic_net_optimizer = optim.Adam(self.critic.parameters(), lr=self.c_lr)
+        self.to_cuda()
 
         trajectory_property = get_trajectory_property()
         self.memory = buffer(self.buffer_size, trajectory_property)
@@ -49,6 +51,17 @@ class PPO(object):
         self.counter = 0
         self.training_step = 0
 
+    def to_cuda(self):
+        if self.use_cuda:
+            self.actor.to('cuda')
+            self.critic.to('cuda')
+
+    def tensor_to_cuda(self, tensor):
+        if self.use_cuda:
+            return tensor.to('cuda')
+        else:
+            return tensor
+
     def choose_action(self, observation, train=True):
         inference_output = self.inference(observation, train)
         if train:
@@ -56,7 +69,7 @@ class PPO(object):
         return inference_output
 
     def inference(self, observation, train=True):
-        state = torch.tensor(observation, dtype=torch.float).unsqueeze(0)
+        state = self.tensor_to_cuda(torch.tensor(observation, dtype=torch.float).unsqueeze(0))
         logits = self.actor(state).detach()
         action = Categorical(torch.Tensor(logits)).sample()
         return {"action": action.item(), "a_logit": logits[:, action.item()].item()}
@@ -78,12 +91,12 @@ class PPO(object):
             "log_prob": np.array(data["a_logit"]),
         }
 
-        obs = torch.tensor(transitions["o_0"], dtype=torch.float)
-        action = torch.tensor(transitions["u_0"], dtype=torch.long).view(-1, 1)
+        obs = self.tensor_to_cuda(torch.tensor(transitions["o_0"], dtype=torch.float))
+        action = self.tensor_to_cuda(torch.tensor(transitions["u_0"], dtype=torch.long).view(-1, 1))
         reward = transitions["r_0"]
-        old_action_log_prob = torch.tensor(
+        old_action_log_prob = self.tensor_to_cuda(torch.tensor(
             transitions["log_prob"], dtype=torch.float
-        ).view(-1, 1)
+        ).view(-1, 1))
 
         # 计算reward-to-go
         R = 0
@@ -91,7 +104,7 @@ class PPO(object):
         for r in reward[::-1]:  # 反过来
             R = r[0] + self.gamma * R
             Gt.insert(0, R)
-        Gt = torch.tensor(Gt, dtype=torch.float)
+        Gt = self.tensor_to_cuda(torch.tensor(Gt, dtype=torch.float))
         for i in range(self.update_freq):
             for index in BatchSampler(
                 SubsetRandomSampler(range(data_length)), self.batch_size, False

@@ -20,7 +20,7 @@ hyperparameters:
   learn_freq: 1
   learn_terminal: false
   marl: false
-  num_hid_layer: 1
+  num_hidden_layer: 1
   target_entropy_ratio: 0.7
   target_replace: 100
   tau: 0.1
@@ -36,3 +36,4 @@ trainingparameters:
   max_episodes: 1000
   render: false
   save_interval: 100
+  use_cuda: false
