@@ -31,7 +31,7 @@ class classic_MountainCar_v0(BaseWrapper):
         if train:
             # reward shapping
             reward = get_reward(next_state[0]["obs"])
-            reward = np.array(reward)
+            reward = np.array([reward])
             return next_state, reward, done, _, _
 
         else:

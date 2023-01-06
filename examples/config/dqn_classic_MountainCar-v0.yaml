@@ -10,15 +10,15 @@ hyperparameters:
   batch_size: 64
   buffer_capacity: 1024
   c_lr: 0.001
-  epsilon: 0.5
-  epsilon_end: 0.05
+  epsilon: 0.9
+  epsilon_end: 0.1
   gamma: 0.99
-  hidden_size: 128
-  num_hidden_layer: 1
+  hidden_size: 64
   learn_freq: 1
   learn_terminal: false
   marl: false
-  target_replace: 100
+  num_hidden_layer: 1
+  target_replace: 20
   use_network: true
 seedparameters:
   seed_nn: 1
@@ -26,7 +26,7 @@ seedparameters:
   seed_random: 1
 trainingparameters:
   evaluate_rate: 20
-  max_episodes: 3000
+  max_episodes: 10000
   render: false
   save_interval: 100
   use_cuda: false
