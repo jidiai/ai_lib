@@ -38,6 +38,9 @@ class DDPG(object):
         self.gamma = args.gamma
         self.tau = args.tau
         self.use_cuda = args.use_cuda
+        self.policy_type = args.policy_type
+        self.continuous_action_min = args.continuous_action_min
+        self.continuous_action_max = args.continuous_action_max
 
         self.update_freq = args.update_freq
 
@@ -89,17 +92,57 @@ class DDPG(object):
         return inference_output
 
     def inference(self, observation, train=True):
-        # if train:
+
         self.eps *= 0.99999
         self.eps = max(self.eps, self.epsilon_end)
-        if random.random() > self.eps:
+
+        if self.policy_type == 'discrete':
+            if train:
+                if random.random() > self.eps:
+                    state = self.tensor_to_cuda(torch.tensor(
+                        observation, dtype=torch.float).unsqueeze(0))
+                    logits = self.actor(state).detach().cpu().numpy()
+                else:
+                    logits = np.random.uniform(low=0, high=1, size=(1, 2))
+                action = Categorical(torch.Tensor(logits)).sample()
+            else:
+                state = self.tensor_to_cuda(torch.tensor(
+                    observation, dtype=torch.float).unsqueeze(0))
+                logits = self.actor(state).detach().cpu().numpy()
+                action = Categorical(torch.Tensor(logits)).sample()
+            return {"action": action, "logits": logits}
+        elif self.policy_type=='continuous':
             state = self.tensor_to_cuda(torch.tensor(
                 observation, dtype=torch.float).unsqueeze(0))
             logits = self.actor(state).detach().cpu().numpy()
-        else:
-            logits = np.random.uniform(low=0, high=1, size=(1, 2))
-        action = Categorical(torch.Tensor(logits)).sample()
-        return {"action": action, "logits": logits}
+
+            mid = (self.continuous_action_max+self.continuous_action_min)/2
+            scale = self.continuous_action_max-mid
+            tanh_a = torch.tanh(logits)
+            action = tanh_a*scale + mid
+            return {"action": action.squeeze(0).cpu().numpy(), "logits": logits.squeeze(0).cpu().numpy()}
+
+    # if train:
+        # self.eps *= 0.99999
+        # self.eps = max(self.eps, self.epsilon_end)
+        # state = self.tensor_to_cuda(torch.tensor(
+        #     observation, dtype=torch.float).unsqueeze(0))
+        # logits = self.actor(state).detach()
+        #
+        # if self.policy_type == 'discrete':
+        #     if random.random() > self.eps:
+        #         pass
+        #     else:
+        #         logits = torch.Tensor(np.random.uniform(low=0, high=1, size=(1, 2)))
+        #
+        #     action = Categorical(logits=logits).sample()
+        #     return {"action": action.cpu(), "logits": logits.squeeze(0).cpu().numpy()}
+        # elif self.policy_type == 'continuous':
+        #     mid = (self.continuous_action_max+self.continuous_action_min)/2
+        #     scale = self.continuous_action_max-mid
+        #     tanh_a = torch.tanh(logits)
+        #     action = tanh_a*scale + mid
+        #     return {"action": action.squeeze(0).cpu().numpy(), "logits": logits.squeeze(0).cpu().numpy()}
 
     def add_experience(self, output):
         agent_id = 0
@@ -125,7 +168,10 @@ class DDPG(object):
 
             obs = self.tensor_to_cuda(torch.tensor(transitions["o_0"], dtype=torch.float))
             obs_ = self.tensor_to_cuda(torch.tensor(transitions["o_next_0"], dtype=torch.float))
-            action = self.tensor_to_cuda(torch.tensor(transitions["u_0"], dtype=torch.float).squeeze())
+            if self.policy_type == 'continuous':
+                action = self.tensor_to_cuda(torch.tensor(transitions["u_0"], dtype=torch.float))
+            elif self.policy_type == 'discrete':
+                action = self.tensor_to_cuda(torch.tensor(transitions["u_0"], dtype=torch.float).squeeze())
             reward = self.tensor_to_cuda(torch.tensor(transitions["r_0"], dtype=torch.float).view(
                 self.batch_size, -1
             ))
@@ -182,7 +228,7 @@ class DDPG(object):
         model_critic_path = os.path.join(base_path, "critic_" + str(episode) + ".pth")
         torch.save(self.critic.state_dict(), model_critic_path)
         model_actor_path = os.path.join(base_path, "actor_" + str(episode) + ".pth")
-        torch.save(self.critic.state_dict(), model_actor_path)
+        torch.save(self.actor.state_dict(), model_actor_path)
 
     def load(self, load_path, i):
         self.actor.load_state_dict(

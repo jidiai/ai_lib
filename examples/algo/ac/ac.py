@@ -86,7 +86,7 @@ class AC(object):
             R = r + self.gamma * R
             rewards.insert(0, R)
 
-        rewards = torch.tensor(rewards, dtype=torch.float)
+        rewards = torch.tensor(np.array(rewards), dtype=torch.float)
         rewards = (rewards - rewards.mean()) / (rewards.std() + eps)
 
         for (log_prob, value, r) in zip(self.save_actions, self.save_value, rewards):

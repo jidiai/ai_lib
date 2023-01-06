@@ -8,6 +8,7 @@ from networks.actor import Actor
 import os
 from pathlib import Path
 import sys
+import random
 
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
@@ -81,6 +82,8 @@ class PG(object):
         self.optimizer.zero_grad()
         policy_loss = torch.cat(policy_loss).sum()
         policy_loss.backward()
+
+        # torch.nn.utils.clip_grad_norm_(self.policy.parameters(), 0.1)
 
         grad_dict = {}
         for name, param in self.policy.named_parameters():

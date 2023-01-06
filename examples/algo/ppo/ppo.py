@@ -11,6 +11,7 @@ from algo.ppo.Network import Actor, Critic
 import os
 from pathlib import Path
 import sys
+import random
 
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
@@ -48,6 +49,10 @@ class PPO(object):
         self.memory = buffer(self.buffer_size, trajectory_property)
         self.memory.init_item_buffers()
 
+        self.eps = args.epsilon
+        self.eps_end = args.epsilon_end
+        self.eps_delay = 1 / (args.max_episodes * 100)
+
         self.counter = 0
         self.training_step = 0
 
@@ -68,11 +73,20 @@ class PPO(object):
             self.add_experience(inference_output)
         return inference_output
 
-    def inference(self, observation, train=True):
+    def inference(self, observation, train):
         state = self.tensor_to_cuda(torch.tensor(observation, dtype=torch.float).unsqueeze(0))
         logits = self.actor(state).detach()
-        action = Categorical(torch.Tensor(logits)).sample()
-        return {"action": action.item(), "a_logit": logits[:, action.item()].item()}
+
+        if train:
+            self.eps = max(self.eps_end, self.eps - self.eps_delay)
+            if random.random() < self.eps:
+                action = random.randrange(self.action_dim)
+            else:
+                action = Categorical(torch.Tensor(logits)).sample().item()
+        else:
+            action = Categorical(torch.Tensor(logits)).sample().item()
+
+        return {"action": action, "a_logit": logits[:, action].item()}
 
     def add_experience(self, output):
         agent_id = 0
