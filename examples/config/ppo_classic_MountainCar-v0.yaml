@@ -1,0 +1,34 @@
+algo: ppo
+envparameters:
+  action_continuous: false
+  action_space: 3
+  n_player: 1
+  obs_continuous: true
+  obs_space: 2
+  scenario: classic_MountainCar-v0
+hyperparameters:
+  a_lr: 0.001
+  batch_size: 64
+  buffer_capacity: 200
+  c_lr: 0.001
+  clip_param: 0.1
+  epsilon: 0
+  epsilon_end: 0
+  gamma: 0.998
+  hidden_size: 64
+  learn_terminal: true
+  marl: false
+  max_grad_norm: 0.1
+  num_hidden_layer: 1
+  update_freq: 100
+  use_network: true
+seedparameters:
+  seed_nn: 1
+  seed_np: 1
+  seed_random: 1
+trainingparameters:
+  evaluate_rate: 20
+  max_episodes: 10000
+  render: false
+  save_interval: 100
+  use_cuda: false
