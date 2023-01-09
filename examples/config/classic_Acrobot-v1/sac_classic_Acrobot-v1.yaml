@@ -1,30 +1,32 @@
-algo: ddpg
+algo: sac
 envparameters:
-  action_continuous: true
-  action_space: 1
+  action_continuous: false
+  action_space: 3
   n_player: 1
   obs_continuous: true
-  obs_space: 3
-  scenario: classic_Pendulum-v0
+  obs_space: 6
+  scenario: classic_Acrobot-v1
 hyperparameters:
   a_lr: 0.001
+  alpha: 0.2
+  alpha_lr: 0.0001
   batch_size: 64
-  buffer_capacity: 2048
-  c_lr: 0.0005
-  continuous_action_max: 2
-  continuous_action_min: -2
+  buffer_capacity: 1024
+  c_lr: 0.001
   epsilon: 0.5
-  epsilon_end: 0.01
+  epsilon_end: 0.05
   gamma: 0.99
-  hidden_size: 100
+  hidden_size: 64
   learn_freq: 1
   learn_terminal: false
   marl: false
   num_hidden_layer: 1
-  policy_type: continuous
-  tau: 0.001
-  update_freq: 1
+  target_entropy_ratio: 0.7
+  target_replace: 20
+  tau: 0.1
+  tune_entropy: false
   use_network: true
+  policy_type: discrete
 seedparameters:
   seed_nn: 1
   seed_np: 1

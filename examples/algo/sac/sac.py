@@ -215,7 +215,7 @@ class SAC(object):
                 self.add_experience({"action": action})
             else:
                 _, _, action = self.policy.sample(state)
-                action = action.item()
+                action = action.detach().numpy().squeeze(1)
             return {"action": action}
 
         else:
@@ -420,6 +420,13 @@ class SAC(object):
                     )
                 # for param, target_param in zip(self.policy.parameters(), self.policy_target.parameters()):
                 #    target_param.data.copy_(self.tau * param.data + (1.-self.tau) * target_param.data)
+
+            training_results = {
+                "policy_loss": policy_loss.item(),
+                "value_loss": qf_loss.item(),
+                "alpha_loss": alpha_loss.item()
+            }
+            return training_results
 
         else:
             raise NotImplementedError

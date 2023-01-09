@@ -3,7 +3,7 @@ import torch
 import torch.nn.functional as F
 import torch.optim as optim
 
-from networks.network_td3 import Actor, Critic
+from networks.network_td3 import ContinuousTanhActor, Critic
 from common.buffer import Replay_buffer as buffer
 from pathlib import Path
 import sys
@@ -25,14 +25,25 @@ class TD3:
     def __init__(self, args):
 
         self.state_dim = args.obs_space
-        self.action_dim = 1
+        self.action_dim = args.action_space
+        self.hidden_size = args.hidden_size
+        self.num_hidden_layer = args.num_hidden_layer
+        self.continuous_action_min = args.continuous_action_min
+        self.continuous_action_max = args.continuous_action_max
 
-        self.actor = Actor(self.state_dim, self.action_dim, max_action)
-        self.actor_target = Actor(self.state_dim, self.action_dim, max_action)
-        self.critic_1 = Critic(self.state_dim, self.action_dim)
-        self.critic_1_target = Critic(self.state_dim, self.action_dim)
-        self.critic_2 = Critic(self.state_dim, self.action_dim)
-        self.critic_2_target = Critic(self.state_dim, self.action_dim)
+        action_loc = (self.continuous_action_max+self.continuous_action_min)/2
+        action_scale = self.continuous_action_max-action_loc
+        self.actor = ContinuousTanhActor(self.state_dim, self.action_dim, self.hidden_size,
+                                         action_loc=action_loc,action_scale=action_scale,
+                                         num_hidden_layer=self.num_hidden_layer)
+        self.actor_target = ContinuousTanhActor(self.state_dim, self.action_dim, self.hidden_size,
+                                         action_loc=action_loc,action_scale=action_scale,
+                                         num_hidden_layer=self.num_hidden_layer)
+
+        self.critic_1 = Critic(self.state_dim, self.action_dim, self.hidden_size, self.num_hidden_layer)
+        self.critic_1_target = Critic(self.state_dim, self.action_dim, self.hidden_size, self.num_hidden_layer)
+        self.critic_2 = Critic(self.state_dim, self.action_dim, self.hidden_size, self.num_hidden_layer)
+        self.critic_2_target = Critic(self.state_dim, self.action_dim, self.hidden_size, self.num_hidden_layer)
 
         self.actor_optimizer = optim.Adam(self.actor.parameters())
         self.critic_1_optimizer = optim.Adam(self.critic_1.parameters())
@@ -42,7 +53,6 @@ class TD3:
         self.critic_1_target.load_state_dict(self.critic_1.state_dict())
         self.critic_2_target.load_state_dict(self.critic_2.state_dict())
 
-        self.max_action = max_action
         self.buffer_size = args.buffer_capacity
         self.batch_size = args.batch_size
         self.gamma = args.gamma
@@ -73,7 +83,7 @@ class TD3:
         state = torch.tensor(state, dtype=torch.float).view(1, -1)
         action = self.actor(state).cpu().data.numpy().flatten()
         action += np.random.normal(0, self.exploration_noise, size=self.action_dim)
-        action = action.clip(-max_action, max_action)
+        action = action.clip(-self.continuous_action_min, -self.continuous_action_max)
         logits = self.actor(state).detach().numpy()
         return {"action": action, "logits": logits}
 
@@ -86,7 +96,12 @@ class TD3:
 
         data_length = len(self.memory.item_buffers["rewards"].data)
         if data_length < self.buffer_size:
-            return
+            return {}
+
+        training_results = {}
+        training_results['policy_loss'] = []
+        training_results['Q1_loss'] = []
+        training_results['Q2_loss'] = []
 
         for i in range(self.update_freq):
             data = self.memory.sample(self.batch_size)
@@ -116,7 +131,7 @@ class TD3:
             noise = noise.normal_(0.0, self.policy_noise)
             noise = noise.clamp(-self.noise_clip, self.noise_clip)
             next_action = self.actor_target(next_state) + noise
-            next_action = next_action.clamp(-self.max_action, self.max_action)
+            next_action = next_action.clamp(self.continuous_action_min, self.continuous_action_max)
 
             # Compute target Q-value:
             target_Q1 = self.critic_1_target(next_state, next_action)
@@ -129,14 +144,23 @@ class TD3:
             loss_Q1 = F.mse_loss(current_Q1, target_Q)
             self.critic_1_optimizer.zero_grad()
             loss_Q1.backward()
+            torch.nn.utils.clip_grad_norm_(self.critic_1.parameters(), 0.1)
+
+
             self.critic_1_optimizer.step()
+
+            training_results['Q1_loss'].append(loss_Q1.item())
 
             # Optimize Critic 2:
             current_Q2 = self.critic_2(state, action)
             loss_Q2 = F.mse_loss(current_Q2, target_Q)
             self.critic_2_optimizer.zero_grad()
             loss_Q2.backward()
+            torch.nn.utils.clip_grad_norm_(self.critic_2.parameters(), 0.5)
+
             self.critic_2_optimizer.step()
+
+            training_results['Q2_loss'].append(loss_Q2.item())
 
             # Delayed policy updates:
             if i % self.policy_delay == 0:
@@ -146,7 +170,12 @@ class TD3:
                 # Optimize the actor
                 self.actor_optimizer.zero_grad()
                 actor_loss.backward()
+                torch.nn.utils.clip_grad_norm_(self.actor.parameters(), 0.5)
+
                 self.actor_optimizer.step()
+
+                training_results['policy_loss'].append(actor_loss.item())
+
                 for param, target_param in zip(
                     self.actor.parameters(), self.actor_target.parameters()
                 ):
@@ -171,6 +200,11 @@ class TD3:
                 self.num_actor_update_iteration += 1
         self.num_critic_update_iteration += 1
         self.num_training += 1
+
+        for tag, v in training_results.items():
+            training_results[tag] = np.mean(v)
+
+        return training_results
 
     def save(self, save_path, episode):
         base_path = os.path.join(save_path, "trained_model")

@@ -1,21 +1,22 @@
-#not tuned
-algo: pg
+algo: dqn
 envparameters:
   action_continuous: false
   action_space: 3
   n_player: 1
   obs_continuous: true
-  obs_space: 2
-  scenario: classic_MountainCar-v0
+  obs_space: 6
+  scenario: classic_Acrobot-v1
 hyperparameters:
   batch_size: 64
-  buffer_capacity: 10240
+  buffer_capacity: 1024
+  c_lr: 0.001
+  epsilon: 0.5
+  epsilon_end: 0.05
   gamma: 0.99
-  hidden_size: 100
-  learn_terminal: true
-  lr: 0.001
+  hidden_size: 64
   marl: false
   num_hidden_layer: 1
+  target_replace: 100
   use_network: true
 seedparameters:
   seed_nn: 1
@@ -23,7 +24,9 @@ seedparameters:
   seed_random: 1
 trainingparameters:
   evaluate_rate: 20
+  learn_freq: 1
+  learn_terminal: false
   max_episodes: 1000
   render: false
-  save_interval: 100
+  save_interval: 500
   use_cuda: false

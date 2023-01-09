@@ -29,6 +29,7 @@ class PG(object):
 
         self.lr = args.lr
         self.gamma = args.gamma
+        self.max_grad_norm = args.max_grad_norm
 
         self.policy = Actor(
             self.state_dim, self.action_dim, args.hidden_size, args.num_hidden_layer
@@ -83,7 +84,8 @@ class PG(object):
         policy_loss = torch.cat(policy_loss).sum()
         policy_loss.backward()
 
-        # torch.nn.utils.clip_grad_norm_(self.policy.parameters(), 0.1)
+        if self.max_grad_norm is not None:
+            torch.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
 
         grad_dict = {}
         for name, param in self.policy.named_parameters():
