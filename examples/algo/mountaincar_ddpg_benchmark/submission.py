@@ -38,7 +38,6 @@ class Actor(nn.Module):
 
     def forward(self, x):
         x = self.net(x)
-
         return x
 
 policy = Actor(state_dim=STATE_DIM,
@@ -54,3 +53,4 @@ def my_controller(observation, action_space, is_act_continuous=True):
     onehot_a = [0,0,0]
     onehot_a[action.item()] = 1
     return [onehot_a]
+

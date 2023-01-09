@@ -1,4 +1,4 @@
-algo: dqn
+algo: duelingq
 envparameters:
   action_continuous: false
   action_space: 3
@@ -8,17 +8,17 @@ envparameters:
   scenario: classic_MountainCar-v0
 hyperparameters:
   batch_size: 64
-  buffer_capacity: 1024
-  c_lr: 0.001
-  epsilon: 0.9
-  epsilon_end: 0.1
+  buffer_capacity: 10240
+  c_lr: 0.005
+  epsilon: 0.5
+  epsilon_end: 0.05
   gamma: 0.99
-  hidden_size: 64
+  hidden_size: 100
   learn_freq: 1
   learn_terminal: false
   marl: false
   num_hidden_layer: 1
-  target_replace: 20
+  target_replace: 100
   use_network: true
 seedparameters:
   seed_nn: 1
@@ -26,7 +26,7 @@ seedparameters:
   seed_random: 1
 trainingparameters:
   evaluate_rate: 20
-  max_episodes: 10000
+  max_episodes: 1000
   render: false
   save_interval: 100
   use_cuda: false

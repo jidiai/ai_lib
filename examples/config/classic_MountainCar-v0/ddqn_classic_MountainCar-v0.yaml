@@ -1,4 +1,4 @@
-algo: ppo
+algo: ddqn
 envparameters:
   action_continuous: false
   action_space: 3
@@ -7,20 +7,18 @@ envparameters:
   obs_space: 2
   scenario: classic_MountainCar-v0
 hyperparameters:
-  a_lr: 0.001
   batch_size: 64
-  buffer_capacity: 200
-  c_lr: 0.001
-  clip_param: 0.1
-  epsilon: 0
-  epsilon_end: 0
-  gamma: 0.998
-  hidden_size: 64
-  learn_terminal: true
+  buffer_capacity: 10240
+  c_lr: 0.005
+  epsilon: 0.5
+  epsilon_end: 0.05
+  gamma: 0.99
+  hidden_size: 100
+  learn_freq: 1
+  learn_terminal: false
   marl: false
-  max_grad_norm: 0.1
   num_hidden_layer: 1
-  update_freq: 100
+  target_replace: 100
   use_network: true
 seedparameters:
   seed_nn: 1
@@ -28,7 +26,7 @@ seedparameters:
   seed_random: 1
 trainingparameters:
   evaluate_rate: 20
-  max_episodes: 10000
+  max_episodes: 1000
   render: false
   save_interval: 100
   use_cuda: false

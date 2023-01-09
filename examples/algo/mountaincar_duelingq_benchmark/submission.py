@@ -5,11 +5,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 current_path = Path(__file__).resolve().parent
-model_path = os.path.join(current_path, "critic_10000.pth")
+model_path = os.path.join(current_path, "critic_1000.pth")
 
 STATE_DIM = 2
 ACTION_DIM = 3
-HIDDEN_SIZE = 64
+HIDDEN_SIZE = 100
 NUM_HIDDEN_LAYER = 1
 
 

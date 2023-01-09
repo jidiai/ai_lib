@@ -10,7 +10,7 @@ import torch.optim as optimizer
 import torch.nn.functional as F
 from torch.distributions import Categorical
 
-from algo.ddpg.Network import Actor, Critic
+from algo.ddpg.Network import Actor, Critic, ContinuousActor
 
 import os
 from pathlib import Path
@@ -44,12 +44,23 @@ class DDPG(object):
 
         self.update_freq = args.update_freq
 
-        self.actor = Actor(
-            self.state_dim, self.action_dim, self.hidden_size, args.num_hidden_layer
-        )
-        self.actor_target = Actor(
-            self.state_dim, self.action_dim, self.hidden_size, args.num_hidden_layer
-        )
+        if self.policy_type == 'discrete':
+            self.actor = Actor(
+                self.state_dim, self.action_dim, self.hidden_size, args.num_hidden_layer
+            )
+            self.actor_target = Actor(
+                self.state_dim, self.action_dim, self.hidden_size, args.num_hidden_layer
+            )
+        elif self.policy_type == 'continuous':
+            self.actor = ContinuousActor(
+                self.state_dim, self.action_dim, self.hidden_size, args.num_hidden_layer
+            )
+            self.actor_target = ContinuousActor(
+                self.state_dim, self.action_dim, self.hidden_size, args.num_hidden_layer
+            )
+        else:
+            raise NotImplementedError
+
         self.actor_target.load_state_dict(self.actor.state_dict())
 
         self.critic = Critic(
@@ -103,7 +114,7 @@ class DDPG(object):
                         observation, dtype=torch.float).unsqueeze(0))
                     logits = self.actor(state).detach().cpu().numpy()
                 else:
-                    logits = np.random.uniform(low=0, high=1, size=(1, 2))
+                    logits = np.random.uniform(low=0, high=1, size=(1, self.action_dim))
                 action = Categorical(torch.Tensor(logits)).sample()
             else:
                 state = self.tensor_to_cuda(torch.tensor(
@@ -116,11 +127,19 @@ class DDPG(object):
                 observation, dtype=torch.float).unsqueeze(0))
             logits = self.actor(state).detach().cpu().numpy()
 
-            mid = (self.continuous_action_max+self.continuous_action_min)/2
-            scale = self.continuous_action_max-mid
-            tanh_a = torch.tanh(logits)
-            action = tanh_a*scale + mid
-            return {"action": action.squeeze(0).cpu().numpy(), "logits": logits.squeeze(0).cpu().numpy()}
+            # mid = (self.continuous_action_max+self.continuous_action_min)/2
+            # scale = self.continuous_action_max-mid
+            # tanh_a = torch.tanh(logits.squeeze(0))
+            # action = tanh_a*scale + mid
+            # action = tanh_a*scale + mid
+            # if train:
+            #     if random.random() > self.eps:
+            #         logits += np.random.normal(0, 0.2)
+
+            # action = np.clip(logits.squeeze(0), self.continuous_action_min, self.continuous_action_max)
+            action = logits.squeeze(0)
+
+            return {"action": action, "logits": logits}
 
     # if train:
         # self.eps *= 0.99999
@@ -154,6 +173,11 @@ class DDPG(object):
         if data_length < self.buffer_size:
             return {}
 
+        training_results = {
+            "policy_loss": [],
+            "value_loss": [],
+        }
+
         for _ in range(self.update_freq):
 
             data = self.memory.sample(self.batch_size)
@@ -169,7 +193,7 @@ class DDPG(object):
             obs = self.tensor_to_cuda(torch.tensor(transitions["o_0"], dtype=torch.float))
             obs_ = self.tensor_to_cuda(torch.tensor(transitions["o_next_0"], dtype=torch.float))
             if self.policy_type == 'continuous':
-                action = self.tensor_to_cuda(torch.tensor(transitions["u_0"], dtype=torch.float))
+                action = self.tensor_to_cuda(torch.tensor(transitions["u_0"], dtype=torch.float).squeeze(-1))
             elif self.policy_type == 'discrete':
                 action = self.tensor_to_cuda(torch.tensor(transitions["u_0"], dtype=torch.float).squeeze())
             reward = self.tensor_to_cuda(torch.tensor(transitions["r_0"], dtype=torch.float).view(
@@ -183,6 +207,12 @@ class DDPG(object):
 
             with torch.no_grad():
                 a1 = self.actor_target(obs_)
+                # if self.policy_type == 'continuous':
+                    # mid = (self.continuous_action_max + self.continuous_action_min) / 2
+                    # scale = self.continuous_action_max - mid
+                    # tanh_a = torch.tanh(a1)
+                    # a1 = tanh_a * scale + mid
+                    # a1 = torch.clip(a1, self.continuous_action_min, self.continuous_action_max)
                 y_true = reward + self.gamma * (1 - done) * self.critic_target(obs_, a1)
             y_pred = self.critic(obs, action)
 
@@ -190,6 +220,7 @@ class DDPG(object):
             value_loss = loss_fn(y_pred, y_true)
             self.critic_optim.zero_grad()
             value_loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.critic.parameters(), 0.1)
 
             grad_dict = {}
             # for name, param in self.critic.named_parameters():
@@ -197,9 +228,18 @@ class DDPG(object):
 
             self.critic_optim.step()
 
-            actor_loss = -torch.mean(self.critic(obs, self.actor(obs)))
+            cur_a = self.actor(obs)
+            # if self.policy_type == 'continuous':
+                # mid = (self.continuous_action_max + self.continuous_action_min) / 2
+                # scale = self.continuous_action_max - mid
+                # tanh_a = torch.tanh(cur_a)
+                # cur_a = tanh_a * scale + mid
+                # cur_a = torch.clip(cur_a, self.continuous_action_min, self.continuous_action_max)
+
+            actor_loss = -torch.mean(self.critic(obs, cur_a))
             self.actor_optim.zero_grad()
             actor_loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.actor.parameters(), 0.1)
 
             # for name, param in self.actor.named_parameters():
             #     grad_dict[f'Actor/{name} gradient']=param.grad().mean().item()
@@ -209,12 +249,14 @@ class DDPG(object):
             self.soft_update(self.critic_target, self.critic, self.tau)
             self.soft_update(self.actor_target, self.actor, self.tau)
 
-            training_results = {
-                "policy_loss": actor_loss.detach().cpu().numpy(),
-                "value_loss": value_loss.detach().cpu().numpy(),
-            }
-            training_results.update(grad_dict)
-            return training_results
+            training_results['policy_loss'].append(actor_loss.detach().cpu().numpy())
+            training_results['value_loss'].append(value_loss.detach().cpu().numpy())
+
+        for tag,v in training_results.items():
+            training_results[tag] = np.mean(v)
+        training_results.update(grad_dict)
+
+        return training_results
 
     def soft_update(self, net_target, net, tau):
         for target_param, param in zip(net_target.parameters(), net.parameters()):

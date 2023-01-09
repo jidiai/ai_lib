@@ -35,7 +35,7 @@ class Runner:
         self.run_dir, self.log_dir = make_logpath(args.scenario, args.algo)
         self.writer = SummaryWriter(str(self.run_dir))
 
-        config_dir = os.path.join(os.getcwd(), "config")
+        config_dir = os.path.join(os.getcwd(), f"config/{args.scenario}")
         file_name = args.algo + "_" + args.scenario
 
         if (

@@ -119,6 +119,9 @@ class PPO(object):
             R = r[0] + self.gamma * R
             Gt.insert(0, R)
         Gt = self.tensor_to_cuda(torch.tensor(Gt, dtype=torch.float))
+
+        training_results = {"policy_loss": [], "value_loss": []}
+
         for i in range(self.update_freq):
             for index in BatchSampler(
                 SubsetRandomSampler(range(data_length)), self.batch_size, False
@@ -147,10 +150,18 @@ class PPO(object):
                 self.critic_net_optimizer.zero_grad()
                 value_loss.backward()
                 nn.utils.clip_grad_norm_(self.critic.parameters(), self.max_grad_norm)
+
+                training_results['policy_loss'].append(action_loss.item())
+                training_results['value_loss'].append(value_loss.item())
+
                 self.critic_net_optimizer.step()
                 self.training_step += 1
         self.memory.item_buffer_clear()
-        return {}
+
+        for tag, v in training_results.items():
+            training_results[tag] = np.mean(v)
+
+        return training_results
 
     def save(self, save_path, episode):
         base_path = os.path.join(save_path, "trained_model")
