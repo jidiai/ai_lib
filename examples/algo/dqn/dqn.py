@@ -4,7 +4,9 @@ import torch.nn as nn
 import torch.optim as optimizer
 import numpy as np
 
-from networks.critic import Critic
+from examples.networks.critic import Critic
+from examples.networks.encoder import CNNEncoder
+
 
 import os
 from pathlib import Path
@@ -12,7 +14,7 @@ import sys
 
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
-from common.buffer import Replay_buffer as buffer
+from examples.common.buffer import Replay_buffer as buffer
 
 
 def get_trajectory_property():
@@ -30,23 +32,53 @@ class DQN(object):
         self.buffer_size = args.buffer_capacity
         self.batch_size = args.batch_size
         self.gamma = args.gamma
+        if 'max_grad_norm' not in vars(args):
+            self.max_grad_norm = 0.1
+        else:
+            self.max_grad_norm = args.max_grad_norm
+
         self.use_cuda = args.use_cuda
+        if 'cnn' in vars(args):
+            self.use_cnn_encoder = True
+            cnn_cfg = args.cnn
+            self.cnn_encoder = CNNEncoder(input_chanel=cnn_cfg['input_chanel'],
+                                          hidden_size=128,
+                                          output_size=self.hidden_size,
+                                          channel_list=cnn_cfg['channel_list'],
+                                          kernel_list=cnn_cfg['kernel_list'],
+                                          stride_list=cnn_cfg['stride_list'])
+            self.critic_eval = Critic(
+                input_size=self.hidden_size,
+                output_size=self.action_dim,
+                hidden_size=self.hidden_size,
+                num_hidden_layer=args.num_hidden_layer
+            )
+            self.critic_target = Critic(
+                input_size=self.hidden_size,
+                output_size=self.action_dim,
+                hidden_size=self.hidden_size,
+                num_hidden_layer=args.num_hidden_layer
+            )
+            self.to_cuda()
+            self.optimizer=optimizer.Adam(list(self.critic_eval.parameters())+list(self.cnn_encoder.parameters()), lr=self.lr)
 
-        self.critic_eval = Critic(
-            self.state_dim,
-            self.action_dim,
-            self.hidden_size,
-            num_hidden_layer=args.num_hidden_layer,
-        )
-        self.critic_target = Critic(
-            self.state_dim,
-            self.action_dim,
-            self.hidden_size,
-            num_hidden_layer=args.num_hidden_layer,
-        )
-        self.to_cuda()
+        else:
+            self.use_cnn_encoder = False
+            self.critic_eval = Critic(
+                self.state_dim,
+                self.action_dim,
+                self.hidden_size,
+                num_hidden_layer=args.num_hidden_layer,
+            )
+            self.critic_target = Critic(
+                self.state_dim,
+                self.action_dim,
+                self.hidden_size,
+                num_hidden_layer=args.num_hidden_layer,
+            )
+            self.to_cuda()
 
-        self.optimizer = optimizer.Adam(self.critic_eval.parameters(), lr=self.lr)
+            self.optimizer = optimizer.Adam(self.critic_eval.parameters(), lr=self.lr)
 
         # exploration
         self.eps = args.epsilon
@@ -65,6 +97,8 @@ class DQN(object):
         if self.use_cuda:
             self.critic_eval.to('cuda')
             self.critic_target.to('cuda')
+            if self.use_cnn_encoder:
+                self.cnn_encoder.to('cuda')
 
     def tensor_to_cuda(self, tensor):
         if self.use_cuda:
@@ -85,10 +119,21 @@ class DQN(object):
                 action = random.randrange(self.action_dim)
 
             else:
-                observation = self.tensor_to_cuda(torch.tensor(observation, dtype=torch.float).view(1, -1))
+
+                observation = self.tensor_to_cuda(torch.tensor(observation, dtype=torch.float))
+                if self.use_cnn_encoder:
+                    observation = self.cnn_encoder(observation.unsqueeze(0))
+                else:
+                    observation = observation.view(1, -1)
+
                 action = torch.argmax(self.critic_eval(observation)).item()
         else:
-            observation = self.tensor_to_cuda(torch.tensor(observation, dtype=torch.float).view(1, -1))
+            observation = self.tensor_to_cuda(torch.tensor(observation, dtype=torch.float))
+            if self.use_cnn_encoder:
+                observation = self.cnn_encoder(observation.unsqueeze(0))
+            else:
+                observation = observation.view(1, -1)
+
             action = torch.argmax(self.critic_eval(observation)).item()
 
         return {"action": action}
@@ -121,6 +166,10 @@ class DQN(object):
         reward = self.tensor_to_cuda(torch.tensor(transitions["r_0"], dtype=torch.float).squeeze())
         done = self.tensor_to_cuda(torch.tensor(transitions["d_0"], dtype=torch.float).squeeze())
 
+        if self.use_cnn_encoder:
+            obs = self.cnn_encoder(obs)
+            obs_ = self.cnn_encoder(obs_)
+
         q_eval = self.critic_eval(obs).gather(1, action)
         q_next = self.critic_target(obs_).detach()
         q_target = (reward + self.gamma * q_next.max(1)[0] * (1 - done)).view(
@@ -132,11 +181,14 @@ class DQN(object):
         self.optimizer.zero_grad()
         loss.backward()
 
-        torch.nn.utils.clip_grad_norm_(self.critic_eval.parameters(), 0.1)
+        torch.nn.utils.clip_grad_norm_(self.critic_eval.parameters(), self.max_grad_norm)
 
         grad_dict = {}
         for name, param in self.critic_eval.named_parameters():
             grad_dict[f"Critic_eval/{name} gradient"] = param.grad.mean().item()
+        if self.use_cnn_encoder:
+            for name, param in self.cnn_encoder.named_parameters():
+                grad_dict[f"CNN_encoder/{name} gradient"] = param.grad.mean().item()
 
         self.optimizer.step()
 
