@@ -290,6 +290,48 @@
     "max_step": 50,
     "obs_type": ["grid"]
   },
+    "MiniGrid-Dynamic-Obstacles-5x5-v0": {
+    "class_literal": "MiniGrid",
+    "n_player": 1,
+    "board_width": 5,
+    "board_height": 5,
+    "cell_range": 3,
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "act_box": {"discrete_n": 7},
+    "game_name": "MiniGrid-Dynamic-Obstacles-5x5-v0",
+    "agent_nums": [1],
+    "max_step": 50,
+    "obs_type": ["grid"]
+  },
+  "MiniGrid-Empty-5x5-v0": {
+    "class_literal": "MiniGrid",
+    "n_player": 1,
+    "board_width": 5,
+    "board_height": 5,
+    "cell_range": 3,
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "act_box": {"discrete_n": 7},
+    "game_name": "MiniGrid-Empty-5x5-v0",
+    "agent_nums": [1],
+    "max_step": 50,
+    "obs_type": ["grid"]
+  },
+    "MiniGrid-Empty-Random-5x5-v0": {
+    "class_literal": "MiniGrid",
+    "n_player": 1,
+    "board_width": 5,
+    "board_height": 5,
+    "cell_range": 3,
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "act_box": {"discrete_n": 7},
+    "game_name": "MiniGrid-Empty-Random-5x5-v0",
+    "agent_nums": [1],
+    "max_step": 50,
+    "obs_type": ["grid"]
+  },
   "MiniGrid-MultiRoom-N6-v0": {
     "class_literal": "MiniGrid",
     "n_player": 1,

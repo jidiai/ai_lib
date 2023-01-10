@@ -7,7 +7,7 @@ class Flatten(nn.Module):
         """
         x: [batch_size, ...]
         """
-        return x.view(x.size(0), -1)
+        return x.reshape(x.size(0), -1)
 
 
 class CNN_encoder(nn.Module):
@@ -48,6 +48,41 @@ class CNN_encoder(nn.Module):
         state = state.permute(0, 3, 1, 2)
 
         return self.net(state)
+
+
+class CNNEncoder(nn.Module):
+    def __init__(self, input_chanel, hidden_size, output_size, channel_list, kernel_list, stride_list,
+                 padding_list=None, batch_norm=True, pooling=False):
+        super(CNNEncoder, self).__init__()
+        assert len(channel_list) == len(kernel_list) == len(stride_list)
+        if padding_list is None:
+            padding_list = [0]*len(channel_list)
+
+        net_list = []
+        for idx in range(len(channel_list)):
+            net_list.append(
+                nn.Conv2d(in_channels=input_chanel, out_channels=channel_list[idx],
+                          kernel_size=kernel_list[idx], stride=stride_list[idx],padding=padding_list[idx])
+            )
+            if batch_norm:
+                net_list.append(nn.BatchNorm2d(channel_list[idx]))
+            net_list.append(nn.ReLU())
+            input_chanel = channel_list[idx]
+
+        net_list.append(Flatten())
+        # net_list.append(nn.Linear(hidden_size, output_size))
+        # net_list.append(nn.ReLU())
+
+        self.net = nn.Sequential(*net_list)
+
+    def forward(self, state):
+        # [batch, xx,xx,3]
+        assert len(state.shape)==4
+        state = state/255.0
+        state = state.permute(0,3,1,2)
+        return self.net(state)
+
+
 
 
 # another class of encoder is the LSTM net....
