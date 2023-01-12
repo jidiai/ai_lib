@@ -193,7 +193,8 @@ class DQN(object):
             loss.backward()
 
             torch.nn.utils.clip_grad_norm_(self.critic_eval.parameters(), self.max_grad_norm)
-            torch.nn.utils.clip_grad_norm_(self.cnn_encoder.parameters(), self.max_grad_norm)
+            if self.use_cnn_encoder:
+                torch.nn.utils.clip_grad_norm_(self.cnn_encoder.parameters(), self.max_grad_norm)
 
             grad_dict = {}
             for name, param in self.critic_eval.named_parameters():

@@ -8,12 +8,14 @@ import torch.nn.functional as F
 
 import numpy as np
 
-from networks.critic import Critic
-from networks.actor import NoisyActor, CategoricalActor, GaussianActor
+from examples.networks.critic import Critic
+from examples.networks.actor import NoisyActor, CategoricalActor, GaussianActor
+from examples.networks.encoder import CNNEncoder, Flatten
+
 
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
-from common.buffer import Replay_buffer as buffer
+from examples.common.buffer import Replay_buffer as buffer
 
 
 def get_trajectory_property():  # for adding terms to the memory buffer
@@ -26,7 +28,7 @@ def weights_init_(m):
         torch.nn.init.constant_(m.bias, 0)
 
 
-def update_params(optim, loss, clip=False, param_list=False, retain_graph=False):
+def update_params(optim, loss, clip=False, param_list=[], retain_graph=False):
     optim.zero_grad()
     loss.backward(retain_graph=retain_graph)
     if clip is not False:
@@ -52,6 +54,10 @@ class SAC(object):
         self.critic_lr = args.c_lr
         self.alpha_lr = args.alpha_lr
         self.use_cuda = args.use_cuda
+        if 'max_grad_norm' not in vars(args):
+            self.max_grad_norm = None
+        else:
+            self.max_grad_norm = args.max_grad_norm
 
         self.buffer_size = args.buffer_capacity
 
@@ -102,6 +108,28 @@ class SAC(object):
             self.tune_entropy = args.tune_entropy
             self.target_entropy_ratio = args.target_entropy_ratio
 
+            if 'cnn' in vars(args):
+                self.use_cnn_encoder = True
+                cnn_cfg = args.cnn
+                # self.cnn_encoder = Flatten()
+                self.actor_cnn_encoder = CNNEncoder(input_chanel=cnn_cfg['input_chanel'],
+                                                    hidden_size=None,
+                                                    output_size=None,
+                                                    channel_list=cnn_cfg['channel_list'],
+                                                    kernel_list=cnn_cfg['kernel_list'],
+                                                    stride_list=cnn_cfg['stride_list'],
+                                                    batch_norm=False).to(self.device)
+                self.critic_cnn_encoder = CNNEncoder(input_chanel=cnn_cfg['input_chanel'],
+                                                     hidden_size=None,
+                                                     output_size=None,
+                                                     channel_list=cnn_cfg['channel_list'],
+                                                     kernel_list=cnn_cfg['kernel_list'],
+                                                     stride_list=cnn_cfg['stride_list'],
+                                                     batch_norm=False).to(self.device)
+                self.state_dim = self.hidden_size
+            else:
+                self.use_cnn_encoder = False
+
             self.policy = CategoricalActor(
                 self.state_dim, self.hidden_size, self.action_dim
             ).to(self.device)
@@ -124,10 +152,17 @@ class SAC(object):
             ).to(self.device)
             self.q1_target.load_state_dict(self.q1.state_dict())
             self.q2_target.load_state_dict(self.q2.state_dict())
-            self.critic_optim = Adam(
-                list(self.q1.parameters()) + list(self.q2.parameters()),
-                lr=self.critic_lr,
-            )
+
+            if self.use_cnn_encoder:
+                self.critic_optim = Adam(list(self.q1.parameters())+
+                                         list(self.q2.parameters())+
+                                         list(self.critic_cnn_encoder.parameters()),
+                                         lr=self.critic_lr)
+            else:
+                self.critic_optim = Adam(
+                    list(self.q1.parameters()) + list(self.q2.parameters()),
+                    lr=self.critic_lr,
+                )
 
         elif self.policy_type == "gaussian":
             self.tune_entropy = args.tune_entropy
@@ -166,7 +201,12 @@ class SAC(object):
         self.learn_step_counter = 0
         self.target_replace_iter = args.target_replace
 
-        self.policy_optim = Adam(self.policy.parameters(), lr=self.actor_lr)
+        if self.use_cnn_encoder:
+            self.policy_optim = Adam(list(self.policy.parameters())+
+                                     list(self.actor_cnn_encoder.parameters()),
+                                     lr=self.actor_lr)
+        else:
+            self.policy_optim = Adam(self.policy.parameters(), lr=self.actor_lr)
 
         trajectory_property = get_trajectory_property()
         self.memory = buffer(self.buffer_size, trajectory_property)
@@ -186,9 +226,14 @@ class SAC(object):
             ).to(self.device)  # coefficiency for entropy term
 
     def choose_action(self, state, train=True):
-        state = torch.tensor(state, dtype=torch.float).view(1, -1).to(self.device)
+        state = torch.tensor(state, dtype=torch.float).to(self.device)
 
         if self.policy_type == "discrete":
+            if self.use_cnn_encoder:
+                state = self.actor_cnn_encoder(state.unsqueeze(0))
+            else:
+                state = state.view(1,-1)
+
             if train:
                 action, _, _, _ = self.policy.sample(state)
                 action = action.item()
@@ -199,6 +244,7 @@ class SAC(object):
             return {"action": action}
 
         elif self.policy_type == "deterministic":
+            state = state.view(1, -1)
             if train:
                 _, _, _, action = self.policy.sample(state)
                 action = action.item()
@@ -209,6 +255,7 @@ class SAC(object):
             return {"action": action}
 
         elif self.policy_type == "gaussian":
+            state = state.view(1, -1)
             if train:
                 action, _, _ = self.policy.sample(state)
                 action = action.detach().numpy().squeeze(1)
@@ -228,13 +275,22 @@ class SAC(object):
 
     def critic_loss(self, current_state, batch_action, next_state, reward, mask):
 
+        if self.use_cnn_encoder:
+            critic_encoded_state = self.critic_cnn_encoder(current_state)
+            critic_encoded_next_state = self.critic_cnn_encoder(next_state)
+            actor_encoded_next_state = self.actor_cnn_encoder(next_state)
+        else:
+            critic_encoded_state = current_state
+            critic_encoded_next_state = next_state
+            actor_encoded_next_state = next_state
+
         with torch.no_grad():
             next_state_action, next_state_pi, next_state_log_pi, _ = self.policy.sample(
-                next_state
+                actor_encoded_next_state
             )
             # qf1_next_target, qf2_next_target = self.critic_target(next_state)
-            qf1_next_target = self.q1_target(next_state)
-            qf2_next_target = self.q2_target(next_state)
+            qf1_next_target = self.q1_target(critic_encoded_next_state)
+            qf2_next_target = self.q2_target(critic_encoded_next_state)
 
             min_qf_next_target = next_state_pi * (
                 torch.min(qf1_next_target, qf2_next_target)
@@ -244,8 +300,8 @@ class SAC(object):
             next_q_value = reward + mask * self.gamma * (min_qf_next_target)
 
         # qf1, qf2 = self.critic(current_state)  # Two Q-functions to mitigate positive bias in the policy improvement step, [batch, action_num]
-        qf1 = self.q1(current_state)
-        qf2 = self.q2(current_state)
+        qf1 = self.q1(critic_encoded_state)
+        qf2 = self.q2(critic_encoded_state)
 
         qf1 = qf1.gather(1, batch_action.long())
         qf2 = qf2.gather(
@@ -258,15 +314,21 @@ class SAC(object):
         return qf1_loss, qf2_loss
 
     def policy_loss(self, current_state):
+        if self.use_cnn_encoder:
+            critic_encoded_state = self.critic_cnn_encoder(current_state)
+            actor_encoded_state = self.actor_cnn_encoder(current_state)
+        else:
+            critic_encoded_state = current_state
+            actor_encoded_state = current_state
 
         with torch.no_grad():
             # qf1_pi, qf2_pi = self.critic(current_state)
-            qf1_pi = self.q1(current_state)
-            qf2_pi = self.q2(current_state)
+            qf1_pi = self.q1(critic_encoded_state)
+            qf2_pi = self.q2(critic_encoded_state)
 
             min_qf_pi = torch.min(qf1_pi, qf2_pi)
 
-        pi, prob, log_pi, _ = self.policy.sample(current_state)
+        pi, prob, log_pi, _ = self.policy.sample(actor_encoded_state)
         inside_term = self.alpha.detach() * log_pi - min_qf_pi  # [batch, action_dim]
         policy_loss = ((prob * inside_term).sum(1)).mean()
 
@@ -312,13 +374,57 @@ class SAC(object):
         reward = torch.tensor(transitions["r_0"], dtype=torch.float).to(self.device)
         done = torch.tensor(transitions["d_0"], dtype=torch.float).to(self.device)
 
+        # if self.use_cnn_encoder:
+        #     critic_encoded_obs = self.critic_cnn_encoder(obs)
+        #     critic_encoded_obs_ = self.critic_cnn_encoder(obs_)
+        #     actor_encoded_obs = self.actor_cnn_encoder(obs)
+        # else:
+        #     critic_encoded_obs = obs
+        #     critic_encoded_obs_ = obs_
+        #     actor_encoded_obs = obs
+
         if self.policy_type == "discrete":
             qf1_loss, qf2_loss = self.critic_loss(obs, action, obs_, reward, (1 - done))
             policy_loss, prob, log_pi = self.policy_loss(obs)
             alpha_loss, alpha_logs = self.alpha_loss(prob, log_pi)
             qf_loss = qf1_loss + qf2_loss
-            update_params(self.critic_optim, qf_loss)
-            update_params(self.policy_optim, policy_loss)
+
+            self.critic_optim.zero_grad()
+            qf_loss.backward()
+            if self.max_grad_norm is not None:
+                torch.nn.utils.clip_grad_norm_(self.q1.parameters(), self.max_grad_norm)
+                torch.nn.utils.clip_grad_norm_(self.q2.parameters(), self.max_grad_norm)
+                if self.use_cnn_encoder:
+                    torch.nn.utils.clip_grad_norm_(self.critic_cnn_encoder.parameters(), self.max_grad_norm)
+            grad_dict = {}
+            for name, param in self.q1.named_parameters():
+                grad_dict[f"Q1/{name} gradient"] = param.grad.mean().item()
+            if self.use_cnn_encoder:
+                for name, param in self.critic_cnn_encoder.named_parameters():
+                    grad_dict[f'Critic_CNN_encoder/{name} gradient'] = param.grad.mean().item()
+
+            self.critic_optim.step()
+
+            self.policy_optim.zero_grad()
+            policy_loss.backward()
+            if self.max_grad_norm is not None:
+                torch.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
+                if self.use_cnn_encoder:
+                    torch.nn.utils.clip_grad_norm_(self.actor_cnn_encoder.parameters(), self.max_grad_norm)
+
+            for name, param in self.policy.named_parameters():
+                grad_dict[f"Policy/{name} gradient"] = param.grad.mean().item()
+            if self.use_cnn_encoder:
+                for name, param in self.actor_cnn_encoder.named_parameters():
+                    grad_dict[f'Actor_CNN_encoder/{name} gradient'] = param.grad.mean().item()
+
+            self.policy_optim.step()
+            # update_params(self.critic_optim, qf_loss, clip = self.max_grad_norm,
+            #               param_list=list(self.critic_cnn_encoder.parameters())
+            #                          +list(self.q1.parameters())+list(self.q2.parameters()))
+            # update_params(self.policy_optim, policy_loss, clip=self.max_grad_norm,
+            #               param_list=list(self.actor_cnn_encoder.parameters())+list(self.policy.parameters()))
+
             if self.tune_entropy:
                 update_params(self.alpha_optim, alpha_loss)
                 self.alpha = self.log_alpha.exp().detach()
@@ -330,11 +436,14 @@ class SAC(object):
 
             self.learn_step_counter += 1
 
-            return {
+            training_results = {
                 "policy_loss": policy_loss.detach().cpu().numpy(),
                 "value_loss": qf_loss.detach().cpu().numpy(),
                 "alpha_loss": alpha_loss.detach().cpu().numpy(),
             }
+            training_results.update(grad_dict)
+
+            return training_results
 
         elif self.policy_type == "deterministic":
 
@@ -438,6 +547,10 @@ class SAC(object):
             os.makedirs(base_path)
         model_actor_path = os.path.join(base_path, "actor_" + str(episode) + ".pth")
         torch.save(self.policy.state_dict(), model_actor_path)
+        if self.use_cnn_encoder:
+            encoder_path = os.path.join(base_path, f"encoder_{episode}.pth")
+            encoder_state_dict = self.actor_cnn_encoder.state_dict()
+            torch.save(encoder_state_dict, encoder_path)
 
     def load(self, file):
         self.policy.load_state_dict(torch.load(file))

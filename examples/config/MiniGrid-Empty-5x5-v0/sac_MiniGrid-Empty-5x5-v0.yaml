@@ -1,0 +1,46 @@
+algo: sac
+envparameters:
+  action_continuous: false
+  action_space: 7
+  n_player: 1
+  obs_continuous: true
+  obs_space: [7,7,3]
+  scenario: MiniGrid-Empty-5x5-v0
+hyperparameters:
+  cnn:
+    use_cnn_encoder: true
+    input_chanel: 3
+    channel_list: [32,32]
+    kernel_list: [4,2]
+    stride_list: [1,2]
+  a_lr: 0.0005
+  alpha: 0.2
+  alpha_lr: 0.0001
+  batch_size: 256
+  buffer_capacity: 10240
+  c_lr: 0.0005
+  epsilon: 0.9
+  epsilon_end: 0.2
+  gamma: 0.99
+  hidden_size: 128
+  max_grad_norm: 0.2
+  learn_freq: 1
+  learn_terminal: false
+  marl: false
+  num_hidden_layer: 2
+  target_entropy_ratio: 0.7
+  target_replace: 100
+  tau: 0.05
+  tune_entropy: false
+  use_network: true
+  policy_type: discrete
+seedparameters:
+  seed_nn: 1
+  seed_np: 1
+  seed_random: 1
+trainingparameters:
+  evaluate_rate: 100
+  max_episodes: 1800
+  render: false
+  save_interval: 1000
+  use_cuda: true

@@ -10,7 +10,8 @@ import torch.optim as optimizer
 import torch.nn.functional as F
 from torch.distributions import Categorical
 
-from algo.ddpg.Network import Actor, Critic, ContinuousActor
+from examples.algo.ddpg.Network import Actor, Critic, ContinuousActor
+from examples.networks.encoder import CNNEncoder
 
 import os
 from pathlib import Path
@@ -18,7 +19,7 @@ import sys
 
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
-from common.buffer import Replay_buffer as buffer
+from examples.common.buffer import Replay_buffer as buffer
 
 
 def get_trajectory_property():
@@ -41,16 +42,47 @@ class DDPG(object):
         self.policy_type = args.policy_type
         self.continuous_action_min = args.continuous_action_min
         self.continuous_action_max = args.continuous_action_max
+        if 'max_grad_norm' not in vars(args):
+            self.max_grad_norm = 0.1
+        else:
+            self.max_grad_norm = args.max_grad_norm
 
         self.update_freq = args.update_freq
 
         if self.policy_type == 'discrete':
-            self.actor = Actor(
-                self.state_dim, self.action_dim, self.hidden_size, args.num_hidden_layer
-            )
-            self.actor_target = Actor(
-                self.state_dim, self.action_dim, self.hidden_size, args.num_hidden_layer
-            )
+
+            if 'cnn' in vars(args):
+                self.use_cnn_encoder = True
+                cnn_cfg = args.cnn
+                self.actor_cnn_encoder = CNNEncoder(input_chanel=cnn_cfg['input_chanel'],
+                                                    hidden_size=None,
+                                                    output_size=None,
+                                                    channel_list=cnn_cfg['channel_list'],
+                                                    kernel_list=cnn_cfg['kernel_list'],
+                                                    stride_list=cnn_cfg['stride_list'],
+                                                    batch_norm=False)
+                self.critic_cnn_encoder = CNNEncoder(input_chanel=cnn_cfg['input_chanel'],
+                                                     hidden_size=None,
+                                                     output_size=None,
+                                                     channel_list=cnn_cfg['channel_list'],
+                                                     kernel_list=cnn_cfg['kernel_list'],
+                                                     stride_list=cnn_cfg['stride_list'],
+                                                     batch_norm=False)
+                self.actor = Actor(self.hidden_size, self.action_dim, self.hidden_size, args.num_hidden_layer)
+                self.actor_target = Actor(self.hidden_size, self.action_dim, self.hidden_size, args.num_hidden_layer)
+                self.actor_optimizer = optimizer.Adam(
+                    list(self.actor.parameters()) + list(self.actor_cnn_encoder.parameters()), lr=self.actor_lr)
+                self.state_dim = self.hidden_size
+
+                # self.critic_net_optimizer = optimizer.Adam(
+                #     list(self.critic.parameters()) + list(self.critic_cnn_encoder.parameters()), lr=self.actor_lr)
+            else:
+                self.actor = Actor(
+                    self.state_dim, self.action_dim, self.hidden_size, args.num_hidden_layer
+                )
+                self.actor_target = Actor(
+                    self.state_dim, self.action_dim, self.hidden_size, args.num_hidden_layer
+                )
         elif self.policy_type == 'continuous':
             self.actor = ContinuousActor(
                 self.state_dim, self.action_dim, self.hidden_size, args.num_hidden_layer
@@ -74,7 +106,11 @@ class DDPG(object):
         self.to_cuda()
 
         self.actor_optim = optimizer.Adam(self.actor.parameters(), lr=self.actor_lr)
-        self.critic_optim = optimizer.Adam(self.critic.parameters(), lr=self.critic_lr)
+        if self.use_cnn_encoder:
+            self.critic_optim = optimizer.Adam(
+                list(self.critic.parameters()) + list(self.critic_cnn_encoder.parameters()), lr=self.actor_lr)
+        else:
+            self.critic_optim = optimizer.Adam(self.critic.parameters(), lr=self.critic_lr)
 
         trajectory_property = get_trajectory_property()
         self.memory = buffer(self.buffer_size, trajectory_property)
@@ -89,6 +125,9 @@ class DDPG(object):
             self.actor_target.to('cuda')
             self.critic.to('cuda')
             self.critic_target.to('cuda')
+            if self.use_cnn_encoder:
+                self.actor_cnn_encoder.to('cuda')
+                self.critic_cnn_encoder.to('cuda')
 
     def tensor_to_cuda(self, tensor):
         if self.use_cuda:
@@ -112,6 +151,8 @@ class DDPG(object):
                 if random.random() > self.eps:
                     state = self.tensor_to_cuda(torch.tensor(
                         observation, dtype=torch.float).unsqueeze(0))
+                    if self.use_cnn_encoder:
+                        state = self.actor_cnn_encoder(state)
                     logits = self.actor(state).detach().cpu().numpy()
                 else:
                     logits = np.random.uniform(low=0, high=1, size=(1, self.action_dim))
@@ -119,6 +160,9 @@ class DDPG(object):
             else:
                 state = self.tensor_to_cuda(torch.tensor(
                     observation, dtype=torch.float).unsqueeze(0))
+                if self.use_cnn_encoder:
+                    state = self.actor_cnn_encoder(state)
+
                 logits = self.actor(state).detach().cpu().numpy()
                 action = Categorical(torch.Tensor(logits)).sample()
             return {"action": action, "logits": logits}
@@ -205,22 +249,35 @@ class DDPG(object):
                 .view(self.batch_size, -1)
             )
 
+            if self.use_cnn_encoder:
+                critic_encoded_obs = self.critic_cnn_encoder(obs)
+                critic_encoded_obs_ = self.critic_cnn_encoder(obs_)
+                actor_encoded_obs = self.actor_cnn_encoder(obs)
+                actor_encoded_obs_ = self.actor_cnn_encoder(obs_)
+            else:
+                critic_encoded_obs = obs
+                critic_encoded_obs_ = obs_
+                actor_encoded_obs = obs
+                actor_encoded_obs_ = obs_
+
             with torch.no_grad():
-                a1 = self.actor_target(obs_)
+                a1 = self.actor_target(actor_encoded_obs_)
                 # if self.policy_type == 'continuous':
                     # mid = (self.continuous_action_max + self.continuous_action_min) / 2
                     # scale = self.continuous_action_max - mid
                     # tanh_a = torch.tanh(a1)
                     # a1 = tanh_a * scale + mid
                     # a1 = torch.clip(a1, self.continuous_action_min, self.continuous_action_max)
-                y_true = reward + self.gamma * (1 - done) * self.critic_target(obs_, a1)
-            y_pred = self.critic(obs, action)
+                y_true = reward + self.gamma * (1 - done) * self.critic_target(critic_encoded_obs_, a1)
+            y_pred = self.critic(critic_encoded_obs, action)
 
             loss_fn = nn.MSELoss()
             value_loss = loss_fn(y_pred, y_true)
             self.critic_optim.zero_grad()
             value_loss.backward()
-            torch.nn.utils.clip_grad_norm_(self.critic.parameters(), 0.1)
+            torch.nn.utils.clip_grad_norm_(self.critic.parameters(), self.max_grad_norm)
+            if self.use_cnn_encoder:
+                torch.nn.utils.clip_grad_norm_(self.critic_cnn_encoder.parameters(), self.max_grad_norm)
 
             grad_dict = {}
             # for name, param in self.critic.named_parameters():
@@ -228,7 +285,7 @@ class DDPG(object):
 
             self.critic_optim.step()
 
-            cur_a = self.actor(obs)
+            cur_a = self.actor(actor_encoded_obs)
             # if self.policy_type == 'continuous':
                 # mid = (self.continuous_action_max + self.continuous_action_min) / 2
                 # scale = self.continuous_action_max - mid
@@ -236,10 +293,12 @@ class DDPG(object):
                 # cur_a = tanh_a * scale + mid
                 # cur_a = torch.clip(cur_a, self.continuous_action_min, self.continuous_action_max)
 
-            actor_loss = -torch.mean(self.critic(obs, cur_a))
+            actor_loss = -torch.mean(self.critic(critic_encoded_obs.detach(), cur_a))
             self.actor_optim.zero_grad()
             actor_loss.backward()
-            torch.nn.utils.clip_grad_norm_(self.actor.parameters(), 0.1)
+            torch.nn.utils.clip_grad_norm_(self.actor.parameters(), self.max_grad_norm)
+            if self.use_cnn_encoder:
+                torch.nn.utils.clip_grad_norm_(self.actor_cnn_encoder.parameters(), self.max_grad_norm)
 
             # for name, param in self.actor.named_parameters():
             #     grad_dict[f'Actor/{name} gradient']=param.grad().mean().item()
@@ -271,6 +330,13 @@ class DDPG(object):
         torch.save(self.critic.state_dict(), model_critic_path)
         model_actor_path = os.path.join(base_path, "actor_" + str(episode) + ".pth")
         torch.save(self.actor.state_dict(), model_actor_path)
+        if self.use_cnn_encoder:
+            encoder_path = os.path.join(base_path, f"encoder_{episode}.pth")
+            encoder_state_dict = {}
+            encoder_state_dict['actor_cnn_encoder'] = self.actor_cnn_encoder.state_dict()
+            encoder_state_dict['critic_cnn_encoder'] = self.critic_cnn_encoder.state_dict()
+            torch.save(encoder_state_dict, encoder_path)
+
 
     def load(self, load_path, i):
         self.actor.load_state_dict(
