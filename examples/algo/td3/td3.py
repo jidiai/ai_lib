@@ -30,30 +30,22 @@ class TD3:
         self.num_hidden_layer = args.num_hidden_layer
         self.continuous_action_min = args.continuous_action_min
         self.continuous_action_max = args.continuous_action_max
-        self.max_grad_norm = args.max_grad_norm
+        # self.max_grad_norm = args.max_grad_norm
         self.a_lr = args.a_lr
         self.c_lr = args.c_lr
-
-
         action_loc = (self.continuous_action_max+self.continuous_action_min)/2
         action_scale = self.continuous_action_max-action_loc
-        self.actor = ContinuousTanhActor(self.state_dim, self.action_dim, self.hidden_size,
-                                         action_loc=action_loc,action_scale=action_scale,
-                                         num_hidden_layer=self.num_hidden_layer)
-        self.actor_target = ContinuousTanhActor(self.state_dim, self.action_dim, self.hidden_size,
-                                         action_loc=action_loc,action_scale=action_scale,
-                                         num_hidden_layer=self.num_hidden_layer)
 
-        self.critic_1 = Critic(self.state_dim, self.action_dim, self.hidden_size, self.num_hidden_layer)
-        self.critic_1_target = Critic(self.state_dim, self.action_dim, self.hidden_size, self.num_hidden_layer)
-        self.critic_2 = Critic(self.state_dim, self.action_dim, self.hidden_size, self.num_hidden_layer)
-        self.critic_2_target = Critic(self.state_dim, self.action_dim, self.hidden_size, self.num_hidden_layer)
+        self.actor = ContinuousTanhActor(self.state_dim, self.action_dim, self.hidden_size, action_loc, action_scale, self.num_hidden_layer)
+        self.actor_target = ContinuousTanhActor(self.state_dim, self.action_dim, self.hidden_size, action_loc, action_scale, self.num_hidden_layer)
+        self.critic_1 = Critic(self.state_dim, self.action_dim, args.hidden_size)
+        self.critic_1_target = Critic(self.state_dim, self.action_dim, args.hidden_size)
+        self.critic_2 = Critic(self.state_dim, self.action_dim, args.hidden_size)
+        self.critic_2_target = Critic(self.state_dim, self.action_dim, args.hidden_size)
 
-        self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=self.a_lr)
-        self.critic_1_optimizer = optim.Adam(self.critic_1.parameters(), lr=self.c_lr)
-        self.critic_2_optimizer = optim.Adam(self.critic_2.parameters(), lr=self.c_lr)
-        # self.critic_optimizer = optim.Adam(list(self.critic_1.parameters())
-        #                                    +list(self.critic_2.parameters()), lr=self.c_lr)
+        self.actor_optimizer = optim.Adam(self.actor.parameters(), lr = self.a_lr)
+        self.critic_1_optimizer = optim.Adam(self.critic_1.parameters(), lr = self.c_lr)
+        self.critic_2_optimizer = optim.Adam(self.critic_2.parameters(), lr = self.c_lr)
 
         self.actor_target.load_state_dict(self.actor.state_dict())
         self.critic_1_target.load_state_dict(self.critic_1.state_dict())
@@ -79,19 +71,18 @@ class TD3:
         self.num_actor_update_iteration = 0
         self.num_training = 0
 
-    def choose_action(self, observation, train=True):
+    def choose_action(self, observation, train):
         inference_output = self.inference(observation, train)
         if train:
             self.add_experience(inference_output)
         return inference_output
 
-    def inference(self, state, train):
+    def inference(self, state, train=True):
         state = torch.tensor(state, dtype=torch.float).view(1, -1)
         action = self.actor(state).cpu().data.numpy().flatten()
         if train:
             action += np.random.normal(0, self.exploration_noise, size=self.action_dim)
-            action = action.clip(-self.continuous_action_min, -self.continuous_action_max)
-
+            action = action.clip(-max_action, max_action)
         logits = self.actor(state).detach().numpy()
         return {"action": action, "logits": logits}
 
@@ -149,34 +140,17 @@ class TD3:
 
             # Optimize Critic 1:
             current_Q1 = self.critic_1(state, action)
-            # current_Q2 = self.critic_2(state, action)
-            #
             loss_Q1 = F.mse_loss(current_Q1, target_Q)
-            # loss_Q2 = F.mse_loss(current_Q2, target_Q)
-            # critic_loss = loss_Q1+loss_Q2
-            # self.critic_optimizer.zero_grad()
-            # critic_loss.backward()
-            # torch.nn.utils.clip_grad_norm_(self.critic_1.parameters(), self.max_grad_norm)
-            # torch.nn.utils.clip_grad_norm_(self.critic_2.parameters(), self.max_grad_norm)
-            #
-            # self.critic_optimizer.step()
-
             self.critic_1_optimizer.zero_grad()
             loss_Q1.backward()
-            torch.nn.utils.clip_grad_norm_(self.critic_1.parameters(), self.max_grad_norm)
-
-
             self.critic_1_optimizer.step()
 
             training_results['Q1_loss'].append(loss_Q1.item())
-
             # Optimize Critic 2:
             current_Q2 = self.critic_2(state, action)
             loss_Q2 = F.mse_loss(current_Q2, target_Q)
             self.critic_2_optimizer.zero_grad()
             loss_Q2.backward()
-            torch.nn.utils.clip_grad_norm_(self.critic_2.parameters(), self.max_grad_norm)
-
             self.critic_2_optimizer.step()
 
             training_results['Q2_loss'].append(loss_Q2.item())
@@ -189,8 +163,6 @@ class TD3:
                 # Optimize the actor
                 self.actor_optimizer.zero_grad()
                 actor_loss.backward()
-                torch.nn.utils.clip_grad_norm_(self.actor.parameters(), self.max_grad_norm)
-
                 self.actor_optimizer.step()
 
                 training_results['policy_loss'].append(actor_loss.item())

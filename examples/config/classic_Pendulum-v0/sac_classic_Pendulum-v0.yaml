@@ -7,6 +7,7 @@ envparameters:
   obs_space: 3
   scenario: classic_Pendulum-v0
 hyperparameters:
+  use_cnn_encoder: false
   batch_size: 64
   buffer_capacity: 2048
   c_lr: 0.001

@@ -7,29 +7,27 @@ envparameters:
   obs_space: 3
   scenario: classic_Pendulum-v0
 hyperparameters:
-  a_lr: 0.0005
+  a_lr: 0.005
   batch_size: 64
   buffer_capacity: 2048
-  c_lr: 0.0005
-  epsilon: 0.5
+  c_lr: 0.005
+  epsilon: 0.3
   epsilon_end: 0.05
-  exploration_noise: 0.02
+  exploration_noise: 0.1
   gamma: 0.99
   hidden_size: 100
   num_hidden_layer: 1
-  learn_freq: 1
   learn_terminal: false
   marl: false
-  noise_clip: 0.02
-  policy_delay: 10
-  policy_noise: 0.02
-  max_grad_norm: 0.1
+  noise_clip: 0.5
+  policy_delay: 2
+  policy_noise: 0.2
   target_replace: 100
-  tau: 0.01
+  tau: 0.005
   update_freq: 1
   use_network: true
-  continuous_action_max: 2
   continuous_action_min: -2
+  continuous_action_max: 2
 seedparameters:
   seed_nn: 1
   seed_np: 1
@@ -38,5 +36,5 @@ trainingparameters:
   evaluate_rate: 20
   max_episodes: 1000
   render: false
-  save_interval: 1000
-  use_cuda: true
+  save_interval: 100
+  use_cuda: false

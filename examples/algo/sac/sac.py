@@ -60,6 +60,7 @@ class SAC(object):
             self.max_grad_norm = args.max_grad_norm
 
         self.buffer_size = args.buffer_capacity
+        self.use_cnn_encoder = args.use_cnn_encoder
 
         self.policy_type = (
             "discrete" if (not self.action_continuous) else args.policy_type
