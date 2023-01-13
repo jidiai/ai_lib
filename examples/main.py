@@ -4,10 +4,10 @@ import argparse
 if __name__ == "__main__":
     # set env and algo
     parser = argparse.ArgumentParser()
-    parser.add_argument("--scenario", default="classic_CartPole-v0", type=str)
+    parser.add_argument("--scenario", default="classic_Pendulum-v0", type=str)
     parser.add_argument(
         "--algo",
-        default="sac",
+        default="td3",
         type=str,
         help="tabularq/sarsa/dqn/ppo/ddpg/ac/ddqn/duelingq/sac/pg/sac/td3",
     )

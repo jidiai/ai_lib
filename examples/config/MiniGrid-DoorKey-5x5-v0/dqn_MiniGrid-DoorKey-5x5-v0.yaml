@@ -20,12 +20,16 @@ hyperparameters:
   epsilon_end: 0.2
   gamma: 0.99
   hidden_size: 128
-  num_hidden_layer: 2
+  num_hidden_layer: 1
   marl: false
   target_replace: 50
   use_network: true
   max_grad_norm: 0.1
   update_freq: 1
+  pretrain:
+    encoder_path:
+    actor_path:
+    critic_path:
 seedparameters:
   seed_nn: 1
   seed_np: 1

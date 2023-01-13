@@ -25,16 +25,21 @@ hyperparameters:
   num_hidden_layer: 2
   learn_terminal: true
   marl: false
-  max_grad_norm: 0.5
+  max_grad_norm: 0.2
   update_freq: 1
   use_network: true
+  pretrain:
+    encoder_path: /home/yansong/Desktop/jidiai/marllib_logs/minigrid/MiniGrid-Empty-Random-5x5-v0/ppo/selected/trained_model/encoder_10000.pth
+    actor_path: /home/yansong/Desktop/jidiai/marllib_logs/minigrid/MiniGrid-Empty-Random-5x5-v0/ppo/selected/trained_model/actor_10000.pth
+    critic_path: /home/yansong/Desktop/jidiai/marllib_logs/minigrid/MiniGrid-Empty-Random-5x5-v0/ppo/selected/trained_model/critic_10000.pth
+
 seedparameters:
   seed_nn: 1
   seed_np: 1
   seed_random: 1
 trainingparameters:
   evaluate_rate: 50
-  max_episodes: 10000
+  max_episodes: 50000
   render: false
-  save_interval: 100
+  save_interval: 1000
   use_cuda: true

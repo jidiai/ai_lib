@@ -161,8 +161,8 @@ def run_game(g, env_name, multi_part_agent_ids, actions_spaces, policy_list, ren
     set_seed(g, env_name)
 
     for i in range(len(policy_list)):
-        if policy_list[i] not in get_valid_agents():
-            raise Exception("agent {} not valid!".format(policy_list[i]))
+        # if policy_list[i] not in get_valid_agents():
+        #     raise Exception("agent {} not valid!".format(policy_list[i]))
 
         file_path = os.path.dirname(os.path.abspath(__file__)) + "/examples/algo/" + policy_list[i] + "/submission.py"
         if not os.path.exists(file_path):
@@ -221,6 +221,7 @@ def run_game(g, env_name, multi_part_agent_ids, actions_spaces, policy_list, ren
     game_info["end_time"] = ed
     logs = json.dumps(game_info, ensure_ascii=False, cls=NpEncoder)
     logger.info(logs)
+    print('total steps = ', step)
 
 
 def get_valid_agents():
@@ -254,23 +255,27 @@ if __name__ == "__main__":
     # "ParticleEnv-simple_tag-continuous", "ParticleEnv-simple_world_comm-continuous", "olympics-curling",
     # "delivery_two_agents", "Logistics_Transportation2", "olympics-integrated", "wilderness-navigation",
     # "chessandcard-leduc_holdem_v3", "revive-refrigerator"
-    env_type = "revive-refrigerator"
+    env_type = "olympics-integrated"
     game = make(env_type)
 
     # 针对"classic_"环境，使用gym core 进行render;
     # gridgame类环境（"gobang_1v1", "reversi_1v1", "snakes_1v1", "sokoban_2p", "snakes_3v3",
     # "snakes_5p", "sokoban_1p", "cliffwalking"），使用replay工具包的replay.html，通过上传.json进行网页回放
-    render_mode = False
+    render_mode = True
 
     # gridgame类环境支持实时render（"gobang_1v1", "reversi_1v1", "snakes_1v1", "sokoban_2p", "snakes_3v3",
     # "snakes_5p", "sokoban_1p", "cliffwalking"）
     render_in_time = False
 
     # print("可选policy 名称类型:", get_valid_agents())
-    policy_list = ["random"] * len(game.agent_nums)
+    policy_list = ['random']*2    #["random"] * len(game.agent_nums)
+    import time
 
+    time1 = time.time()
     multi_part_agent_ids, actions_space = get_players_and_action_space_list(game)
     if render_in_time:
         render_game(game)
     else:
         run_game(game, env_type, multi_part_agent_ids, actions_space, policy_list, render_mode)
+
+    print(f'time = {time.time()-time1}')

@@ -3,8 +3,8 @@ import torch
 import torch.nn.functional as F
 import torch.optim as optim
 
-from networks.network_td3 import ContinuousTanhActor, Critic
-from common.buffer import Replay_buffer as buffer
+from examples.networks.network_td3 import ContinuousTanhActor, Critic
+from examples.common.buffer import Replay_buffer as buffer
 from pathlib import Path
 import sys
 import os
@@ -30,6 +30,10 @@ class TD3:
         self.num_hidden_layer = args.num_hidden_layer
         self.continuous_action_min = args.continuous_action_min
         self.continuous_action_max = args.continuous_action_max
+        self.max_grad_norm = args.max_grad_norm
+        self.a_lr = args.a_lr
+        self.c_lr = args.c_lr
+
 
         action_loc = (self.continuous_action_max+self.continuous_action_min)/2
         action_scale = self.continuous_action_max-action_loc
@@ -45,9 +49,11 @@ class TD3:
         self.critic_2 = Critic(self.state_dim, self.action_dim, self.hidden_size, self.num_hidden_layer)
         self.critic_2_target = Critic(self.state_dim, self.action_dim, self.hidden_size, self.num_hidden_layer)
 
-        self.actor_optimizer = optim.Adam(self.actor.parameters())
-        self.critic_1_optimizer = optim.Adam(self.critic_1.parameters())
-        self.critic_2_optimizer = optim.Adam(self.critic_2.parameters())
+        self.actor_optimizer = optim.Adam(self.actor.parameters(), lr=self.a_lr)
+        self.critic_1_optimizer = optim.Adam(self.critic_1.parameters(), lr=self.c_lr)
+        self.critic_2_optimizer = optim.Adam(self.critic_2.parameters(), lr=self.c_lr)
+        # self.critic_optimizer = optim.Adam(list(self.critic_1.parameters())
+        #                                    +list(self.critic_2.parameters()), lr=self.c_lr)
 
         self.actor_target.load_state_dict(self.actor.state_dict())
         self.critic_1_target.load_state_dict(self.critic_1.state_dict())
@@ -79,11 +85,13 @@ class TD3:
             self.add_experience(inference_output)
         return inference_output
 
-    def inference(self, state, train=True):
+    def inference(self, state, train):
         state = torch.tensor(state, dtype=torch.float).view(1, -1)
         action = self.actor(state).cpu().data.numpy().flatten()
-        action += np.random.normal(0, self.exploration_noise, size=self.action_dim)
-        action = action.clip(-self.continuous_action_min, -self.continuous_action_max)
+        if train:
+            action += np.random.normal(0, self.exploration_noise, size=self.action_dim)
+            action = action.clip(-self.continuous_action_min, -self.continuous_action_max)
+
         logits = self.actor(state).detach().numpy()
         return {"action": action, "logits": logits}
 
@@ -141,10 +149,21 @@ class TD3:
 
             # Optimize Critic 1:
             current_Q1 = self.critic_1(state, action)
+            # current_Q2 = self.critic_2(state, action)
+            #
             loss_Q1 = F.mse_loss(current_Q1, target_Q)
+            # loss_Q2 = F.mse_loss(current_Q2, target_Q)
+            # critic_loss = loss_Q1+loss_Q2
+            # self.critic_optimizer.zero_grad()
+            # critic_loss.backward()
+            # torch.nn.utils.clip_grad_norm_(self.critic_1.parameters(), self.max_grad_norm)
+            # torch.nn.utils.clip_grad_norm_(self.critic_2.parameters(), self.max_grad_norm)
+            #
+            # self.critic_optimizer.step()
+
             self.critic_1_optimizer.zero_grad()
             loss_Q1.backward()
-            torch.nn.utils.clip_grad_norm_(self.critic_1.parameters(), 0.1)
+            torch.nn.utils.clip_grad_norm_(self.critic_1.parameters(), self.max_grad_norm)
 
 
             self.critic_1_optimizer.step()
@@ -156,7 +175,7 @@ class TD3:
             loss_Q2 = F.mse_loss(current_Q2, target_Q)
             self.critic_2_optimizer.zero_grad()
             loss_Q2.backward()
-            torch.nn.utils.clip_grad_norm_(self.critic_2.parameters(), 0.5)
+            torch.nn.utils.clip_grad_norm_(self.critic_2.parameters(), self.max_grad_norm)
 
             self.critic_2_optimizer.step()
 
@@ -170,7 +189,7 @@ class TD3:
                 # Optimize the actor
                 self.actor_optimizer.zero_grad()
                 actor_loss.backward()
-                torch.nn.utils.clip_grad_norm_(self.actor.parameters(), 0.5)
+                torch.nn.utils.clip_grad_norm_(self.actor.parameters(), self.max_grad_norm)
 
                 self.actor_optimizer.step()
 

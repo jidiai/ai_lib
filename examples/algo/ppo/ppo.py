@@ -69,6 +69,15 @@ class PPO(object):
             self.critic_net_optimizer = optim.Adam(self.critic.parameters(), lr=self.c_lr)
         self.to_cuda()
 
+        # pretrained_path = args.pretrain
+        # if len(pretrained_path)>0:
+        #     encoder_dict = torch.load(pretrained_path['encoder_path'])
+        #     self.actor_cnn_encoder.load_state_dict(encoder_dict['actor_cnn_encoder'])
+        #     self.critic_cnn_encoder.load_state_dict(encoder_dict['critic_cnn_encoder'])
+        #     self.actor.load_state_dict(torch.load(pretrained_path['actor_path']))
+        #     self.critic.load_state_dict(torch.load(pretrained_path['critic_path']))
+
+
         trajectory_property = get_trajectory_property()
         self.memory = buffer(self.buffer_size, trajectory_property)
         self.memory.init_item_buffers()

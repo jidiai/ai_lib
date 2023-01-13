@@ -87,6 +87,11 @@ class DQN(object):
 
             self.optimizer = optimizer.Adam(self.critic_eval.parameters(), lr=self.lr)
 
+        # pretrained_path = args.pretrain
+        # if len(pretrained_path)>0:
+        #     self.cnn_encoder.load_state_dict(torch.load(pretrained_path['encoder_path']))
+        #     self.critic_eval.load_state_dict(torch.load(pretrained_path['critic_path']))
+
         # exploration
         self.eps = args.epsilon
         self.eps_end = args.epsilon_end
