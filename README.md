@@ -104,6 +104,9 @@ Apart from the necessary dependency in `requirements.txt`, some environments req
 - `gym-chinese-chess` https://github.com/bupticybee/gym_chinese_chess
 - `Wilderness Scavenger` https://github.com/inspirai/wilderness-scavenger
 - `REVIVE SDK` https://www.revive.cn/help/polixir-revive-sdk/text/introduction.html
+- `FinRL` https://github.com/AI4Finance-Foundation/FinRL
+
+  `pip install git+https://github.com/AI4Finance-Foundation/FinRL.git`
   
 - `Torch 1.7.0` 可选
   - 支持提交Torch训练后的模型.pth附属文件

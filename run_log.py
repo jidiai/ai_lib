@@ -253,8 +253,8 @@ if __name__ == "__main__":
     # "ParticleEnv-simple_speaker_listener-continuous", "ParticleEnv-simple_spread-continuous",
     # "ParticleEnv-simple_tag-continuous", "ParticleEnv-simple_world_comm-continuous", "olympics-curling",
     # "delivery_two_agents", "Logistics_Transportation2", "olympics-integrated", "wilderness-navigation",
-    # "chessandcard-leduc_holdem_v3", "revive-refrigerator"
-    env_type = "revive-refrigerator"
+    # "chessandcard-leduc_holdem_v3", "revive-refrigerator", "finrl-stocktrading"
+    env_type = "finrl-stocktrading"
     game = make(env_type)
 
     # 针对"classic_"环境，使用gym core 进行render;

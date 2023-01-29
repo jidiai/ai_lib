@@ -1020,5 +1020,15 @@
     "is_act_continuous": true,
     "agent_nums": [1],
     "obs_type": ["dict"]
+  },
+  "finrl-stocktrading": {
+    "class_literal": "FinRL_StockTradingEnv",
+    "n_player": 1,
+    "max_step": 5000,
+    "game_name": "finrl-stocktrading",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [1],
+    "obs_type": ["dict"]
   }
 }
