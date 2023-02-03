@@ -3,7 +3,10 @@ import numpy as np
 import gym
 
 from pettingzoo.mpe import simple_reference_v2
+# from pettingzoo.mpe import simple_v2
+
 env = simple_reference_v2.parallel_env()
+# env = simple_v2.parallel_env()
 
 class Encoder:
     def __init__(self, action_spaces=env.action_space('agent_0'),

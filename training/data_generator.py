@@ -79,6 +79,42 @@ def simple_data_generator(data, num_mini_batch, device, shuffle=False):
         yield {k: v for k, v in tmp_batch.items()}
 
 
+def batched_data_generator(data, num_mini_batch, device, shuffle=False):
+    # breakpoint()
+    assert num_mini_batch==1, "only support num_mini_batch = 1"
+
+
+    assert len(data[EpisodeKey.CUR_OBS].shape) == 3, "{}".format(
+        {k: v.shape for k, v in data.items()}
+    )
+
+    bs, n_agent, _ = data[EpisodeKey.CUR_OBS].shape
+    batch_size = bs*n_agent  # * n_agent
+
+
+    batch = {}
+    for k in data:
+        try:
+            global_timer.record("data_copy_start")
+            if isinstance(data[k], np.ndarray):
+                batch[k] = torch.from_numpy(data[k]).to(device)
+            else:
+                batch[k] = data[k]
+            global_timer.time("data_copy_start", "data_copy_end", "data_copy")
+            batch[k] = batch[k].reshape(batch_size, *data[k].shape[2:])
+        except Exception:
+            Logger.error("k: {}, shape = {}".format(k, batch[k].shape))
+            for i, j in data.items():
+                print(f"data = {i}, shape = {j.shape}")
+            raise Exception(
+                "k: {}, shape = {}, batch size = {}".format(
+                    k, batch[k].shape, batch_size
+                )
+            )
+
+    yield  batch
+    return
+
 def recurrent_generator(data, num_mini_batch, rnn_data_chunk_length, device):
     batch = {k: d for k, d in data.items()}
     # batch_size,seq_length,n_agent(,n_feats*)

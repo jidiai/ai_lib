@@ -152,7 +152,7 @@ class DeepQLearningLoss(LossFunc):
         value_loss.backward()
 
         grad_dict = {}
-        for name, param in policy.named_parameters():
+        for name, param in policy.critic.named_parameters():
             if param.grad is not None:
                 grad_dict[name] = param.grad.mean().item()
 

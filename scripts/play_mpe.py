@@ -54,7 +54,9 @@ class RandomPlayer:
 
 
 # env_cfg= #{'env_id': "simple_speaker_listener_v3"}
-env_cfg={'env_id': "simple_reference_v2"}
+# env_cfg={'env_id': "simple_reference_v2"}
+env_cfg={'env_id': "simple_v2"}
+
 
 env = MPE(0,None,env_cfg)
 

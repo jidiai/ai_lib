@@ -1,4 +1,4 @@
-expr_group: mpe_simple_reference
+expr_group: mpe_simple
 expr_name: marl_dqn
 log_dir: logs
 log_name: 'Marl'
@@ -102,7 +102,7 @@ rollout_manager:
     envs:
       - cls: "mpe"
         id_prefix: "mpe"
-        env_id: "simple_reference_v2"
+        env_id: "simple_v2"
 
 
 training_manager:
