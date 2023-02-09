@@ -74,11 +74,22 @@ def merge_gym_box(box_list):
 INDEPENDENT_OBS = True
 
 # env_cfg= #{'env_id': "simple_speaker_listener_v3"}
-env_cfg={'env_id': "simple_reference_v2", "global_encoder": not INDEPENDENT_OBS}
+# env_cfg={'env_id': "simple_reference_v2", "global_encoder": not INDEPENDENT_OBS}
+env_cfg = {'env_id': "simple_speaker_listener_v3", "global_encoder": not INDEPENDENT_OBS}
+# env_cfg = {'env_id': "simple_spread_v2", "global_encoder": not INDEPENDENT_OBS}
 # env_cfg={'env_id': "simple_v2"}
+
 env = MPE(0,None,env_cfg)
 
 
+if env_cfg['env_id']=='simple_reference_v2':
+    agent_0_name = 'agent_0'
+    agent_1_name = 'agent_1'
+elif env_cfg['env_id']=='simple_speaker_listener_v3':
+    agent_0_name = 'speaker_0'
+    agent_1_name = 'listener_0'
+elif env_cfg['env_id']=='simple_spread_v2':
+    agent_0_name, agent_1_name, agent_2_name = env.agent_ids
 
 if INDEPENDENT_OBS:
     ### Independent DQN player
@@ -109,8 +120,8 @@ if INDEPENDENT_OBS:
     config = '/home/yansong/Desktop/jidiai/ai_lib/expr/mpe/mpe_ppo_marl.yaml'
     ppo_cfg = load_cfg(config)
     policy = PPO(registered_name='PPO',
-                 observation_space=env.observation_spaces('agent_0'),
-                 action_space=env.action_spaces('agent_0'),
+                 observation_space=env.observation_spaces(agent_0_name),
+                 action_space=env.action_spaces(agent_1_name),
                  model_config=ppo_cfg['populations'][0]['algorithm']['model_config'])
 
 
