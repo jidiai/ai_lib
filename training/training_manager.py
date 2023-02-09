@@ -123,7 +123,7 @@ class TrainingManager:
             training_steps += 1
 
             global_timer.record("optimize_start")
-            try:
+            try:                                                    #check buffer size > batch size???
                 statistics_list = ray.get(
                     [trainer.optimize.remote() for trainer in self.trainers]
                 )

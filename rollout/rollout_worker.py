@@ -99,6 +99,7 @@ class RolloutWorker:
 
         module = importlib.import_module("rollout.{}".format(self.cfg.rollout_func_name))
         self.rollout_func = module.rollout_func
+        self.rollout_func_cfg = cfg.get('rollout_func_cfg', {})
 
         self.mix_opponent = cfg.get('mix_opponent', False)
         self.policy_distribution_record = []
@@ -154,7 +155,9 @@ class RolloutWorker:
             rollout_length=rollout_length,
             sample_length=self.cfg.sample_length,
             padding_length=self.cfg.padding_length,
-            rollout_epoch=rollout_epoch
+            rollout_epoch=rollout_epoch,
+            seed=self.seed,
+            **self.rollout_func_cfg
             # decaying_exploration_cfg=self.cfg.decaying_exploration
         )
         global_timer.time("policy_update_end", "rollout_end", "rollout")

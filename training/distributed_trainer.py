@@ -25,6 +25,10 @@ class DistributedPolicyWrapper:
                 local_rank, os.environ["CUDA_VISIBLE_DEVICES"]
             )
         )
+
+        torch.random.manual_seed(0)
+        torch.cuda.manual_seed(0)
+
         self.device = torch.device("cuda:0")
         self.policy = policy.to_device(self.device)
 

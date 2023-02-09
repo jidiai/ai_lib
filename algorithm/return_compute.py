@@ -15,8 +15,53 @@ def compute_return(policy, batch):
         return compute_async_gae(policy, batch)
     elif return_mode in ["mc"]:
         return compute_mc(policy, batch)
+    elif return_mode == 'reward_to_go':
+        return reward_to_go(policy, batch)
     else:
         raise ValueError("Unexpected return mode: {}".format(return_mode))
+
+
+# def compute_gae(policy, batch):
+#     with torch.no_grad()
+def reward_to_go(policy, batch):
+    """
+    batch: [B, traj_len, num_agent, _];
+    """
+    # breakpoint()
+    cfg = policy.custom_config
+    gamma = cfg["gamma"]
+    reward = batch[EpisodeKey.REWARD]
+    batch_size, traj_len, num_agent, reward_dim = reward.shape
+    Gt = []
+    R = np.zeros((batch_size, num_agent, reward_dim))
+    for t in reversed(range(traj_len)):
+        r = reward[:,t,...]
+        R = r + gamma*R
+        Gt.insert(0, R)
+    Gt = np.swapaxes(np.stack(Gt), 0,1)
+
+    obs= batch[EpisodeKey.CUR_OBS].reshape(batch_size*traj_len*num_agent, -1)
+    action_masks = batch[EpisodeKey.ACTION_MASK].reshape(batch_size*traj_len*num_agent, -1)
+
+    device = policy.device
+    obs = torch.FloatTensor(obs).to(device)
+    action_masks = torch.FloatTensor(action_masks).to(device)
+
+    V = policy.critic(**{EpisodeKey.CUR_OBS: obs,
+                         EpisodeKey.ACTION_MASK: action_masks}).detach().cpu().numpy()
+    V = V.reshape(batch_size, traj_len, num_agent, -1)
+    delta = Gt-V
+    adv = delta
+
+    ret = {
+        EpisodeKey.RETURN: Gt,
+        EpisodeKey.STATE_VALUE: V,
+        EpisodeKey.ADVANTAGE: adv
+    }
+    return ret
+
+
+
 
 
 def compute_async_gae(policy, batch):

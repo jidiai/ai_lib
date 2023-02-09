@@ -29,6 +29,26 @@ class DefaultFeatureEncoder:
     def action_space(self):
         return self._action_space
 
+class GlobalFeatureEncoder:
+    def __init__(self, action_spaces_dict, observation_spaces_dict):
+        self._action_space_dict = action_spaces_dict
+        self._observation_space_dict = observation_spaces_dict
+        self._agent_ids = list(self._observation_space_dict.keys())
+
+    def encode(self, global_state):
+        encoded_obs = {}
+        action_masks = {}
+        for aid in self._agent_ids:
+            current_obs = global_state[aid]
+            other_obs = [global_state[i] for i in self._agent_ids if i != aid]
+            other_obs = np.concatenate(other_obs)
+            current_encoded_obs = np.concatenate([current_obs, other_obs])
+            encoded_obs[aid] = current_encoded_obs
+            action_masks[aid] = np.ones(self._action_space_dict[aid].n, dtype=np.float32)
+        return encoded_obs, action_masks
+
+
+
 class ParameterSharingFeatureEncoder:
     def __init__(self, action_spaces, observation_spaces):
         self._action_space = action_spaces
@@ -50,6 +70,7 @@ class MPE(BaseAECEnv):
         env_id = cfg["env_id"]
         env_module = importlib.import_module(f"pettingzoo.mpe.{env_id}")
         self._env = env_module.parallel_env()            #max_cycles=25, continuous_actions=False
+        self._env.seed(seed)
         self._step_ctr = 0
         self._is_terminated = False
 
@@ -63,13 +84,18 @@ class MPE(BaseAECEnv):
         #     "agent_0": DefaultFeatureEncoder(self._action_space['agent_0'], self._observation_space['agent_0']),
         #     "agent_1": DefaultFeatureEncoder(self._action_space['agent_0'], self._observation_space['agent_0']),
         # }
-        self.feature_encoders = {
-            aid: DefaultFeatureEncoder(self._action_space(aid), self._observation_space(aid))
-            for aid in self.agent_ids
-        }
+        self.global_encoder = self.cfg['global_encoder']
+        if not self.global_encoder:
+            self.feature_encoders = {
+                aid: DefaultFeatureEncoder(self._action_space(aid), self._observation_space(aid))
+                for aid in self.agent_ids
+            }
+        else:
+            self.feature_encoders = GlobalFeatureEncoder(self._env.action_spaces,
+                                                         self._env.observation_spaces)
+
 
         self.max_step = 25
-
 
     @property
     def possible_agents(self):
@@ -90,21 +116,29 @@ class MPE(BaseAECEnv):
         self._is_terminated=False
         # self.cumulated_rewards = 0
         self.stats={agent_id: {
-            "reward": 0.0,
-            "total_steps": 0
+            "total_reward": 0.0,
+            "total_steps": 0,
+            f"{agent_id}'s reward": 0,
         } for agent_id in self.agent_ids
         }
 
 
         observations = self._env.reset()  # {agent_id: agent_obs}
-        encoded_observations = {}
-        action_masks = {}
-        dones = {}
-        for agent_id in self.agent_ids:
-            _obs, _action_mask = self.feature_encoders[agent_id].encode(observations[agent_id])
-            encoded_observations[agent_id] = np.array(_obs, dtype=np.float32)
-            action_masks[agent_id] = np.array(_action_mask)
-            dones[agent_id] = np.zeros((1))
+        # if not self.global_encoder:
+        if not self.global_encoder:
+            encoded_observations = {}
+            action_masks = {}
+            dones = {}
+            for agent_id in self.agent_ids:
+                _obs, _action_mask = self.feature_encoders[agent_id].encode(observations[agent_id])
+                encoded_observations[agent_id] = np.array(_obs, dtype=np.float32)
+                action_masks[agent_id] = np.array(_action_mask)
+                dones[agent_id] = np.zeros((1))
+        else:
+            encoded_observations, action_masks = self.feature_encoders.encode(observations)
+            dones = dict(zip(self.agent_ids, [np.zeros((1))]*len(self.agent_ids)))
+        # else:
+        #     encoded_observations =
 
         rets = {
             agent_id:{
@@ -131,13 +165,23 @@ class MPE(BaseAECEnv):
         #     assert self.action_spaces[agent].contains(action), f"Action is not in space: {action} with type={type(action)}"
         observations, rewards, dones, infos = self._env.step(filtered_actions)
 
+        if not self.global_encoder:
+            encoded_observations = {}
+            action_masks = {}
+            for agent_id in self.agent_ids:
+                _obs, _action_mask = self.feature_encoders[agent_id].encode(observations[agent_id])
+                encoded_observations[agent_id] = np.array(_obs, dtype=np.float32)
+                action_masks[agent_id] = np.array(_action_mask)
+        else:
+            encoded_observations, action_masks = self.feature_encoders.encode(observations)
+
         self._is_terminated=all(list(dones.values()))
         self.update_episode_stats(rewards)
 
 
         return {
             agent_id: {
-                EpisodeKey.NEXT_OBS: observations[agent_id],
+                EpisodeKey.NEXT_OBS: encoded_observations[agent_id],
                 EpisodeKey.NEXT_ACTION_MASK: np.ones(self.action_spaces('agent_0').n, dtype=np.float32),
                 EpisodeKey.REWARD: np.array([rewards[agent_id]]),
                 EpisodeKey.DONE: np.array([dones[agent_id]])
@@ -157,8 +201,9 @@ class MPE(BaseAECEnv):
     def update_episode_stats(self, reward):
 
         for agent_id, stat in self.stats.items():
-            stat['reward'] += reward[agent_id]
+            stat['total_reward'] += sum(reward.values())  #reward[agent_id]
             stat['total_steps'] = self._step_ctr
+            stat[f"{agent_id}'s reward"] += reward[agent_id]
 
     def get_episode_stats(self):
         return self.stats

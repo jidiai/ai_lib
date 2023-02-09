@@ -15,7 +15,12 @@ export PYTHONPATH=$SCRIPT_DIR
 #python main_marl.py --config expr/gym/CartPole_SAC_marl.yaml
 #python main_marl.py --config expr/gym/Pendulum_DDPG_marl.yaml
 #python main_marl.py --config expr/mpe/mpe_dqn_marl.yaml
-python main_marl.py --config expr/mpe/mpe_dqn_marl.yaml
+#python main_marl.py --config expr/mpe/mpe_dqn_marl.yaml
+#python main_marl.py --config expr/mpe/mpe_madqn_marl.yaml
+python main_marl.py --config expr/mpe/mpe_ppo_marl.yaml
+
+
+
 
 
 

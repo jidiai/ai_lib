@@ -7,6 +7,8 @@ from utils.desc.task_desc import RolloutDesc
 from utils.timer import global_timer
 from utils.naming import default_table_name
 
+import torch
+import random
 
 def rename_field(data, field, new_field):
     for agent_id, agent_data in data.items():
@@ -103,6 +105,8 @@ def rollout_func(
 
     sample_length = kwargs.get("sample_length", rollout_length)
     render = kwargs.get("render", False)
+    rollout_epoch = kwargs['rollout_epoch'] #kwargs.get('rollout_epoch', 0)
+    episode_mode = kwargs['episode_mode']
 
     policy_ids = OrderedDict()
     feature_encoders = OrderedDict()
@@ -153,7 +157,10 @@ def rollout_func(
         global_timer.record("inference_start")
         for agent_id, (policy_id, policy) in behavior_policies.items():
             policy_outputs[agent_id] = policy.compute_action(explore=not eval,
+                                                             step=rollout_epoch,
                                                              **policy_inputs[agent_id])
+            current_eps = policy.current_eps
+
         global_timer.time("inference_start", "inference_end", "inference")
 
         actions = select_fields(policy_outputs, [EpisodeKey.ACTION])
@@ -215,17 +222,26 @@ def rollout_func(
 
         step += 1
     if not eval:
-        episode = step_data_list
+        if episode_mode == 'traj':
+            episode = stack_step_data(step_data_list, {})
+        elif episode_mode == 'time-step':
+            episode = step_data_list
+        else:
+            raise NotImplementedError(f'Episode mode {episode_mode} not implemented')
+
         data_server.save.remote(
             default_table_name(
                 rollout_desc.agent_id,
                 rollout_desc.policy_id,
                 rollout_desc.share_policies,
             ),
-            episode,
+            [episode],
         )
 
     stats = env.get_episode_stats()
+
+    if not eval:
+        stats['agent_0']['eps'] = current_eps
 
     return {
         "main_agent_id": rollout_desc.agent_id,

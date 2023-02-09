@@ -334,6 +334,15 @@ class RolloutManager:
                             main_tag, results, global_step=rollout_epoch
                         )
                     )
+                    main_worker_tag = "RolloutEval_worker/{}/{}/".format(
+                        rollout_desc.agent_id, rollout_desc.policy_id
+                    )
+                    ray.get(
+                        self.monitor.add_multiple_scalars.remote(
+                            main_worker_tag, results, global_step=rollout_epoch*self.cfg.num_workers
+                        )
+                    )
+
                     main_tag = "RolloutEvalTimer/{}/{}/".format(
                         rollout_desc.agent_id, rollout_desc.policy_id
                     )

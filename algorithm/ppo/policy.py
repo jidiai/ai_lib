@@ -10,15 +10,16 @@ from torch import nn
 from utils.logger import Logger
 from utils.typing import DataTransferType, Tuple, Any, Dict, EpisodeID, List
 from utils.episode import EpisodeKey
+from gym.spaces import Discrete
+from algorithm.common.policy import Policy
+from copy import deepcopy
 
+from ..utils import PopArt, init_fc_weights
 import wrapt
 import tree
 import importlib
 from utils.logger import Logger
-from gym.spaces import Discrete
-from ..utils import PopArt
 from registry import registry
-from copy import deepcopy
 
 
 def hard_update(target, source):
@@ -70,21 +71,19 @@ def shape_adjusting(wrapped, instance, args, kwargs):
 
 
 @registry.registered(registry.POLICY)
-class DeepQLearning(nn.Module):
+class PPO(nn.Module):
     def __init__(
         self,
         registered_name: str,
-        observation_space: gym.spaces.Space,  # legacy
-        action_space: gym.spaces.Space,  # legacy
+        observation_space: gym.spaces.Space,
+        action_space: gym.spaces.Space,
         model_config: Dict[str, Any] = None,
         custom_config: Dict[str, Any] = None,
         **kwargs,
     ):
-        del observation_space
-        del action_space
 
         self.registered_name = registered_name
-        assert self.registered_name == "DeepQLearning"
+        assert self.registered_name=='PPO'
         self.model_config = model_config
         self.custom_config = custom_config
 
@@ -93,20 +92,11 @@ class DeepQLearning(nn.Module):
         model_type = model_config["model"]
         Logger.warning("use model type: {}".format(model_type))
         model = importlib.import_module("model.{}".format(model_type))
-
         self.encoder = model.Encoder()
         self._rewarder = model.Rewarder()
-
-        # TODO(jh): extension to multi-agent cooperative case
-        # self.env_agent_id = kwargs["env_agent_id"]
-        # self.global_observation_space=self.encoder.global_observation_space if hasattr(self.encoder,"global_observation_space") else self.encoder.observation_space
         self.observation_space = self.encoder.observation_space
         self.action_space = self.encoder.action_space
         assert isinstance(self.action_space, Discrete), str(self.action_space)
-
-        self.device = torch.device(
-            "cuda" if custom_config.get("use_cuda", False) else "cpu"
-        )
 
         self.actor = model.Actor(
             self.model_config["actor"],
@@ -127,10 +117,6 @@ class DeepQLearning(nn.Module):
         self.target_critic = deepcopy(self.critic)
 
         self.current_eps = 0
-        # if custom_config["use_popart"]:
-        #     self.value_normalizer = PopArt(
-        #         1, device=self.device, beta=custom_config["popart_beta"]
-        #     )
 
     @property
     def description(self):
@@ -163,9 +149,11 @@ class DeepQLearning(nn.Module):
     def rewarder(self):
         return self._rewarder
 
-    def get_initial_state(self, batch_size):
+
+    def get_initial_state(self, batch_size) -> List[DataTransferType]:
         if hasattr(self.critic, "get_initial_state"):
             return {
+                EpisodeKey.ACTOR_RNN_STATE: self.actor.get_initial_state(batch_size),
                 EpisodeKey.CRITIC_RNN_STATE: self.critic.get_initial_state(batch_size)
             }
         else:
@@ -177,88 +165,78 @@ class DeepQLearning(nn.Module):
         self_copy.device = device
         return self_copy
 
+
+    def compute_actions(self, observation, **kwargs):
+        raise RuntimeError("Shouldn't use it currently")
+
+    def forward_actor(self, obs, actor_rnn_states, rnn_masks):
+        logits, actor_rnn_states = self.actor(obs, actor_rnn_states, rnn_masks)
+        return logits, actor_rnn_states
+
     @shape_adjusting
     def compute_action(self, **kwargs):
-        """
-        TODO(jh): need action sampler, e.g. epsilon-greedy.
-        """
-        step = kwargs.get("step", 0)
-        to_numpy = kwargs.get("to_numpy", True)
-        explore = kwargs["explore"]
         with torch.no_grad():
-            obs = kwargs[EpisodeKey.CUR_OBS]
+            observations = kwargs[EpisodeKey.CUR_OBS]
             action_masks = kwargs[EpisodeKey.ACTION_MASK]
-            q_values = self.critic(
-                **{EpisodeKey.CUR_OBS: obs, EpisodeKey.ACTION_MASK: action_masks}
+            rnn_masks = kwargs[EpisodeKey.DONE]
+
+
+            # actions, action_probs = self.actor(
+            #     **{EpisodeKey.CUR_OBS: observations, EpisodeKey.ACTION_MASK:action_masks}
+            # )
+            logits = self.actor(
+                **{EpisodeKey.CUR_OBS: observations}
             )
-            # denormalize
-            # if hasattr(self,"value_normalizer"):
-            #     q_values=self.value_normalizer.denormalize(q_values)
-            if not explore:
-                explore_cfg = {"mode": "greedy"}
-            else:
-                _explore_cfg = self.custom_config["explore_cfg"]
-                assert (
-                    _explore_cfg["mode"] == "epsilon_greedy"
-                ), "only epsilon_greedy is supported now."
-                if "epsilon" not in _explore_cfg:
-                    # only support linear decaying now
-                    max_epsilon = _explore_cfg["max_epsilon"]
-                    min_epsilon = _explore_cfg["min_epsilon"]
-                    total_decay_steps = _explore_cfg["total_decay_steps"]
-                    epsilon = (max_epsilon - min_epsilon) / total_decay_steps * (
-                        total_decay_steps - step + 1
-                    ) + min_epsilon
-                    explore_cfg = copy.deepcopy(_explore_cfg)
-                    explore_cfg = {"mode": "epsilon_greedy", "epsilon": epsilon}
-                    self.current_eps = epsilon
-                else:
-                    assert (
-                        "max_epsilon" not in _explore_cfg
-                        and "min_epsilon" not in _explore_cfg
-                        and "total_decay_steps" not in _explore_cfg
-                    )
-                    explore_cfg = copy.deepcopy(_explore_cfg)
-            actions, action_probs = self.actor(
-                **{
-                    EpisodeKey.STATE_ACTION_VALUE: q_values,
-                    EpisodeKey.ACTION_MASK: action_masks,
-                },
-                explore_cfg=explore_cfg,
-            )
-            if to_numpy:
-                actions = actions.cpu().numpy()
-                action_probs = action_probs.cpu().numpy()
-        return {EpisodeKey.ACTION: actions, EpisodeKey.ACTION_PROBS: action_probs}
+            logits-=1e10*(1-action_masks)
+            dist = torch.distributions.Categorical(logits=logits)
+            actions = dist.sample().unsqueeze(-1).cpu().numpy()
+            action_probs = dist.probs.detach().cpu().numpy()
+            # if self.random_exploration:
+            #     exploration_actions = np.zeros(actions.shape, dtype=int)
+            #     for i in range(len(actions)):
+            #         if random.uniform(0, 1) < self.random_exploration:
+            #             exploration_actions[i] = int(random.choice(range(19)))
+            #         else:
+            #             exploration_actions[i] = int(actions[i])
+            #     actions = exploration_actions
+
+
+            return {
+                EpisodeKey.ACTION: actions,
+                EpisodeKey.ACTION_DIST: action_probs,
+            }
 
     @shape_adjusting
     def value_function(self, **kwargs):
-        to_numpy = kwargs.get("to_numpy", True)
-        use_target_critic = kwargs.get("use_target_critic", False)
-        if use_target_critic:
-            critic = self.critic
-        else:
-            critic = self.target_critic
         with torch.no_grad():
-            obs = kwargs[EpisodeKey.CUR_OBS]
-            action_masks = kwargs[EpisodeKey.ACTION_MASK]
-            q_values = critic(
-                **{EpisodeKey.CUR_OBS: obs, EpisodeKey.ACTION_MASK: action_masks}
-            )
-            # denormalize
-            # if hasattr(self,"value_normalizer"):
-            #     q_values=self.value_normalizer.denormalize(q_values)
-            if to_numpy:
-                q_values = q_values.cpu().numpy()
-        return {
-            EpisodeKey.STATE_ACTION_VALUE: q_values,
-            EpisodeKey.ACTION_MASK: action_masks,
-        }
+            # FIXME(ziyu): adjust shapes
+            if EpisodeKey.CUR_STATE not in kwargs:
+                states = kwargs[EpisodeKey.CUR_OBS]
+            else:
+                states = kwargs[EpisodeKey.CUR_STATE]
+            critic_rnn_state = kwargs[EpisodeKey.CRITIC_RNN_STATE]
+            rnn_mask = kwargs[EpisodeKey.DONE]
+            value, _ = self.critic(states, critic_rnn_state, rnn_mask)
+            value = value.cpu().numpy()
+            return {EpisodeKey.STATE_VALUE: value}
+
+    def train(self):
+        pass
+
+    def eval(self):
+        pass
+
+    def prep_training(self):
+        self.actor.train()
+        self.critic.train()
+
+    def prep_rollout(self):
+        self.actor.eval()
+        self.critic.eval()
 
     def dump(self, dump_dir):
-        torch.save(
-            self.critic.state_dict(), os.path.join(dump_dir, "critic_state_dict.pt")
-        )
+        torch.save(self._actor, os.path.join(dump_dir, "actor.pt"))
+        torch.save(self._critic, os.path.join(dump_dir, "critic.pt"))
         pickle.dump(self.description, open(os.path.join(dump_dir, "desc.pkl"), "wb"))
 
     @staticmethod
@@ -266,7 +244,7 @@ class DeepQLearning(nn.Module):
         with open(os.path.join(dump_dir, "desc.pkl"), "rb") as f:
             desc_pkl = pickle.load(f)
 
-        policy = DeepQLearning(
+        res = PPO(
             desc_pkl["registered_name"],
             desc_pkl["observation_space"],
             desc_pkl["action_space"],
@@ -275,11 +253,45 @@ class DeepQLearning(nn.Module):
             **kwargs,
         )
 
-        critic_path = os.path.join(dump_dir, "critic_state_dict.pt")
+        actor_path = os.path.join(dump_dir, "actor.pt")
+        critic_path = os.path.join(dump_dir, "critic.pt")
+        if os.path.exists(actor_path):
+            actor = torch.load(os.path.join(dump_dir, "actor.pt"), res.device)
+            hard_update(res._actor, actor)
         if os.path.exists(critic_path):
-            critic_state_dict = torch.load(
-                os.path.join(dump_dir, "critic_state_dict.pt"), policy.device
-            )
-            policy.critic.load_state_dict(critic_state_dict)
-            policy.target_critic = deepcopy(policy.critic)
-        return policy
+            critic = torch.load(os.path.join(dump_dir, "critic.pt"), res.device)
+            hard_update(res._critic, critic)
+        return res
+
+    # XXX(ziyu): test for this policy
+    def state_dict(self):
+        """Return state dict in real time"""
+
+        res = {
+            k: copy.deepcopy(v).cpu().state_dict()
+            if isinstance(v, nn.Module)
+            else v.state_dict()
+            for k, v in self._state_handler_dict.items()
+        }
+        return res
+
+
+# if __name__ == "__main__":
+#     from light_malib.envs.gr_football import env, default_config
+#     import yaml
+
+#     cfg = yaml.load(open("mappo_grfootball/mappo_5_vs_5.yaml"))
+#     env = env(**default_config)
+#     custom_cfg = cfg["algorithms"]["MAPPO"]["custom_config"]
+#     custom_cfg.update({"global_state_space": env.observation_spaces})
+#     policy = MAPPO(
+#         "MAPPO",
+#         env.observation_spaces["team_0"],
+#         env.action_spaces["team_0"],
+#         cfg["algorithms"]["MAPPO"]["model_config"],
+#         custom_cfg,
+#         env_agent_id="team_0",
+#     )
+#     os.makedirs("play")
+#     policy.dump("play")
+#     MAPPO.load("play", env_agent_id="team_0")

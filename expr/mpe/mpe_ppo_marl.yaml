@@ -1,5 +1,5 @@
 expr_group: mpe_simple_reference
-expr_name: marl_dqn
+expr_name: marl_ppo
 log_dir: logs
 log_name: 'Marl'
 seed: 123
@@ -99,7 +99,7 @@ rollout_manager:
     padding_length: # of not use in gr_football
     rollout_func_name: "rollout_func_share"
     rollout_func_cfg:
-      episode_mode: "time-step"    #traj: whole trajectory (for PPO) and time-step
+      episode_mode: "traj"    #traj: whole trajectory (for PPO) and time-step
     mix_opponent: False
     envs:
       - cls: "mpe"
@@ -168,9 +168,9 @@ policy_server:
 populations:
   - population_id: default # population_id
     algorithm:
-      name: "DeepQLearning"
+      name: "PPO"
       model_config:
-        model: "mpe.dqn"
+        model: "mpe.ppo"
         initialization:
           use_orthogonal: True
           gain: 1.
@@ -209,7 +209,7 @@ populations:
         num_mini_batch: 1  # the number of mini-batches
         max_grad_norm: 0.5
         
-        return_mode: new_gae
+        return_mode: reward_to_go
         gae:
           gae_lambda: 0.95
         vtrace:

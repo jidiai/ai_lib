@@ -1,5 +1,5 @@
 expr_group: mpe_simple_reference
-expr_name: marl_dqn
+expr_name: marl_madqn
 log_dir: logs
 log_name: 'Marl'
 seed: 123
@@ -105,7 +105,7 @@ rollout_manager:
       - cls: "mpe"
         id_prefix: "mpe"
         env_id: "simple_reference_v2"
-        global_encoder: false
+        global_encoder: true
 
 
 training_manager:
@@ -170,7 +170,7 @@ populations:
     algorithm:
       name: "DeepQLearning"
       model_config:
-        model: "mpe.dqn"
+        model: "mpe.madqn"
         initialization:
           use_orthogonal: True
           gain: 1.

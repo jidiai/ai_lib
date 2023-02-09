@@ -44,6 +44,7 @@ class DeepQLearningTrainer(Trainer):
 
             assert not policy.custom_config["use_rnn"]
             num_mini_batch = policy.custom_config["num_mini_batch"]
+            assert num_mini_batch == 1, print('only support single mini batch')
             data_generator_fn = functools.partial(
                 batched_data_generator,
                 batch,
@@ -53,7 +54,7 @@ class DeepQLearningTrainer(Trainer):
             )
 
             data_iter = data_generator_fn()
-            for i in range(num_mini_batch):
+            for i in range(num_mini_batch):             #assume one mini-batch
                 global_timer.record("data_generator_start")
                 mini_batch = next(data_iter)
                 global_timer.time(

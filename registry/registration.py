@@ -18,6 +18,10 @@ from algorithm.ddpg.loss import DDPGLoss
 from algorithm.ddpg.trainer import DDPGTrainer
 from algorithm.ddpg.policy import DDPG
 
+from algorithm.ppo.loss import PPOLoss
+from algorithm.ppo.trainer import PPOTrainer
+from algorithm.ppo.policy import PPO
+
 
 from envs.gr_football.env import GRFootballEnv
 from envs.kuhn_poker.env import KuhnPokerEnv

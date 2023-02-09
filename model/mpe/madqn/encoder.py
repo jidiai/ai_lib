@@ -7,7 +7,6 @@ from pettingzoo.mpe import simple_reference_v2
 
 env = simple_reference_v2.parallel_env()
 # env = simple_v2.parallel_env()
-
 def merge_gym_box(box_list):
     length = len(box_list)
     total_shape = box_list[0].shape[0]
@@ -26,9 +25,11 @@ def merge_gym_box(box_list):
 state_space = merge_gym_box([env.observation_space(aid)
                              for aid in env.possible_agents])
 
+
+
 class Encoder:
     def __init__(self, action_spaces=env.action_space('agent_0'),
-                 observation_spaces=env.observation_space('agent_0')):
+                 observation_spaces=state_space):
 
         self._action_space = action_spaces
         self._observation_space = observation_spaces
@@ -48,12 +49,12 @@ class Encoder:
     def action_space(self):
         return self._action_space
 
-class GlobalEncoder:
-    def __init__(self, action_spaces = env.action_space('agent_0'),
-                 observation_spaces=state_space):
-        self._action_space = action_spaces
-        self._observation_space = observation_spaces
-
-    def encoder(self, state):
-        pass
+# class GlobalEncoder:
+#     def __init__(self, action_spaces = env.action_space('agent_0'),
+#                  observation_spaces=state_space):
+#         self._action_space = action_spaces
+#         self._observation_space = observation_spaces
+#
+#     def encoder(self, state):
+#         pass
 

@@ -14,7 +14,6 @@ def to_tensor(arr):
         arr = torch.FloatTensor(arr)
     return arr
 
-
 class Critic(nn.Module):
     def __init__(
         self,
