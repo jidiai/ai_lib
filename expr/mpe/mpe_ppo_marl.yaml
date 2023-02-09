@@ -150,13 +150,13 @@ data_server:
       resources:
         - ["node:${distributed.nodes.master.ip}",0.01]
   table_cfg:
-    capacity: 10000
-    sampler_type: "uniform"
-    sample_max_usage: 1000 # this might also be problematic when sync training...
+    capacity: 1000
+    sampler_type: "lumrf"
+    sample_max_usage: 1000 #  the generated data need to be more than the required data (rollout_worker*max_usage>batch_size)
     rate_limiter_cfg:
       min_size: ${training_manager.batch_size}
       # r_w_ratio: 10.0 # cannot set it if sync training...
-  read_timeout: 120
+  read_timeout: 60
 
 policy_server:
   distributed:

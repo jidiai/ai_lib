@@ -22,15 +22,6 @@ class Table:
         self.sampler_type = table_cfg.sampler_type
         self.rate_limiter_cfg = table_cfg.rate_limiter_cfg
 
-        sampler_clses = {
-            "uniform": UniformSampler,
-            "lumrf": LUMRFSampler,
-            "lulrf": LULRFSampler,
-        }
-        sampler_cls = sampler_clses[self.sampler_type]
-        self.sampler = sampler_cls(self)
-        self.rate_limiter = RateLimiter(self, **self.rate_limiter_cfg)
-
         self.data = np.empty(shape=(self.capacity,), dtype=object)
 
         # TODO(jh): should we use here read-first lock?
@@ -64,11 +55,20 @@ class Table:
         self.wait_time = 1
         self.timer = Timer()
 
+        sampler_clses = {
+            "uniform": UniformSampler,
+            "lumrf": LUMRFSampler,
+            "lulrf": LULRFSampler,
+        }
+        sampler_cls = sampler_clses[self.sampler_type]
+        self.sampler = sampler_cls(self)
+        self.rate_limiter = RateLimiter(self, **self.rate_limiter_cfg)
+
     def write(self, samples):
         # TODO(jh): check type of samples
         assert isinstance(samples, list) or isinstance(samples, np.ndarray)
         # cannot support list, because np.ndarray recursively builds...
-        assert len(samples) > 0 and not isinstance(samples[0], list)
+        assert len(samples) > 0 and not isinstance(samples[0], list), print(f'{type(samples)}')
         n = len(samples)
         assert n <= self.capacity
 

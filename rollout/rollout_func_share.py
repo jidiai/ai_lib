@@ -223,7 +223,7 @@ def rollout_func(
         step += 1
     if not eval:
         if episode_mode == 'traj':
-            episode = stack_step_data(step_data_list, {})
+            episode = [stack_step_data(step_data_list, {})]
         elif episode_mode == 'time-step':
             episode = step_data_list
         else:
@@ -235,7 +235,7 @@ def rollout_func(
                 rollout_desc.policy_id,
                 rollout_desc.share_policies,
             ),
-            [episode],
+            episode,
         )
 
     stats = env.get_episode_stats()

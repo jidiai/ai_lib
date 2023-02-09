@@ -235,8 +235,8 @@ class PPO(nn.Module):
         self.critic.eval()
 
     def dump(self, dump_dir):
-        torch.save(self._actor, os.path.join(dump_dir, "actor.pt"))
-        torch.save(self._critic, os.path.join(dump_dir, "critic.pt"))
+        torch.save(self.actor, os.path.join(dump_dir, "actor.pt"))
+        torch.save(self.critic, os.path.join(dump_dir, "critic.pt"))
         pickle.dump(self.description, open(os.path.join(dump_dir, "desc.pkl"), "wb"))
 
     @staticmethod
@@ -257,10 +257,10 @@ class PPO(nn.Module):
         critic_path = os.path.join(dump_dir, "critic.pt")
         if os.path.exists(actor_path):
             actor = torch.load(os.path.join(dump_dir, "actor.pt"), res.device)
-            hard_update(res._actor, actor)
+            hard_update(res.actor, actor)
         if os.path.exists(critic_path):
             critic = torch.load(os.path.join(dump_dir, "critic.pt"), res.device)
-            hard_update(res._critic, critic)
+            hard_update(res.critic, critic)
         return res
 
     # XXX(ziyu): test for this policy
