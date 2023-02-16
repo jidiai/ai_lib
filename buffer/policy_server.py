@@ -27,6 +27,9 @@ class PolicyServer:
 
         Logger.info("{} initialized".format(self.id))
 
+    def print_agents(self):
+        print(f'policy server keys = {self.agents.keys()}')
+
     async def push(self, caller_id, policy_desc: PolicyDesc):
         # Logger.debug("{} try to push({}) to policy server".format(caller_id,str(policy_desc)))
         agent_id = policy_desc.agent_id

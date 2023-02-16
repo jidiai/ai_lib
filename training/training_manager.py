@@ -1,7 +1,8 @@
 import threading
 
 from utils.naming import default_table_name
-from utils.desc.task_desc import PrefetchingDesc, RolloutDesc, TrainingDesc
+from utils.desc.task_desc import PrefetchingDesc, RolloutDesc, \
+    TrainingDesc, MARolloutDesc, MATrainingDesc, MAPrefetchingDesc
 from utils.distributed import get_actor, get_resources
 from . import distributed_trainer
 import ray
@@ -68,7 +69,7 @@ class TrainingManager:
             return self.stopped_flag
 
     @limited_calls("semaphore")
-    def train(self, training_desc: TrainingDesc):
+    def train(self, training_desc: MATrainingDesc):
         self.stop_flag = True
         self.stop_flag_lock = threading.Lock()
         self.stopped_flag = True
@@ -82,46 +83,73 @@ class TrainingManager:
             self.stopped_flag = False
 
         # create table
-        table_name = default_table_name(
-            training_desc.agent_id,
-            training_desc.policy_id,
-            training_desc.share_policies,
-        )
-        ray.get(self.data_server.create_table.remote(table_name))
+        table_name_dict = {}
+        for aid in training_desc.agent_id:
+            policy_id = training_desc.policy_id[aid][0]
+            table_name = f'{aid}_{policy_id}'
+            ray.get(self.data_server.create_table.remote(table_name))
+            table_name_dict[aid] = table_name
 
-        rollout_desc = RolloutDesc(
-            training_desc.agent_id,
-            training_desc.policy_id,
-            training_desc.policy_distributions,
-            training_desc.share_policies,
-            training_desc.sync,
-            training_desc.stopper,
-            type="rollout",
+        # table_name = default_table_name(
+        #     training_desc.agent_id,
+        #     training_desc.policy_id,
+        #     training_desc.share_policies,
+        # )
+        # ray.get(self.data_server.create_table.remote(table_name))
+
+        rollout_desc = MARolloutDesc(
+            agent_id=training_desc.agent_id,
+            policy_id=training_desc.policy_id,
+            policy_distributions=training_desc.policy_distributions,
+            share_policies=training_desc.share_policies,
+            sync=training_desc.sync,
+            stopper=training_desc.stopper,
+            type='rollout'
         )
+
+        # rollout_desc = RolloutDesc(
+        #     training_desc.agent_id,
+        #     training_desc.policy_id,
+        #     training_desc.policy_distributions,
+        #     training_desc.share_policies,
+        #     training_desc.sync,
+        #     training_desc.stopper,
+        #     type="rollout",
+        # )
         rollout_task_ref = self.rollout_manger.rollout.remote(rollout_desc)
 
         training_desc.kwargs["cfg"] = self.cfg.trainer
+
         ray.get([trainer.reset.remote(training_desc) for trainer in self.trainers])
 
-        prefetching_desc = PrefetchingDesc(table_name, self.cfg.batch_size)
-        prefetching_descs = [prefetching_desc]
+        #
+        # prefetching_desc = PrefetchingDesc(table_name, self.cfg.batch_size)
+        # prefetching_desc = MAPrefetchingDesc(table_name_dict,
+        #                                      dict(zip(table_name_dict.keys(),[self.cfg.batch_size]*len(table_name_dict))))
+        # for aid in training_desc.agent_id:
+        #     prefetching_desc = PrefetchingDesc(table_name_dict[aid],
+        #                                        self.cfg.batch_size)
+        prefetching_descs = [[MAPrefetchingDesc(table_name_dict[aid],
+                                             self.cfg.batch_size,
+                                              aid)] for aid in training_desc.agent_id]
+
         prefetching_task_refs = [
-            prefetcher.prefetch.remote(prefetching_descs)
-            for prefetcher in self.prefetchers
+            prefetcher.prefetch.remote(prefetching_descs[idx])
+            for idx, prefetcher in enumerate(self.prefetchers)
         ]
 
-        if self.cfg.gpu_preload:
-            ray.get([trainer.local_queue_init.remote() for trainer in self.trainers])
+        # if self.cfg.gpu_preload:
+        #     ray.get([trainer.local_queue_init.remote() for trainer in self.trainers])
 
         training_steps = 0
         # training process
         while True:
-            global_timer.record("train_step_start")
+            # global_timer.record("train_step_start")
             with self.stop_flag_lock:
                 if self.stop_flag:
                     break
             training_steps += 1
-
+            #
             global_timer.record("optimize_start")
             try:                                                    #check buffer size > batch size???
                 statistics_list = ray.get(
@@ -130,62 +158,49 @@ class TrainingManager:
 
             except Exception as e:
                 Logger.error(traceback.format_exc())
-            #     raise e
+                raise e
 
-            global_timer.time("optimize_start", "optimize_end", "optimize")
+            # global_timer.time("optimize_start", "optimize_end", "optimize")
 
             # push new policy
             try:
                 if training_steps % self.cfg.update_interval == 0:
-                    global_timer.record("push_policy_start")
                     ray.get(self.trainers[0].push_policy.remote(training_steps))
-                    global_timer.time(
-                        "push_policy_start", "push_policy_end", "push_policy"
-                    )
-                global_timer.time("train_step_start", "train_step_end", "train_step")
             except Exception as e:
                 # save model
                 Logger.error(traceback.format_exc())
                 raise e
 
             # reduce
-            training_statistics = self.reduce_statistics(
+            training_statistics = self.reduce_multiple_statistics(
                 [statistics[0] for statistics in statistics_list]
             )
-            timer_statistics = self.reduce_statistics(
+            timer_statistics = self.reduce_single_statistics(
                 [statistics[1] for statistics in statistics_list]
             )
-            timer_statistics.update(global_timer.elapses)
+            # timer_statistics.update(global_timer.elapses)
             data_server_statistics = ray.get(
                 self.data_server.get_statistics.remote(table_name)
-            )
-
-            # log
-            main_tag = "Training/{}/{}/".format(
-                rollout_desc.agent_id, rollout_desc.policy_id
-            )
-            ray.get(
-                self.monitor.add_multiple_scalars.remote(
-                    main_tag, training_statistics, global_step=training_steps
-                )
-            )
-            main_tag = "TrainingTimer/{}/{}/".format(
-                rollout_desc.agent_id, rollout_desc.policy_id
-            )
+            )               #TODO: handle multiple table name statistics
+            # # log
+            for aid, value_dict in training_statistics.items():
+                main_tag = f"Training/{aid}"
+                ray.get(self.monitor.add_multiple_scalars.remote(
+                    main_tag, value_dict, global_step=training_steps
+                ))
+            main_tag = "TrainingTimer/"
             ray.get(
                 self.monitor.add_multiple_scalars.remote(
                     main_tag, timer_statistics, global_step=training_steps
                 )
             )
-            main_tag = "DataServer/{}/{}/".format(
-                rollout_desc.agent_id, rollout_desc.policy_id
-            )
+            main_tag = "DataServer/"
             ray.get(
                 self.monitor.add_multiple_scalars.remote(
                     main_tag, data_server_statistics, global_step=training_steps
                 )
             )
-
+            #
             global_timer.clear()
 
             if training_desc.sync:
@@ -212,7 +227,8 @@ class TrainingManager:
         ray.get(rollout_task_ref)
 
         # remove table
-        ray.get(self.data_server.remove_table.remote(table_name))
+        for aid, table_name in table_name_dict.items():
+            ray.get(self.data_server.remove_table.remote(table_name))
 
         Logger.warning("Training ends after {} steps".format(training_steps))
 
@@ -221,7 +237,7 @@ class TrainingManager:
             self.stop_flag = True
         return self.total_training_steps
 
-    def reduce_statistics(self, statistics_list):
+    def reduce_single_statistics(self, statistics_list):
         statistics = {k: [] for k in statistics_list[0]}
         for s in statistics_list:
             for k, v in s.items():
@@ -230,6 +246,24 @@ class TrainingManager:
             # maybe other reduce method
             statistics[k] = np.mean(v)
         return statistics
+
+    def reduce_multiple_statistics(self, statistics_list):
+        statistics = {k: {} for k in statistics_list[0]}
+        for s in statistics_list:
+            for aid, value_dict in s.items():
+                for tag,v in value_dict.items():
+                    if tag not in statistics[aid]:
+                        statistics[aid][tag] = [v]
+                    else:
+                        statistics[aid][tag].append(v)
+
+
+        for aid, value_dict in statistics.items():
+            for tag, v in value_dict.items():
+                statistics[aid][tag] = np.mean(v)
+        return statistics
+
+
 
     def close(self):
         ray.get([trainer.close.remote() for trainer in self.trainers])

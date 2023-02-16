@@ -1,5 +1,5 @@
 # from rollout.rollout_func_share import rollout_func
-from rollout.rollout_func import rollout_func
+from rollout.rollout_func_share import rollout_func
 
 from utils.desc.task_desc import RolloutDesc
 from utils.episode import EpisodeKey
@@ -74,8 +74,8 @@ def merge_gym_box(box_list):
 INDEPENDENT_OBS = True
 
 # env_cfg= #{'env_id': "simple_speaker_listener_v3"}
-# env_cfg={'env_id': "simple_reference_v2", "global_encoder": not INDEPENDENT_OBS}
-env_cfg = {'env_id': "simple_speaker_listener_v3", "global_encoder": not INDEPENDENT_OBS}
+env_cfg={'env_id': "simple_reference_v2", "global_encoder": not INDEPENDENT_OBS}
+# env_cfg = {'env_id': "simple_speaker_listener_v3", "global_encoder": not INDEPENDENT_OBS}
 # env_cfg = {'env_id': "simple_spread_v2", "global_encoder": not INDEPENDENT_OBS}
 # env_cfg={'env_id': "simple_v2"}
 
@@ -117,7 +117,7 @@ if INDEPENDENT_OBS:
     ### Independent PPO player
     from registry.registration import PPO
     from utils.cfg import load_cfg
-    config = '/home/yansong/Desktop/jidiai/ai_lib/expr/mpe/mpe_ppo_marl.yaml'
+    config = '/home/yansong/Desktop/jidiai/ai_lib/expr/mpe/mpe_simple_reference_ppo_marl.yaml'
     ppo_cfg = load_cfg(config)
     policy = PPO(registered_name='PPO',
                  observation_space=env.observation_spaces(agent_0_name),
@@ -183,7 +183,8 @@ results=rollout_func(
     data_server=None,
     rollout_length=25,
     render=True,
-    rollout_epoch=0
+    rollout_epoch=0,
+    episode_mode='time-step'
 )
 
 

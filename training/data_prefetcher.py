@@ -90,7 +90,7 @@ class DataPrefetcher:
         tasks = []
         for consumer, samples in zip(self.consumers, samples_list):
             samples = self.stack(samples)
-            task = consumer.local_queue_put.remote(samples)
+            task = consumer.local_queue_put.remote(samples, prefetching_descs[0].agent_id)
             tasks.append(task)
         ray.get(tasks)
 

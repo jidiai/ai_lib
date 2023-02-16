@@ -1,6 +1,6 @@
 import copy
 from utils.desc.policy_desc import PolicyDesc
-from utils.desc.task_desc import TrainingDesc
+from utils.desc.task_desc import TrainingDesc, MATrainingDesc
 from utils.logger import Logger
 import torch
 from torch.nn.parallel import DistributedDataParallel
@@ -174,70 +174,99 @@ class DistributedTrainer:
 
         Logger.info("{} (local rank: {}) initialized".format(self.id, local_rank))
 
-    def local_queue_put(self, data):
-        if self.gpu_preload:
-            data = GPUPreLoadQueueWrapper.to_pin_memory(data)
+    def local_queue_put(self, data, agent_id):
+        # if self.gpu_preload:
+        #     data = GPUPreLoadQueueWrapper.to_pin_memory(data)
         try:
-            self.local_queue.put(data, block=True, timeout=10)
+            # for aid in self.agent_id:
+            #     self.local_queue_dict[aid].put()
+            self.local_queue_dict[agent_id].put(data, block=True, timeout=10)
+
+            # self.local_queue.put(data, block=True, timeout=10)
         except queue.Full:
             Logger.warning("queue is full. May have bugs in training.")
 
     def local_queue_get(self, timeout=60):
         try:
-            data = self.local_queue.get(block=True, timeout=timeout)
+            data = {}
+            for aid in self.agent_id:
+                data[aid] = self.local_queue_dict[aid].get(block=True, timeout=timeout)
+
+            # data = self.local_queue.get(block=True, timeout=timeout)
         except queue.Empty:
             Logger.warning(
                 "queue is empty. May have bugs in rollout. For example, there is no enough data in data server."
             )
-            data = None
+            data = {}
         return data
 
     def local_queue_init(self):
         Logger.debug("local queue first prefetch")
         self.local_queue._prefetch_next_batch(block=True)
 
-    def reset(self, training_desc: TrainingDesc):
+    def reset(self, training_desc: MATrainingDesc):
         self.agent_id = training_desc.agent_id
         self.policy_id = training_desc.policy_id
         self.cfg = training_desc.kwargs["cfg"]
-        # pull from policy_server
-        policy_desc = ray.get(
-            self.policy_server.pull.remote(
-                self.id, self.agent_id, self.policy_id, old_version=None
-            )
-        )
-        # wrap policies to distributed ones
-        self.policy = DistributedPolicyWrapper(policy_desc.policy, self.local_rank)
-        # TODO(jh): trainer may be set in training_desc
-        trainer_cls = registry.get(
-            registry.TRAINER, policy_desc.policy.registered_name + "Trainer"
-        )
-        self.trainer = trainer_cls(self.id)
-        self.trainer.reset(self.policy, self.cfg)
 
-        self.local_queue = queue.Queue(self.local_queue_size)
-        if self.gpu_preload:
-            self.local_queue = GPUPreLoadQueueWrapper(self.local_queue)
+        policy_descs = {aid: ray.get(self.policy_server.pull.remote(
+                                self.id,
+                                aid,
+                                self.policy_id[aid][0],
+                                old_version=None)) for aid in self.agent_id}
+
+        # pull from policy_server
+        # policy_desc = ray.get(
+        #     self.policy_server.pull.remote(
+        #         self.id, self.agent_id, self.policy_id, old_version=None
+        #     )
+        # )
+        self.policies = {aid: DistributedPolicyWrapper(policy_descs[aid].policy,
+                                                       self.local_rank) for aid in self.agent_id}
+
+        # wrap policies to distributed ones
+        # self.policy = DistributedPolicyWrapper(policy_desc.policy, self.local_rank)
+        # TODO(jh): trainer may be set in training_desc
+        self.trainers = {}
+        self.local_queue_dict = {}
+        for aid in self.agent_id:
+            trainer_cls = registry.get(
+                registry.TRAINER, policy_descs[aid].policy.registered_name + "Trainer"
+            )
+            self.trainers[aid] = trainer_cls(self.id)
+            self.trainers[aid].reset(self.policies[aid], self.cfg)
+
+            # local_queue = queue.Queue(self.local_queue_size)
+            self.local_queue_dict[aid] = queue.Queue(self.local_queue_size)
+
+        # self.local_queue = queue.Queue(self.local_queue_size)
+        assert not self.gpu_preload
+        # if self.gpu_preload:
+        #     self.local_queue = GPUPreLoadQueueWrapper(self.local_queue)
         Logger.warning("{} reset to training_task {}".format(self.id, training_desc))
 
     def is_main(self):
         return self.local_rank == 0
 
-    def optimize(self, batch=None):
+    def optimize(self, batch_dict=None):
         global_timer.record("trainer_data_start")
-        while batch is None:
+        while batch_dict is None:
             try:
-                batch = self.local_queue_get()
+                batch_dict = self.local_queue_get()
             except Exception as e:
                 Logger.error(traceback.format_exc())
                 raise e
-
-        global_timer.time("trainer_data_start", "trainer_data_end", "trainer_data")
-        global_timer.record("trainer_optimize_start")
-        training_info = self.trainer.optimize(batch)
-        global_timer.time(
-            "trainer_optimize_start", "trainer_optimize_end", "trainer_optimize"
-        )
+        # breakpoint()
+        # global_timer.time("trainer_data_start", "trainer_data_end", "trainer_data")
+        # global_timer.record("trainer_optimize_start")
+        training_info = {}
+        for aid in self.agent_id:
+            training_info[aid] = self.trainers[aid].optimize(batch_dict[aid])
+        # breakpoint()
+        # training_info = self.trainer.optimize(batch)
+        # global_timer.time(
+        #     "trainer_optimize_start", "trainer_optimize_end", "trainer_optimize"
+        # )
         timer_info = copy.deepcopy(global_timer.elapses)
         global_timer.clear()
         return training_info, timer_info
@@ -246,14 +275,21 @@ class DistributedTrainer:
         return self.policy.policy
 
     def push_policy(self, version):
-        policy_desc = PolicyDesc(
-            self.agent_id,
-            self.policy_id,
-            self.get_unwrapped_policy().to_device("cpu"),
-            version=version,
-        )
 
-        ray.get(self.policy_server.push.remote(self.id, policy_desc))
+        for aid in self.agent_id:
+            policy = self.policies[aid].policy
+            policy_desc = PolicyDesc(aid, self.policy_id[aid][0],
+                                     policy.to_device('cpu'), version=version,)
+            ray.get(self.policy_server.push.remote(self.id, policy_desc))
+
+        # policy_desc = PolicyDesc(
+        #     self.agent_id,
+        #     self.policy_id,
+        #     self.get_unwrapped_policy().to_device("cpu"),
+        #     version=version,
+        # )
+        #
+        # ray.get(self.policy_server.push.remote(self.id, policy_desc))
 
     def dump_policy(self):
         pass

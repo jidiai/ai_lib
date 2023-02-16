@@ -63,11 +63,11 @@ def main():
 
     # check cfg
     # check gpu number here
-    assert (
-        cfg.training_manager.num_trainers <= ray.cluster_resources()["GPU"]
-    ), "#trainers({}) should be <= #gpus({})".format(
-        cfg.training_manager.num_trainers, ray.cluster_resources()["GPU"]
-    )
+    # assert (
+    #     cfg.training_manager.num_trainers <= ray.cluster_resources()["GPU"]
+    # ), "#trainers({}) should be <= #gpus({})".format(
+    #     cfg.training_manager.num_trainers, ray.cluster_resources()["GPU"]
+    # )
     # check batch size here
     assert (
         cfg.training_manager.batch_size <= cfg.data_server.table_cfg.capacity

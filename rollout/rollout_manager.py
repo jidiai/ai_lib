@@ -11,7 +11,7 @@ from agent.agent import Agents
 from . import rollout_worker
 import ray
 import queue
-from utils.desc.task_desc import RolloutDesc, RolloutEvalDesc
+from utils.desc.task_desc import RolloutDesc, RolloutEvalDesc, MARolloutDesc
 from utils.decorator import limited_calls
 import traceback
 from utils.timer import global_timer
@@ -74,17 +74,30 @@ class RolloutManager:
         self.sync_epoch_event.set()
 
     def rollout_batch(self, batch_size, rollout_desc: RolloutDesc, eval, rollout_epoch):
+        # rollout_descs = [
+        #     RolloutDesc(
+        #         rollout_desc.agent_id,
+        #         rollout_desc.policy_id,
+        #         rollout_desc.policy_distributions,
+        #         rollout_desc.share_policies,
+        #         sync=False,
+        #         stopper=None,
+        #         type="evaluation" if eval else "rollout",
+        #     )
+        # ] * batch_size
+
         rollout_descs = [
-            RolloutDesc(
+            MARolloutDesc(
                 rollout_desc.agent_id,
                 rollout_desc.policy_id,
                 rollout_desc.policy_distributions,
                 rollout_desc.share_policies,
                 sync=False,
-                stopper=None,
-                type="evaluation" if eval else "rollout",
+                stopper = None,
+                type='evaluation' if eval else "rollout"
             )
         ] * batch_size
+
         try:
             rollout_results = self.worker_pool.map_unordered(
                 lambda worker, rollout_desc: worker.rollout.remote(
@@ -275,17 +288,13 @@ class RolloutManager:
                 global_timer.clear()
 
                 # log to tensorboard, etc...
-                main_tag = "Rollout/{}/{}/".format(
-                    rollout_desc.agent_id, rollout_desc.policy_id
-                )
+                main_tag = "Rollout/"
                 ray.get(
                     self.monitor.add_multiple_scalars.remote(
                         main_tag, results, global_step=rollout_epoch
                     )
                 )
-                main_tag = "RolloutTimer/{}/{}/".format(
-                    rollout_desc.agent_id, rollout_desc.policy_id
-                )
+                main_tag = "RolloutTimer/"
                 ray.get(
                     self.monitor.add_multiple_scalars.remote(
                         main_tag, timer_results, global_step=rollout_epoch
@@ -326,26 +335,20 @@ class RolloutManager:
                     )
 
                     # log to tensorboard, etc...
-                    main_tag = "RolloutEval/{}/{}/".format(
-                        rollout_desc.agent_id, rollout_desc.policy_id
-                    )
+                    main_tag = "RolloutEval/"
                     ray.get(
                         self.monitor.add_multiple_scalars.remote(
                             main_tag, results, global_step=rollout_epoch
                         )
                     )
-                    main_worker_tag = "RolloutEval_worker/{}/{}/".format(
-                        rollout_desc.agent_id, rollout_desc.policy_id
-                    )
+                    main_worker_tag = "RolloutEval_worker/"
                     ray.get(
                         self.monitor.add_multiple_scalars.remote(
                             main_worker_tag, results, global_step=rollout_epoch*self.cfg.num_workers
                         )
                     )
 
-                    main_tag = "RolloutEvalTimer/{}/{}/".format(
-                        rollout_desc.agent_id, rollout_desc.policy_id
-                    )
+                    main_tag = "RolloutEvalTimer/"
                     ray.get(
                         self.monitor.add_multiple_scalars.remote(
                             main_tag, timer_results, global_step=rollout_epoch
@@ -370,14 +373,17 @@ class RolloutManager:
                         f"save the best model(average reward:{reward},average win:{win})"
                     )
                     best_reward = reward
-                    policy_desc = self.pull_policy(self.agent_id, self.policy_id)
-                    best_policy_desc = PolicyDesc(
-                        self.agent_id,
-                        f"{self.policy_id}.best",
-                        policy_desc.policy,
-                        version=rollout_epoch,
-                    )
-                    ray.get(self.policy_server.push.remote(self.id, best_policy_desc))
+
+                    for agent_id in self.agent_id:
+                        policy_id = self.policy_id[agent_id][0]
+                        policy_desc = self.pull_policy(agent_id, policy_id)
+                        best_policy_desc = PolicyDesc(
+                            agent_id,
+                            f"{policy_id}.best",
+                            policy_desc.policy,
+                            version=rollout_epoch,
+                        )
+                        ray.get(self.policy_server.push.remote(self.id, best_policy_desc))
 
                 if (
                     rollout_desc.sync
@@ -398,12 +404,12 @@ class RolloutManager:
         self.save_current_model("last")
 
         # save the best model
-        best_policy_desc = self.pull_policy(self.agent_id, f"{self.policy_id}.best")
-        self.save_model(best_policy_desc.policy, self.agent_id, self.policy_id, "best")
+        # best_policy_desc = self.pull_policy(self.agent_id, f"{self.policy_id}.best")
+        # self.save_model(best_policy_desc.policy, self.agent_id, self.policy_id, "best")
         # also push to remote to replace the last policy
-        best_policy_desc.policy_id = self.policy_id
-        best_policy_desc.version = float("inf")  # a version for freezing
-        ray.get(self.policy_server.push.remote(self.id, best_policy_desc))
+        # best_policy_desc.policy_id = self.policy_id
+        # best_policy_desc.version = float("inf")  # a version for freezing
+        # ray.get(self.policy_server.push.remote(self.id, best_policy_desc))
 
         # signal tranining_manager to stop training
         self.total_training_steps = ray.get(self.traning_manager.stop_training.remote())
@@ -448,12 +454,20 @@ class RolloutManager:
         return policy_desc
 
     def save_current_model(self, name):
-        self.pull_policy(self.agent_id, self.policy_id)
-        policy_desc = self.agents[self.agent_id].policy_data[self.policy_id]
-        if policy_desc is not None:
-            return self.save_model(
-                policy_desc.policy, self.agent_id, self.policy_id, name
-            )
+        for aid in self.agent_id:
+            policy_id = self.policy_id[aid][0]
+            self.pull_policy(aid, policy_id)
+            policy_desc = self.agents[aid].policy_data[policy_id]
+            if policy_desc is not None:
+                self.save_model(policy_desc.policy, aid, policy_id, name)
+                # return self.save_model(policy_desc.policy, aid, policy_id, name)
+
+        # self.pull_policy(self.agent_id, self.policy_id)
+        # policy_desc = self.agents[self.agent_id].policy_data[self.policy_id]
+        # if policy_desc is not None:
+        #     return self.save_model(
+        #         policy_desc.policy, self.agent_id, self.policy_id, name
+        #     )
 
     def save_model(self, policy, agent_id, policy_id, name):
         dump_dir = os.path.join(self.expr_log_dir, agent_id, policy_id, name)
@@ -471,18 +485,33 @@ class RolloutManager:
         num_eval_rollouts = rollout_eval_desc.num_eval_rollouts
         # prepare rollout_desc
         # agent_id & policy_id here is dummy
+        # breakpoint()
         rollout_descs = [
-            RolloutDesc(
-                agent_id="agent_0",
-                policy_id=policy_combination["agent_0"],
-                policy_distributions=policy_combination,
-                share_policies=rollout_eval_desc.share_policies,
-                sync=False,
+            MARolloutDesc(
+                agent_id = ['speaker_0', 'listener_0'],
+                policy_id = {'speaker_0': 'speaker_0_speaker_0_0', 'listener_0':'listener_0_listener_0_0'},
+                policy_distributions = policy_combination,
+                share_policies=False,
+                sync=False,     #TODO: check sync
                 stopper=None,
-                type="evaluation",
+                type='evaluation'
             )
             for policy_combination in policy_combinations
         ]
+
+        # rollout_descs = [
+        #     RolloutDesc(
+        #         agent_id="agent_0",
+        #         policy_id=policy_combination["agent_0"],
+        #         policy_distributions=policy_combination,
+        #         share_policies=rollout_eval_desc.share_policies,
+        #         sync=False,
+        #         stopper=None,
+        #         type="evaluation",
+        #     )
+        #     for policy_combination in policy_combinations
+        # ]
+
         rollout_descs *= num_eval_rollouts
 
         rollout_results = self.worker_pool.map_unordered(
@@ -537,11 +566,17 @@ class RolloutManager:
         for rollout_result in rollout_results:
             # TODO(jh): policy-wise stats
             # NOTE(jh): now in training, we only care about statistics of the agent is trained
-            main_agent_id = rollout_result["main_agent_id"]
-            # policy_ids=rollout_result["policy_ids"]
-            stats = rollout_result["stats"][main_agent_id]
-            for k, v in stats.items():
-                results[k].append(v)
+            main_agent_ids = rollout_result["main_agent_id"]
+            if isinstance(main_agent_ids, list):
+                for main_agent_id in main_agent_ids:
+                    stats = rollout_result['stats'][main_agent_id]
+                    for k,v in stats.items():
+                        results[f'{main_agent_id}_{k}'].append(v)
+            elif isinstance(main_agent_ids, str):
+                # policy_ids=rollout_result["policy_ids"]
+                stats = rollout_result["stats"][main_agent_id]
+                for k, v in stats.items():
+                    results[k].append(v)
 
         for k, v in results.items():
             results[k] = np.mean(v)

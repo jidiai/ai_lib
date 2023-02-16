@@ -94,6 +94,10 @@ def batched_data_generator(data, num_mini_batch, device, shuffle=False):
         bs, traj_len, n_agent, _ = data[EpisodeKey.CUR_OBS].shape
         batch_size = bs*traj_len*n_agent
         idx = 3
+    elif len(data[EpisodeKey.CUR_OBS].shape) == 2:
+        bs, _ = data[EpisodeKey.CUR_OBS].shape
+        batch_size = bs
+        idx = 1
 
     batch = {}
     for k in data:

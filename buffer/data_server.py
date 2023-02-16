@@ -17,6 +17,10 @@ class DataServer:
 
         Logger.info("{} initialized".format(self.id))
 
+    def print_table_name(self):
+        print(f'keys = {self.tables.keys()}')
+
+
     def create_table(self, table_name):
         with self.table_lock:
             Logger.warning("table_cfgs:{} uses {}".format(self.id, self.table_cfg))

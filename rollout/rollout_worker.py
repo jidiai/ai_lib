@@ -160,6 +160,8 @@ class RolloutWorker:
             **self.rollout_func_cfg
             # decaying_exploration_cfg=self.cfg.decaying_exploration
         )
+        # if not eval:
+        #     breakpoint()
         global_timer.time("policy_update_end", "rollout_end", "rollout")
 
         result["timer"] = copy.deepcopy(global_timer.elapses)
