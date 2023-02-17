@@ -33,7 +33,6 @@ class PolicyFactory:
         self.id = "PolicyFactory_{}_{}".format(self.agent_id, self.population_id)
         self.algorithm_cfg = algorithm_cfg
         self.policy_server = policy_server
-        # breakpoint()
         self.policy_init_cfg = self.algorithm_cfg.policy_init_cfg[
             self.agent_id
         ].init_cfg

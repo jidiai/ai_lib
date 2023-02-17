@@ -107,15 +107,6 @@ class TrainingManager:
             type='rollout'
         )
 
-        # rollout_desc = RolloutDesc(
-        #     training_desc.agent_id,
-        #     training_desc.policy_id,
-        #     training_desc.policy_distributions,
-        #     training_desc.share_policies,
-        #     training_desc.sync,
-        #     training_desc.stopper,
-        #     type="rollout",
-        # )
         rollout_task_ref = self.rollout_manger.rollout.remote(rollout_desc)
 
         training_desc.kwargs["cfg"] = self.cfg.trainer
@@ -138,8 +129,6 @@ class TrainingManager:
             for idx, prefetcher in enumerate(self.prefetchers)
         ]
 
-        # if self.cfg.gpu_preload:
-        #     ray.get([trainer.local_queue_init.remote() for trainer in self.trainers])
 
         training_steps = 0
         # training process

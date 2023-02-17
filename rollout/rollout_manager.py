@@ -485,32 +485,18 @@ class RolloutManager:
         num_eval_rollouts = rollout_eval_desc.num_eval_rollouts
         # prepare rollout_desc
         # agent_id & policy_id here is dummy
-        # breakpoint()
         rollout_descs = [
             MARolloutDesc(
-                agent_id = ['speaker_0', 'listener_0'],
-                policy_id = {'speaker_0': 'speaker_0_speaker_0_0', 'listener_0':'listener_0_listener_0_0'},
-                policy_distributions = policy_combination,
-                share_policies=False,
-                sync=False,     #TODO: check sync
+                agent_id=rollout_eval_desc.agent_id,
+                policy_id=rollout_eval_desc.policy_id,
+                policy_distributions=policy_combination,
+                share_policies=rollout_eval_desc.share_policies,
+                sync=False,
                 stopper=None,
                 type='evaluation'
             )
             for policy_combination in policy_combinations
         ]
-
-        # rollout_descs = [
-        #     RolloutDesc(
-        #         agent_id="agent_0",
-        #         policy_id=policy_combination["agent_0"],
-        #         policy_distributions=policy_combination,
-        #         share_policies=rollout_eval_desc.share_policies,
-        #         sync=False,
-        #         stopper=None,
-        #         type="evaluation",
-        #     )
-        #     for policy_combination in policy_combinations
-        # ]
 
         rollout_descs *= num_eval_rollouts
 

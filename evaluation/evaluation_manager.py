@@ -57,7 +57,15 @@ class EvaluationManager:
                 self.cfg.num_eval_rollouts, len(policy_combs), policy_combs
             )
         )
+
+        aids = self.agents.agent_ids
+        policy_ids = {aid: self.agents[aid].policy_ids for aid in aids}
+
         rollout_eval_desc = RolloutEvalDesc(
-            policy_combs, self.cfg.num_eval_rollouts, self.agents.share_policies
+            agent_id=aids,
+            policy_id=policy_ids,
+            policy_combinations=policy_combs,
+            num_eval_rollouts=self.cfg.num_eval_rollouts,
+            share_policies=self.agents.share_policies
         )
         return rollout_eval_desc

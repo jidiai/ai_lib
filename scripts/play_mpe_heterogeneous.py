@@ -55,6 +55,7 @@ class RandomPlayer:
             EpisodeKey.ACTOR_RNN_STATE: kwargs[EpisodeKey.ACTOR_RNN_STATE],
         }
 
+
 def merge_gym_box(box_list):
     length = len(box_list)
     total_shape = box_list[0].shape[0]
@@ -63,15 +64,14 @@ def merge_gym_box(box_list):
     dtype = box_list[0].dtype
 
     for i in range(1,length):
-        assert box_list[0] == box_list[i], f"box list has unequal elements, {box_list[0] and box_list[i]}"
-        low = np.concatenate([low, low])
-        high = np.concatenate([high, high])
+        low = np.concatenate([low, box_list[i].low])
+        high = np.concatenate([high, box_list[i].high])
         total_shape += box_list[i].shape[0]
 
     return gym.spaces.Box(low=low,high=high, shape=(total_shape,), dtype =dtype)
 
 
-INDEPENDENT_OBS = True
+INDEPENDENT_OBS = False
 
 # env_cfg= #{'env_id': "simple_speaker_listener_v3"}
 # env_cfg={'env_id': "simple_reference_v2", "global_encoder": not INDEPENDENT_OBS}
@@ -81,6 +81,8 @@ env_cfg = {'env_id': "simple_speaker_listener_v3", "global_encoder": not INDEPEN
 
 env = MPE(0,None,env_cfg)
 
+state_space = merge_gym_box([env.observation_spaces(aid)
+                             for aid in env.possible_agents])
 
 if env_cfg['env_id']=='simple_reference_v2':
     agent_0_name = 'agent_0'
@@ -95,7 +97,7 @@ elif env_cfg['env_id']=='simple_spread_v2':
 model_path = '/home/yansong/Desktop/jidiai/ai_lib_V2_logs/simple_reference/madqn/new_trial/agent_0/agent_0_default_0/epoch_300000'
 from registry.registration import DeepQLearning
 from utils.cfg import load_cfg
-config_path='/home/yansong/Desktop/jidiai/ai_lib/expr/mpe/mpe_simple_speaker_listener_dqn_marl.yaml'
+config_path='/home/yansong/Desktop/jidiai/ai_lib/expr/mpe/mpe_simple_speaker_listener_madqn_marl.yaml'
 dqn_cfg = load_cfg(config_path)
 
 speaker_policy = DeepQLearning(registered_name='DeepQLearning',

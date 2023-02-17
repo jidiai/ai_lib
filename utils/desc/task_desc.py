@@ -50,6 +50,8 @@ class MARolloutDesc:
 
 @dataclass
 class RolloutEvalDesc:
+    agent_id: List
+    policy_id: Dict
     policy_combinations: List[Dict]
     num_eval_rollouts: int
     share_policies: bool

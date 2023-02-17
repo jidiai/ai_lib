@@ -19,7 +19,8 @@ export PYTHONPATH=$SCRIPT_DIR
 #python main_marl.py --config expr/mpe/mpe_simple_reference_ppo_marl.yaml
 #python main_marl.py --config expr/mpe/mpe_simple_reference_mappo_marl.yaml
 
-python main_marl.py --config expr/mpe/mpe_simple_speaker_listener_dqn_marl.yaml
+#python main_marl.py --config expr/mpe/mpe_simple_speaker_listener_dqn_marl.yaml
+python main_marl.py --config expr/mpe/mpe_simple_speaker_listener_madqn_marl.yaml
 
 
 

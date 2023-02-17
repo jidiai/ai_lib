@@ -32,87 +32,25 @@ class AgentManager:
 
     def initialize(self, populations_cfg):
         # add populations
-        pop_cfg = {i['population_id']: i['algorithm'] for i in populations_cfg}
-        # pop2agent = {i['population_id']: i['agent_group'] for i in populations_cfg}
-        agent2pop = {i['agent_group']: i['population_id'] for i in populations_cfg}
-        # breakpoint()
+        agent2pop = {}
+        for pop in populations_cfg:
+            if pop['agent_group'] not in agent2pop:
+                agent2pop[pop['agent_group']] = [(pop['population_id'], pop['algorithm'])]
+            else:
+                agent2pop[pop['agent_group']].append((pop['population_id'],pop['algorithm']))
+
         #TODO: the agent name and population name are confused
         for agent_id in self.agents.training_agent_ids:
-            # print('training agent id =', agent_id)
-            algorithm_cfg = pop_cfg[agent2pop[agent_id]]
-            # for population_cfg in populations_cfg:
-                # print('population cfg = ', population_cfg)
-                # breakpoint()
-                # population_id = population_cfg["population_id"]
-                # algorithm_cfg = population_cfg["algorithm"]
-            self.agents[agent_id].add_new_population(
-                agent2pop[agent_id], algorithm_cfg, self.policy_server
-            )
-        # breakpoint()
-        # print('self.agents = ', self.agents[agent_id])
+            for pop_pair in agent2pop[agent_id]:
+                pop_id, algo_cfg = pop_pair
+                self.agents[agent_id].add_new_population(
+                    pop_id, algo_cfg, self.policy_server
+                )
 
-        # for population_cfg in populations_cfg:
-        #     population_id = population_cfg["population_id"]
-        #     algorithm_cfg = population_cfg.algorithm
-        #     policy_init_cfg = algorithm_cfg.get("policy_init_cfg", None)
-        #     if policy_init_cfg is None:
-        #         continue
-        #     for agent_id, agent_policy_init_cfg in policy_init_cfg.items():
-        #         print("agent id = ", agent_id)
-        #         print("init cfg = ", agent_policy_init_cfg)
-        #         agent_initial_policies = agent_policy_init_cfg.get(
-        #             "initial_policies", None
-        #         )
-        #         if agent_initial_policies is None:
-        #             continue
-        #         oppo_dist = agent_policy_init_cfg.get(
-        #             "initial_policies_distribution", None
-        #         )
-        #         if oppo_dist is not None:
-        #             self.oppo_dist = oppo_dist
-        #             # breakpoint()
-        #         for policy_cfg in agent_initial_policies:
-        #             policy_id = policy_cfg["policy_id"]
-        #             policy_dir = policy_cfg["policy_dir"]
-        #             policy = QLearning.load(policy_dir)
-        #             agent = self.agents[agent_id]
-        #             agent.add_new_policy(population_id, policy_id)
-        #             self.push_policy_to_remote(agent_id, policy_id, policy)
-
-        # print('self.agents =', self.agents.agent_ids)
-        # print('policy server agent_1 = ', ray.get(self.policy_server.show_agents.remote(agent_id = 'agent_1')))
-        # print('policy server agent_0 = ', ray.get(self.policy_server.show_agents.remote(agent_id = 'agent_0')))
-        #
-        # raise NotImplementedError
-
-        # raise NotImplementedError
-        #
-        # for population_cfg in populations_cfg:
-        #     population_id=population_cfg["population_id"]
-        #     algorithm_cfg=population_cfg.algorithm
-        #     policy_init_cfg=algorithm_cfg.get("policy_init_cfg",None)
-        #     if policy_init_cfg is None:
-        #         continue
-        #     for agent_id,agent_policy_init_cfg in policy_init_cfg.items():
-        #         agent_initial_policies=agent_policy_init_cfg.get("initial_policies",None)
-        #         if agent_initial_policies is None:
-        #             continue
-        #         for policy_cfg in agent_initial_policies:
-        #             policy_id=policy_cfg["policy_id"]
-        #             policy_dir=policy_cfg["policy_dir"]
-        #             self.load_policy(agent_id,population_id,policy_id,policy_dir)
-        #             Logger.info(f"Load initial policy {policy_id} from {policy_dir}")
-        # breakpoint()
         # generate the first policy
         for agent_id in self.agents.training_agent_ids:
             for population_id in self.agents[agent_id].populations:
                 self.gen_new_policy(agent_id, population_id)
-        # breakpoint()
-        # print('self.agents =', self.agents.agent_ids)
-        # print('policy server agent_1 = ', ray.get(self.policy_server.show_agents.remote(agent_id = 'agent_1')))
-        # print('policy server agent_0 = ', ray.get(self.policy_server.show_agents.remote(agent_id = 'agent_0')))
-        #
-        # raise NotImplementedError
 
         # TODO(jh):Logger
         Logger.warning("after initialization:\n{}".format(self.agents))
@@ -127,12 +65,12 @@ class AgentManager:
         agent_ids = agent_manager_cfg.get('agent_ids', None)
         share_policies = agent_manager_cfg['share_policies']
 
-        if agent_ids is None:
+        if agent_ids is None:       #default agent_{idx} labelling
             agent_ids = [
                 AgentManager.default_agent_id(idx)
                 for idx in range(agent_manager_cfg.num_agents)
             ]
-        if agent_manager_cfg.share_policies:
+        if agent_manager_cfg.share_policies:        #share the agent
             agent = Agent(AgentManager.default_agent_id(0))
             agents = Agents(
                 OrderedDict({agent_id: agent for agent_id in agent_ids}), True
@@ -145,16 +83,7 @@ class AgentManager:
                              for agent_id, agent in zip(agent_ids, _agents)}),
                 share_policies
             )
-            # agents = [
-            #     Agent(AgentManager.default_agent_id(idx))
-            #     for idx in range(len(agent_ids))
-            # ]
-            # agents = Agents(
-            #     OrderedDict(
-            #         {agent_id: agent for agent_id, agent in zip(agent_ids, agents)}
-            #     ),
-            #     False,
-            # )
+
         return agents
 
     def gen_new_policy(self, agent_id, population_id):
