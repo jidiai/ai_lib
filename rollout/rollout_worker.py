@@ -178,7 +178,7 @@ class RolloutWorker:
                                     enumerate(agent_ids)}
         new_main_idx = np.where(new_agent_ids == main_agent_id)[0][0]
         new_main_agent_id = agent_ids[new_main_idx]
-        rollout_desc.agent_id = new_main_agent_id
+        rollout_desc.agent_id = [new_main_agent_id]
         rollout_desc.policy_distributions = new_policy_distributions
         return rollout_desc
 

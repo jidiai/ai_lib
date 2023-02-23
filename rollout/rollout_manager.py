@@ -560,7 +560,7 @@ class RolloutManager:
                         results[f'{main_agent_id}_{k}'].append(v)
             elif isinstance(main_agent_ids, str):
                 # policy_ids=rollout_result["policy_ids"]
-                stats = rollout_result["stats"][main_agent_id]
+                stats = rollout_result["stats"][main_agent_ids]
                 for k, v in stats.items():
                     results[k].append(v)
 

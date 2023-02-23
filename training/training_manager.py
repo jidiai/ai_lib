@@ -173,7 +173,7 @@ class TrainingManager:
             )               #TODO: handle multiple table name statistics
             # # log
             for aid, value_dict in training_statistics.items():
-                main_tag = f"Training/{aid}"
+                main_tag = f"Training/{aid}/"
                 ray.get(self.monitor.add_multiple_scalars.remote(
                     main_tag, value_dict, global_step=training_steps
                 ))

@@ -96,6 +96,7 @@ class PPO(nn.Module):
         self._rewarder = model.Rewarder()
         self.observation_space = self.encoder.observation_space
         self.action_space = self.encoder.action_space
+        self.state_space = self.encoder.state_space
         assert isinstance(self.action_space, Discrete), str(self.action_space)
 
         self.actor = model.Actor(
@@ -108,11 +109,12 @@ class PPO(nn.Module):
 
         self.critic = model.Critic(
             self.model_config["critic"],
-            self.observation_space,
+            self.state_space,
             self.action_space,
             self.custom_config,
             self.model_config["initialization"],
         )
+        # breakpoint()
 
         self.target_critic = deepcopy(self.critic)
 
@@ -179,7 +181,6 @@ class PPO(nn.Module):
             observations = kwargs[EpisodeKey.CUR_OBS]
             action_masks = kwargs[EpisodeKey.ACTION_MASK]
             rnn_masks = kwargs[EpisodeKey.DONE]
-
 
             # actions, action_probs = self.actor(
             #     **{EpisodeKey.CUR_OBS: observations, EpisodeKey.ACTION_MASK:action_masks}

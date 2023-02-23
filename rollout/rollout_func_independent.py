@@ -150,6 +150,7 @@ def rollout_func(
         step_data = update_fields(step_data, select_fields(env_rets,
                                                            [
                                                                EpisodeKey.NEXT_OBS,
+                                                               EpisodeKey.NEXT_STATE,
                                                                EpisodeKey.REWARD,
                                                                EpisodeKey.DONE,
                                                                EpisodeKey.NEXT_ACTION_MASK
@@ -193,6 +194,7 @@ def rollout_func(
 
 
         env_rets=rename_field(env_rets, EpisodeKey.NEXT_OBS, EpisodeKey.CUR_OBS)
+        env_rets=rename_field(env_rets, EpisodeKey.NEXT_STATE, EpisodeKey.CUR_STATE)
         env_rets=rename_field(env_rets, EpisodeKey.NEXT_ACTION_MASK, EpisodeKey.ACTION_MASK)
 
         # record data for next step
@@ -202,6 +204,7 @@ def rollout_func(
                 policy_outputs,
                 [
                  EpisodeKey.CUR_OBS,
+                 EpisodeKey.CUR_STATE,
                  EpisodeKey.ACTION_MASK,
                  EpisodeKey.ACTOR_RNN_STATE,
                  EpisodeKey.CRITIC_RNN_STATE],

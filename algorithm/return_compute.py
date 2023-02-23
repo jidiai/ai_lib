@@ -40,7 +40,8 @@ def reward_to_go(policy, batch):
         Gt.insert(0, R)
     Gt = np.swapaxes(np.stack(Gt), 0,1)
 
-    obs= batch[EpisodeKey.CUR_OBS].reshape(batch_size*traj_len*num_agent, -1)
+    # obs= batch[EpisodeKey.CUR_OBS].reshape(batch_size*traj_len*num_agent, -1)
+    obs = batch[EpisodeKey.CUR_STATE].reshape(batch_size*traj_len*num_agent, -1)
     action_masks = batch[EpisodeKey.ACTION_MASK].reshape(batch_size*traj_len*num_agent, -1)
 
     device = policy.device

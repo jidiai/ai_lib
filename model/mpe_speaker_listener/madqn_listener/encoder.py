@@ -22,16 +22,18 @@ def merge_gym_box(box_list):
 
     return gym.spaces.Box(low=low,high=high, shape=(total_shape,), dtype =dtype)
 
-state_space = merge_gym_box([env.observation_space(aid)
+_state_space = merge_gym_box([env.observation_space(aid)
                              for aid in env.possible_agents])
 
 
 class Encoder:
     def __init__(self, action_spaces=env.action_space('listener_0'),
-                 observation_spaces=state_space):
+                 observation_spaces=env.action_space('listener_0'),
+                 state_space=_state_space):
 
         self._action_space = action_spaces
         self._observation_space = observation_spaces
+        self._state_space = state_space
 
     def encode(self, state):
         # obs=np.array([self._policy.state_index(state)],dtype=int)
@@ -47,3 +49,7 @@ class Encoder:
     @property
     def action_space(self):
         return self._action_space
+
+    @property
+    def state_space(self):
+        return self._state_space

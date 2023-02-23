@@ -93,24 +93,31 @@ elif env_cfg['env_id']=='simple_speaker_listener_v3':
 elif env_cfg['env_id']=='simple_spread_v2':
     agent_0_name, agent_1_name, agent_2_name = env.agent_ids
 
+algo= 'dqn' #'dqn'
 
-model_path = '/home/yansong/Desktop/jidiai/ai_lib_V2_logs/simple_reference/madqn/new_trial/agent_0/agent_0_default_0/epoch_300000'
-from registry.registration import DeepQLearning
-from utils.cfg import load_cfg
-config_path='/home/yansong/Desktop/jidiai/ai_lib/expr/mpe/mpe_simple_speaker_listener_madqn_marl.yaml'
-dqn_cfg = load_cfg(config_path)
+if algo == 'dqn':
+    model_path = '/home/yansong/Desktop/jidiai/ai_lib_V2_logs/simple_reference/madqn/new_trial/agent_0/agent_0_default_0/epoch_300000'
+    from registry.registration import DeepQLearning
+    from utils.cfg import load_cfg
+    config_path='/home/yansong/Desktop/jidiai/ai_lib/expr/mpe/mpe_simple_speaker_listener_madqn_marl.yaml'
+    dqn_cfg = load_cfg(config_path)
 
-speaker_policy = DeepQLearning(registered_name='DeepQLearning',
-                               observation_space=env.observation_spaces(agent_0_name),
-                               action_space = env.action_spaces(agent_0_name),
-                               model_config=dqn_cfg['populations'][0]['algorithm']['model_config'],
-                               custom_config=dqn_cfg['populations'][0]['algorithm']['custom_config'])
+    speaker_policy = DeepQLearning(registered_name='DeepQLearning',
+                                   observation_space=env.observation_spaces(agent_0_name),
+                                   action_space = env.action_spaces(agent_0_name),
+                                   model_config=dqn_cfg['populations'][0]['algorithm']['model_config'],
+                                   custom_config=dqn_cfg['populations'][0]['algorithm']['custom_config'])
 
-listener_policy = DeepQLearning(registered_name='DeepQLearning',
-                               observation_space=env.observation_spaces(agent_1_name),
-                               action_space = env.action_spaces(agent_1_name),
-                               model_config=dqn_cfg['populations'][1]['algorithm']['model_config'],
-                               custom_config=dqn_cfg['populations'][1]['algorithm']['custom_config'])
+    listener_policy = DeepQLearning(registered_name='DeepQLearning',
+                                   observation_space=env.observation_spaces(agent_1_name),
+                                   action_space = env.action_spaces(agent_1_name),
+                                   model_config=dqn_cfg['populations'][1]['algorithm']['model_config'],
+                                   custom_config=dqn_cfg['populations'][1]['algorithm']['custom_config'])
+# elif algo=='ppo':
+#     from registry.registration import PPO
+#     from utils.cfg import load_cfg
+#     config_path=''
+
 
 
 behavior_policies = {agent_0_name: ('speaker_0_v1', speaker_policy),

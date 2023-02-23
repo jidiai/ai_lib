@@ -142,7 +142,8 @@ class MPE(BaseAECEnv):
 
         rets = {
             agent_id:{
-                EpisodeKey.CUR_OBS: encoded_observations[agent_id],
+                EpisodeKey.CUR_OBS: observations[agent_id],
+                EpisodeKey.CUR_STATE: encoded_observations[agent_id],
                 EpisodeKey.ACTION_MASK: action_masks[agent_id],
                 EpisodeKey.DONE: dones[agent_id]
             }
@@ -181,7 +182,8 @@ class MPE(BaseAECEnv):
 
         return {
             agent_id: {
-                EpisodeKey.NEXT_OBS: encoded_observations[agent_id],
+                EpisodeKey.NEXT_OBS: observations[agent_id],
+                EpisodeKey.NEXT_STATE: encoded_observations[agent_id],
                 EpisodeKey.NEXT_ACTION_MASK: np.ones(self.action_spaces(agent_id).n, dtype=np.float32),
                 EpisodeKey.REWARD: np.array([rewards[agent_id]]),
                 EpisodeKey.DONE: np.array([dones[agent_id]])

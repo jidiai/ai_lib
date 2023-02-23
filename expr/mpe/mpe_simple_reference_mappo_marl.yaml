@@ -27,6 +27,7 @@ framework:
 
 agent_manager:
   num_agents: 1
+  agent_ids: ['agent_0']
   share_policies: True
 
 evaluation_manager:
@@ -73,7 +74,7 @@ rollout_manager:
       num_cpus: 1
       resources:
         - ["node:${distributed.nodes.master.ip}",0.01]
-  num_workers: 20
+  num_workers: 5
   seed: 12345
   saving_interval: 10000 # the sequence of dump model's weight
   batch_size: ${rollout_manager.num_workers}
@@ -166,7 +167,8 @@ policy_server:
         - ["node:${distributed.nodes.master.ip}",0.01]
 
 populations:
-  - population_id: default # population_id
+  - population_id: 'pop1' # population_id
+    agent_group: "agent_0"
     algorithm:
       name: "PPO"
       model_config:
@@ -192,6 +194,7 @@ populations:
               activation: ReLU
           output:
             activation: False
+        distributed_execution: True
 
       # set hyper parameter
       custom_config:

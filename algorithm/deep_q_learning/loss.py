@@ -100,12 +100,12 @@ class DeepQLearningLoss(LossFunc):
             next_observations,
             next_action_masks,
         ) = (
-            sample[EpisodeKey.CUR_OBS],
+            sample[EpisodeKey.CUR_STATE],
             sample[EpisodeKey.ACTION_MASK],
             sample[EpisodeKey.ACTION].long(),
             sample[EpisodeKey.REWARD],
             sample[EpisodeKey.DONE],
-            sample[EpisodeKey.NEXT_OBS],
+            sample[EpisodeKey.NEXT_STATE],
             sample[EpisodeKey.NEXT_ACTION_MASK],
         )
 

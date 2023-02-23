@@ -23,7 +23,7 @@ framework:
     kwargs:
       min_win_rate: 0.95
       # min_win_rate: 0.9
-      max_steps: 100000
+      max_steps: 1000
 
 agent_manager:
   num_agents: 2
@@ -236,7 +236,7 @@ populations:
         target_update_lr: 0.5
 
       policy_init_cfg:
-        speaker_0: # agent_id
+        speaker_0: # equals to agent_id
           new_policy_ctr_start: -1
           init_cfg:
             - condition: "==0" # condition if True in order

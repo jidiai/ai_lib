@@ -102,6 +102,7 @@ class DeepQLearning(nn.Module):
         # self.global_observation_space=self.encoder.global_observation_space if hasattr(self.encoder,"global_observation_space") else self.encoder.observation_space
         self.observation_space = self.encoder.observation_space
         self.action_space = self.encoder.action_space
+        self.state_space = self.encoder.state_space
         assert isinstance(self.action_space, Discrete), str(self.action_space)
 
         self.device = torch.device(
@@ -118,7 +119,7 @@ class DeepQLearning(nn.Module):
 
         self.critic = model.Critic(
             self.model_config["critic"],
-            self.observation_space,
+            self.state_space,
             self.action_space,
             self.custom_config,
             self.model_config["initialization"],
@@ -186,7 +187,7 @@ class DeepQLearning(nn.Module):
         to_numpy = kwargs.get("to_numpy", True)
         explore = kwargs["explore"]
         with torch.no_grad():
-            obs = kwargs[EpisodeKey.CUR_OBS]
+            obs = kwargs[EpisodeKey.CUR_STATE]              #single obs if not global_encoder or STATE if use global encoder
             action_masks = kwargs[EpisodeKey.ACTION_MASK]
             q_values = self.critic(
                 **{EpisodeKey.CUR_OBS: obs, EpisodeKey.ACTION_MASK: action_masks}

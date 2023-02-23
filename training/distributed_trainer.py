@@ -256,7 +256,7 @@ class DistributedTrainer:
             except Exception as e:
                 Logger.error(traceback.format_exc())
                 raise e
-        # breakpoint()
+
         # global_timer.time("trainer_data_start", "trainer_data_end", "trainer_data")
         # global_timer.record("trainer_optimize_start")
         training_info = {}

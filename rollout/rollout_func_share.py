@@ -114,6 +114,8 @@ def rollout_func(
         feature_encoders[agent_id] = policy.feature_encoder
         policy_ids[agent_id] = policy_id
 
+    agent_id_list = rollout_desc.agent_id
+
     custom_reset_config = {
         "feature_encoders": feature_encoders,
         "main_agent_id": rollout_desc.agent_id,
@@ -140,14 +142,14 @@ def rollout_func(
         agent_id: behavior_policies[agent_id][1].get_initial_state(
             batch_size=env.num_players[agent_id]
         )
-        for agent_id in [rollout_desc.agent_id]
+        for agent_id in agent_id_list
     }
 
     # TODO(jh): support multi-dimensional batched data based on dict & list using sth like NamedIndex.
     step_data = update_fields(env_rets, init_rnn_states)
 
     step = 0
-    step_data_list = []
+    step_data_dict = {aid: [] for aid in agent_id_list}
     while (
         not env.is_terminated()
     ):  # XXX(yan): terminate only when step_length >= fragment_length
@@ -164,7 +166,7 @@ def rollout_func(
         global_timer.time("inference_start", "inference_end", "inference")
 
         actions = select_fields(policy_outputs, [EpisodeKey.ACTION])
-        splitted_actions = {agent_id: actions[rollout_desc.agent_id][EpisodeKey.ACTION][i]
+        splitted_actions = {agent_id: actions[agent_id_list[0]][EpisodeKey.ACTION][i]
                             for i,agent_id in enumerate(env.agent_ids)}
 
         global_timer.record("env_step_start")
@@ -181,6 +183,7 @@ def rollout_func(
             step_data, select_fields(env_rets,
             [
                 EpisodeKey.NEXT_OBS,
+                EpisodeKey.NEXT_STATE,
                 EpisodeKey.REWARD,
                 EpisodeKey.DONE,
                 EpisodeKey.NEXT_ACTION_MASK
@@ -202,10 +205,12 @@ def rollout_func(
         # if share_policies:
         #     step_data_list.append(merge_rets(step_data))
         # else:
-        step_data_list.append(step_data[rollout_desc.agent_id])
+        for aid in agent_id_list:
+            step_data_dict[aid].append(step_data[aid])
 
         env_rets=rename_field(env_rets, EpisodeKey.NEXT_OBS, EpisodeKey.CUR_OBS)
         env_rets=rename_field(env_rets, EpisodeKey.NEXT_ACTION_MASK, EpisodeKey.ACTION_MASK)
+        env_rets=rename_field(env_rets, EpisodeKey.NEXT_STATE, EpisodeKey.CUR_STATE)
 
         # record data for next step
         step_data = update_fields(
@@ -214,6 +219,7 @@ def rollout_func(
                 policy_outputs,
                 [
                  EpisodeKey.CUR_OBS,
+                 EpisodeKey.CUR_STATE,
                  EpisodeKey.ACTION_MASK,
                  EpisodeKey.ACTOR_RNN_STATE,
                  EpisodeKey.CRITIC_RNN_STATE],
@@ -223,20 +229,29 @@ def rollout_func(
         step += 1
     if not eval:
         if episode_mode == 'traj':
-            episode = [stack_step_data(step_data_list, {})]
+            episode_dict = {aid: [stack_step_data(step_data_dict[aid], {})] for aid in agent_id_list}
+            # episode = [stack_step_data(step_data_list, {})]
         elif episode_mode == 'time-step':
-            episode = step_data_list
+            episode_dict = step_data_dict
         else:
             raise NotImplementedError(f'Episode mode {episode_mode} not implemented')
 
-        data_server.save.remote(
-            default_table_name(
-                rollout_desc.agent_id,
-                rollout_desc.policy_id,
-                rollout_desc.share_policies,
-            ),
-            episode,
-        )
+        for aid in agent_id_list:
+            table_name = f'{aid}_{rollout_desc.policy_id[aid][0]}'
+            data_server.save.remote(
+                table_name,
+                episode_dict[aid]
+            )
+
+
+        # data_server.save.remote(
+        #     default_table_name(
+        #         rollout_desc.agent_id,
+        #         rollout_desc.policy_id,
+        #         rollout_desc.share_policies,
+        #     ),
+        #     episode,
+        # )
 
     stats = env.get_episode_stats()
 
