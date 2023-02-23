@@ -2,7 +2,7 @@
 <img src="imgs/Jidi%20logo.png" width='300px'>
 
 
-# Jidi AiLib V2: A general reinforcement learning library
+# JidiRLlib: A general reinforcement learning library
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
 [![Release Version](https://img.shields.io/badge/release-2.0-red.svg)]()
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)]()
