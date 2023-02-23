@@ -31,9 +31,17 @@ def reward_to_go(policy, batch):
     cfg = policy.custom_config
     gamma = cfg["gamma"]
     reward = batch[EpisodeKey.REWARD]
-    batch_size, traj_len, num_agent, reward_dim = reward.shape
+    if len(reward.shape) == 4:
+        batch_size, traj_len, num_agent, reward_dim = reward.shape
+        BS = batch_size&traj_len*num_agent
+        R = np.zeros((batch_size, num_agent, reward_dim))
+    elif len(reward.shape) == 3:
+        batch_size, traj_len, reward_dim = reward.shape
+        BS = batch_size*traj_len
+        R = np.zeros((batch_size, reward_dim))
+
     Gt = []
-    R = np.zeros((batch_size, num_agent, reward_dim))
+
     for t in reversed(range(traj_len)):
         r = reward[:,t,...]
         R = r + gamma*R
@@ -41,8 +49,8 @@ def reward_to_go(policy, batch):
     Gt = np.swapaxes(np.stack(Gt), 0,1)
 
     # obs= batch[EpisodeKey.CUR_OBS].reshape(batch_size*traj_len*num_agent, -1)
-    obs = batch[EpisodeKey.CUR_STATE].reshape(batch_size*traj_len*num_agent, -1)
-    action_masks = batch[EpisodeKey.ACTION_MASK].reshape(batch_size*traj_len*num_agent, -1)
+    obs = batch[EpisodeKey.CUR_STATE].reshape(BS, -1)
+    action_masks = batch[EpisodeKey.ACTION_MASK].reshape(BS, -1)
 
     device = policy.device
     obs = torch.FloatTensor(obs).to(device)
@@ -50,7 +58,11 @@ def reward_to_go(policy, batch):
 
     V = policy.critic(**{EpisodeKey.CUR_OBS: obs,
                          EpisodeKey.ACTION_MASK: action_masks}).detach().cpu().numpy()
-    V = V.reshape(batch_size, traj_len, num_agent, -1)
+    if len(reward.shape) == 4:
+        V = V.reshape(batch_size, traj_len, num_agent, -1)
+    elif len(reward.shape) == 3:
+        V = V.reshape(batch_size, traj_len, -1)
+
     delta = Gt-V
     adv = delta
 
