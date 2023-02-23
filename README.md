@@ -7,7 +7,7 @@
 [![Release Version](https://img.shields.io/badge/release-2.0-red.svg)]()
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)]()
 
-**Jidi AiLib is a general distributed-RL library that integrates  Single-Agent RL, Multi-Agent RL and Population-based 
+**JidiRLlib is a general distributed-RL library that integrates  Single-Agent RL, Multi-Agent RL and Population-based 
 Training framework (i.e. Self-Play, PSRO, League Training). It inherits its structure 
 from [DB-Football](https://github.com/Shanghai-Digital-Brain-Laboratory/DB-Football)** and **[MALib](https://github.com/sjtu-marl/malib)**.
 
@@ -61,29 +61,13 @@ python3 -m pip install -e .
 - [x] **Open-spiel Kuhn Poker**
 - [x] **Open-spiel Leduc Poker**
 - [x] **Connect-Four**
-- [ ] **MPE**
+- [x] **MPE**
 
 ## Supported Baseline Algorithms
-- [x] **PPO**
+- [x] **(MA)PPO**
 - [x] **table-q learning**
-- [x] **DQN**
+- [x] **(MA)DQN**
 - [x] **DDPG**
 - [x] **SAC**
 - [ ] **QMIX**
 
-
-## Supported Benchmarking
-- [x] **table-q learning in Kuhn Poker**
-- [x] **table-q learning in Leduc Poker**
-- [x] **PPO in GRFootball with Bot opponent**
-
-
-
-
-# TODO
-1. selective installation on environmental dependencies
-2. add baseline envs
-3. add benchmark environmens
-4. ~~add SARL framework~~
-5. ~~add PSRO, MARL benchmark graphs~~
-6. **specify transformation from trained policy to ready-for-submission policy**
