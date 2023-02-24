@@ -33,8 +33,9 @@ export PYTHONPATH=$SCRIPT_DIR
 #python main_marl.py --config expr/mpe/mpe_simple_adversary_dqn_marl.yaml
 #python main_marl.py --config expr/mpe/mpe_simple_adversary_madqn_marl.yaml
 #python main_marl.py --config expr/mpe/mpe_simple_adversary_ppo_marl.yaml
-python main_marl.py --config expr/mpe/mpe_simple_adversary_mappo_marl.yaml
+#python main_marl.py --config expr/mpe/mpe_simple_adversary_mappo_marl.yaml
 
+python main_marl.py --config expr/mpe/mpe_simple_push_dqn_marl.yaml
 
 
 
