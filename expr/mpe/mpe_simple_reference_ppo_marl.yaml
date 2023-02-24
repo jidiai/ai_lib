@@ -172,7 +172,7 @@ populations:
     algorithm:
       name: "PPO"
       model_config:
-        model: "mpe.ppo"
+        model: "mpe_simple_reference.ppo"
         initialization:
           use_orthogonal: True
           gain: 1.

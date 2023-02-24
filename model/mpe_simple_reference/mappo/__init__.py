@@ -5,8 +5,8 @@ from ...default.encoder import Encoder as encoder_cls
 import numpy as np
 import gym
 
-from pettingzoo.mpe import simple_speaker_listener_v3
-env = simple_speaker_listener_v3.parallel_env()
+from pettingzoo.mpe import simple_reference_v2
+env = simple_reference_v2.parallel_env()
 
 def merge_gym_box(box_list):
     length = len(box_list)
@@ -27,8 +27,8 @@ _state_space = merge_gym_box([env.observation_space(aid)
 
 class Encoder(encoder_cls):
     def __init__(self):
-        super().__init__(action_spaces=env.action_space('speaker_0'),
-                         observation_spaces=env.observation_space('speaker_0'),
+        super().__init__(action_spaces=env.action_space('agent_0'),
+                         observation_spaces=env.observation_space('agent_0'),
                          state_space=_state_space)
 
 class Rewarder:

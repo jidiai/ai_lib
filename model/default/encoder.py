@@ -2,21 +2,12 @@ from gym.spaces import Box, Discrete
 import numpy as np
 import gym
 
-from pettingzoo.mpe import simple_speaker_listener_v3
-# from pettingzoo.mpe import simple_v2
-
-env = simple_speaker_listener_v3.parallel_env()
-# env = simple_v2.parallel_env()
-
-
 class Encoder:
-    def __init__(self, action_spaces=env.action_space('speaker_0'),
-                 observation_spaces=env.observation_space('speaker_0'),
-                 state_space=env.observation_space('speaker_0')):
+    def __init__(self, action_spaces, observation_spaces, state_space):
 
         self._action_space = action_spaces
         self._observation_space = observation_spaces
-        self._state_space=state_space
+        self._state_space = state_space
 
     def encode(self, state):
         # obs=np.array([self._policy.state_index(state)],dtype=int)
@@ -32,7 +23,7 @@ class Encoder:
     @property
     def action_space(self):
         return self._action_space
+
     @property
     def state_space(self):
         return self._state_space
-

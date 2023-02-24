@@ -33,7 +33,7 @@ def reward_to_go(policy, batch):
     reward = batch[EpisodeKey.REWARD]
     if len(reward.shape) == 4:
         batch_size, traj_len, num_agent, reward_dim = reward.shape
-        BS = batch_size&traj_len*num_agent
+        BS = batch_size*traj_len*num_agent
         R = np.zeros((batch_size, num_agent, reward_dim))
     elif len(reward.shape) == 3:
         batch_size, traj_len, reward_dim = reward.shape

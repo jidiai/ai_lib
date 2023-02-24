@@ -14,6 +14,7 @@ export PYTHONPATH=$SCRIPT_DIR
 #python main_pbt.py --config expr/kuhn_poker/expr_sac_psro.yaml
 #python main_marl.py --config expr/gym/CartPole_SAC_marl.yaml
 #python main_marl.py --config expr/gym/Pendulum_DDPG_marl.yaml
+
 #python main_marl.py --config expr/mpe/mpe_simple_reference_dqn_marl.yaml
 #python main_marl.py --config expr/mpe/mpe_simple_reference_madqn_marl.yaml
 #python main_marl.py --config expr/mpe/mpe_simple_reference_ppo_marl.yaml
@@ -22,9 +23,12 @@ export PYTHONPATH=$SCRIPT_DIR
 #python main_marl.py --config expr/mpe/mpe_simple_speaker_listener_dqn_marl.yaml
 #python main_marl.py --config expr/mpe/mpe_simple_speaker_listener_madqn_marl.yaml
 #python main_marl.py --config expr/mpe/mpe_simple_speaker_listener_ppo_marl.yaml
-#python main_marl.py --config expr/mpe/mpe_simple_speaker_listener_mappo_marl.yaml
+python main_marl.py --config expr/mpe/mpe_simple_speaker_listener_mappo_marl.yaml
 
-python main_marl.py --config expr/mpe/mpe_simple_spread_dqn_marl.yaml
+#python main_marl.py --config expr/mpe/mpe_simple_spread_dqn_marl.yaml
+#python main_marl.py --config expr/mpe/mpe_simple_spread_madqn_marl.yaml
+#python main_marl.py --config expr/mpe/mpe_simple_spread_ppo_marl.yaml
+#python main_marl.py --config expr/mpe/mpe_simple_spread_mappo_marl.yaml
 
 
 

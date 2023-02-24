@@ -1,5 +1,5 @@
 expr_group: mpe_simple_spread
-expr_name: marl_dqn
+expr_name: marl_mappo
 log_dir: logs
 log_name: 'Marl'
 seed: 123
@@ -28,7 +28,7 @@ framework:
 agent_manager:
   num_agents: 1
   agent_ids: ['agent_0']
-  share_policies: True    #parameter-sharing
+  share_policies: True
 
 evaluation_manager:
   num_eval_rollouts: 30
@@ -79,7 +79,7 @@ rollout_manager:
   saving_interval: 10000 # the sequence of dump model's weight
   batch_size: ${rollout_manager.num_workers}
   eval_batch_size: 100
-  eval_freq: 100 # epochs
+  eval_freq: 500 # epochs
   min_samples: ${training_manager.batch_size}
   rollout_metric_cfgs:
     reward:
@@ -100,13 +100,13 @@ rollout_manager:
     padding_length: # of not use in gr_football
     rollout_func_name: "rollout_func_share"
     rollout_func_cfg:
-      episode_mode: "time-step"    #traj: whole trajectory (for PPO) and time-step
+      episode_mode: "traj"    #traj: whole trajectory (for PPO) and time-step
     mix_opponent: False
     envs:
       - cls: "mpe"
         id_prefix: "mpe"
         env_id: "simple_spread_v2"
-        global_encoder: false
+        global_encoder: true
 
 
 training_manager:
@@ -151,13 +151,13 @@ data_server:
       resources:
         - ["node:${distributed.nodes.master.ip}",0.01]
   table_cfg:
-    capacity: 10000
-    sampler_type: "uniform"
-    sample_max_usage: 1000 # this might also be problematic when sync training...
+    capacity: 1000
+    sampler_type: "lumrf"
+    sample_max_usage: 1000 #  the generated data need to be more than the required data (rollout_worker*max_usage>batch_size)
     rate_limiter_cfg:
       min_size: ${training_manager.batch_size}
       # r_w_ratio: 10.0 # cannot set it if sync training...
-  read_timeout: 120
+  read_timeout: 60
 
 policy_server:
   distributed:
@@ -170,9 +170,9 @@ populations:
   - population_id: 'pop1' # population_id
     agent_group: "agent_0"
     algorithm:
-      name: "DeepQLearning"
+      name: "PPO"
       model_config:
-        model: "mpe_simple_spread.dqn"
+        model: "mpe_simple_spread.mappo"
         initialization:
           use_orthogonal: True
           gain: 1.
@@ -211,7 +211,7 @@ populations:
         num_mini_batch: 1  # the number of mini-batches
         max_grad_norm: 0.5
         
-        return_mode: new_gae
+        return_mode: reward_to_go
         gae:
           gae_lambda: 0.95
         vtrace:

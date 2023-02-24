@@ -172,7 +172,7 @@ populations:
     algorithm:
       name: "DeepQLearning"
       model_config:
-        model: "mpe.madqn"
+        model: "mpe_simple_reference.madqn"
         initialization:
           use_orthogonal: True
           gain: 1.

@@ -17,8 +17,9 @@ from [DB-Football](https://github.com/Shanghai-Digital-Brain-Laboratory/DB-Footb
 You can install Jidi AiLib on your own personal computer or workstation. To install it, please follow the instruction below.
 
 ```bash
-git clone https://github.com/YanSong97/ailib_v2.0.git
-cd ailib_v2
+git clone https://github.com/jidiai/ai_lib.git 
+cd ai_lib
+git checkout V2
 ```
 
 your can use virtual environment:
