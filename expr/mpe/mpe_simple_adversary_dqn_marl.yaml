@@ -1,0 +1,402 @@
+expr_group: mpe_adversary
+expr_name: marl_dqn
+log_dir: logs
+log_name: 'Marl'
+seed: 123
+eval_only: False
+
+distributed:
+  use: False
+  auto_connect:
+  auto_copy:
+  nodes:
+    master:
+      ip: 'auto'
+    workers:      
+      - ip:
+
+framework:
+  name: "marl"
+  sync_training: True
+  stopper:
+    type: "win_rate_stopper"
+    kwargs:
+      min_win_rate: 0.95
+      # min_win_rate: 0.9
+      max_steps: 1000
+
+agent_manager:
+  num_agents: 3
+  agent_ids: ['adversary_0', 'agent_0', 'agent_1']
+  share_policies: False
+
+evaluation_manager:
+  num_eval_rollouts: 30
+
+policy_data_manager:
+  update_func: "gym"
+  fields:
+    payoff:
+      type: "matrix"
+      missing_value: -100 
+    score:
+      type: "matrix"
+      missing_value: -100 
+    win:
+      type: "matrix"
+      missing_value: -100 
+    lose:
+      type: "matrix"
+      missing_value: -100 
+    reward:
+      type: "matrix"
+      missing_value: -100
+    exploitability:
+      type: "array"
+      missing_value: -100
+        
+monitor:
+  distributed:
+    resources:
+      num_cpus: 1
+      resources:
+        - ["node:${distributed.nodes.master.ip}",0.01]
+
+# TODO
+league:
+  role: "client"
+  server_ip: ""
+  server_port: ""
+
+rollout_manager:
+  distributed:
+    resources:
+      num_cpus: 1
+      resources:
+        - ["node:${distributed.nodes.master.ip}",0.01]
+  num_workers: 5
+  seed: 12345
+  saving_interval: 1000 # the sequence of dump model's weight
+  batch_size: ${rollout_manager.num_workers}
+  eval_batch_size: 100
+  eval_freq: 500 # epochs
+  min_samples: ${training_manager.batch_size}
+  rollout_metric_cfgs:
+    reward:
+      type: "sliding"
+      window_size: 20
+      init_list: [-10000]
+    win:
+      type: "sliding"
+      window_size: 20
+      init_list: [0,0,0,0,0]
+  worker:
+    distributed:
+      resources:
+        num_cpus: 1
+    rollout_length: 25
+    eval_rollout_length: 25
+    sample_length: 25
+    padding_length: # of not use in gr_football
+    rollout_func_name: "rollout_func_independent"
+    rollout_func_cfg:
+      episode_mode: "time-step"    #traj: whole trajectory (for PPO) and time-step
+    mix_opponent: False
+    envs:
+      - cls: "mpe"
+        id_prefix: "mpe"
+        env_id: "simple_adversary_v2"
+        global_encoder: false
+
+
+training_manager:
+  distributed:
+    resources:
+      num_cpus: 1
+      resources:
+        - ["node:${distributed.nodes.master.ip}",0.01]
+ 
+  master_addr: "127.0.0.1"
+  master_port:  #"12774"
+  local_queue_size: 1
+  batch_size: 128 # how many data sample from DatasetServer per time.
+  num_prefetchers: 3
+  data_prefetcher:
+    distributed:
+      resources:
+        num_cpus: 1
+  num_trainers: 1
+  # control the frequency of remote parameter update
+  update_interval: 1
+  gpu_preload: False
+  trainer:
+    distributed:
+      resources:
+        num_cpus: 1
+        num_gpus: 1
+        resources:
+          - ["node:${distributed.nodes.master.ip}",0.01]
+    optimizer: "Adam"
+    actor_lr: 5e-4
+    critic_lr: 5e-4
+    opti_eps: 1.e-5
+    weight_decay: 0.05
+    lr_decay: False            #update_linear_schedule
+    lr_decay_epoch: 2000      #how many rollout steps till zero
+
+data_server:
+  distributed:
+    resources:
+      num_cpus: 1
+      resources:
+        - ["node:${distributed.nodes.master.ip}",0.01]
+  table_cfg:
+    capacity: 10000
+    sampler_type: "uniform"
+    sample_max_usage: 1000 # this might also be problematic when sync training...
+    rate_limiter_cfg:
+      min_size: ${training_manager.batch_size}
+      # r_w_ratio: 10.0 # cannot set it if sync training...
+  read_timeout: 120
+
+policy_server:
+  distributed:
+    resources:
+      num_cpus: 1
+      resources:
+        - ["node:${distributed.nodes.master.ip}",0.01]
+
+populations:
+  - population_id: "pop1" # population_id
+    agent_group: "adversary_0"
+    algorithm:
+      name: "DeepQLearning"
+      model_config:
+        model: "mpe_simple_adversary.dqn_adversary"
+        initialization:
+          use_orthogonal: True
+          gain: 1.
+        actor:
+          network: mlp
+          layers:
+            - units: 64
+              activation: ReLU
+            - units: 32
+              activation: ReLU
+          output:
+            activation: False
+        critic:
+          network: mlp
+          layers:
+            - units: 64
+              activation: ReLU
+            - units: 32
+              activation: ReLU
+          output:
+            activation: False
+
+      # set hyper parameter
+      custom_config:
+        explore_cfg:
+          mode: "epsilon_greedy"
+          # epsilon: 0.5
+          max_epsilon: 0.5
+          min_epsilon: 0.1
+          total_decay_steps: ${framework.stopper.kwargs.max_steps}
+
+        gamma: 0.99
+        use_cuda: False  # enable cuda or not
+        use_q_head: False
+        ppo_epoch: 5
+        num_mini_batch: 1  # the number of mini-batches
+        max_grad_norm: 0.5
+        
+        return_mode: new_gae
+        gae:
+          gae_lambda: 0.95
+        vtrace:
+          clip_rho_threshold: 1.0
+          clip_pg_rho_threshold: 100.0
+
+        use_rnn: False
+        # this is not used, instead it is fixed to last hidden in actor/critic
+        rnn_layer_num: 1
+        rnn_data_chunk_length: 16
+
+        use_feature_normalization: True
+        use_popart: False
+        popart_beta: 0.99999
+
+        entropy_coef: 0.00
+        clip_param: 0.2
+
+        use_modified_mappo: False
+
+        target_update_freq: 200
+        target_update_lr: 0.5
+
+      policy_init_cfg:
+        adversary_0: # equals to agent_id
+          new_policy_ctr_start: -1
+          init_cfg:
+            - condition: "==0" # condition if True in order
+              strategy: random # now support pretrained, inherit_last, random
+            - condition: "default" # default case.
+              strategy: random # now support pretrained, inherit_last, random
+          initial_policies:
+
+  - population_id: "pop1" # population_id
+    agent_group: "agent_0"
+    algorithm:
+      name: "DeepQLearning"
+      model_config:
+        model: "mpe_simple_adversary.dqn_agent"
+        initialization:
+          use_orthogonal: True
+          gain: 1.
+        actor:
+          network: mlp
+          layers:
+            - units: 64
+              activation: ReLU
+            - units: 32
+              activation: ReLU
+          output:
+            activation: False
+        critic:
+          network: mlp
+          layers:
+            - units: 64
+              activation: ReLU
+            - units: 32
+              activation: ReLU
+          output:
+            activation: False
+
+      # set hyper parameter
+      custom_config:
+        explore_cfg:
+          mode: "epsilon_greedy"
+          # epsilon: 0.5
+          max_epsilon: 0.5
+          min_epsilon: 0.1
+          total_decay_steps: ${framework.stopper.kwargs.max_steps}
+
+        gamma: 0.99
+        use_cuda: False  # enable cuda or not
+        use_q_head: False
+        ppo_epoch: 5
+        num_mini_batch: 1  # the number of mini-batches
+        max_grad_norm: 0.5
+
+        return_mode: new_gae
+        gae:
+          gae_lambda: 0.95
+        vtrace:
+          clip_rho_threshold: 1.0
+          clip_pg_rho_threshold: 100.0
+
+        use_rnn: False
+        # this is not used, instead it is fixed to last hidden in actor/critic
+        rnn_layer_num: 1
+        rnn_data_chunk_length: 16
+
+        use_feature_normalization: True
+        use_popart: False
+        popart_beta: 0.99999
+
+        entropy_coef: 0.00
+        clip_param: 0.2
+
+        use_modified_mappo: False
+
+        target_update_freq: 200
+        target_update_lr: 0.5
+
+      policy_init_cfg:
+        agent_0:
+          init_cfg:
+            - condition: "==0" # condition if True in order
+              strategy: random # now support pretrained, inherit_last, random
+            - condition: "default" # default case.
+              strategy: random # now support pretrained, inherit_last, random
+
+          initial_policies:
+
+  - population_id: "pop1" # population_id
+    agent_group: "agent_1"
+    algorithm:
+      name: "DeepQLearning"
+      model_config:
+        model: "mpe_simple_adversary.dqn_agent"
+        initialization:
+          use_orthogonal: True
+          gain: 1.
+        actor:
+          network: mlp
+          layers:
+            - units: 64
+              activation: ReLU
+            - units: 32
+              activation: ReLU
+          output:
+            activation: False
+        critic:
+          network: mlp
+          layers:
+            - units: 64
+              activation: ReLU
+            - units: 32
+              activation: ReLU
+          output:
+            activation: False
+
+      # set hyper parameter
+      custom_config:
+        explore_cfg:
+          mode: "epsilon_greedy"
+          # epsilon: 0.5
+          max_epsilon: 0.5
+          min_epsilon: 0.1
+          total_decay_steps: ${framework.stopper.kwargs.max_steps}
+
+        gamma: 0.99
+        use_cuda: False  # enable cuda or not
+        use_q_head: False
+        ppo_epoch: 5
+        num_mini_batch: 1  # the number of mini-batches
+        max_grad_norm: 0.5
+
+        return_mode: new_gae
+        gae:
+          gae_lambda: 0.95
+        vtrace:
+          clip_rho_threshold: 1.0
+          clip_pg_rho_threshold: 100.0
+
+        use_rnn: False
+        # this is not used, instead it is fixed to last hidden in actor/critic
+        rnn_layer_num: 1
+        rnn_data_chunk_length: 16
+
+        use_feature_normalization: True
+        use_popart: False
+        popart_beta: 0.99999
+
+        entropy_coef: 0.00
+        clip_param: 0.2
+
+        use_modified_mappo: False
+
+        target_update_freq: 200
+        target_update_lr: 0.5
+
+      policy_init_cfg:
+        agent_1:
+          init_cfg:
+            - condition: "==0" # condition if True in order
+              strategy: random # now support pretrained, inherit_last, random
+            - condition: "default" # default case.
+              strategy: random # now support pretrained, inherit_last, random
+
+          initial_policies:

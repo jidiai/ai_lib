@@ -9,15 +9,16 @@ import numpy as np
 
 
 class DefaultFeatureEncoder:
-    def __init__(self, action_spaces, observation_spaces):
+    def __init__(self, action_spaces, observation_spaces, current_aid):
 
         self._action_space = action_spaces
         self._observation_space = observation_spaces
+        self.current_aid = current_aid
 
     def encode(self, state):
         # obs=np.array([self._policy.state_index(state)],dtype=int)
         # print(self._policy.state_index(state))
-        obs = state
+        obs = state[self.current_aid]
         action_mask = np.ones(self._action_space.n, dtype=np.float32)
         return obs, action_mask
 
@@ -46,6 +47,25 @@ class GlobalFeatureEncoder:
             encoded_obs[aid] = current_encoded_obs
             action_masks[aid] = np.ones(self._action_space_dict[aid].n, dtype=np.float32)
         return encoded_obs, action_masks
+
+class IndividualGlobalFeatureEncoder:
+    def __init__(self, action_spaces_dict, observation_spaces_dict, current_aid):
+        self._action_space_dict = action_spaces_dict
+        self._observation_space_dict = observation_spaces_dict
+        self._agent_ids = list(self._observation_space_dict.keys())
+        self.current_aid = current_aid
+
+    def encode(self, global_state):
+        encoded_obs = {}
+        action_masks = {}
+        current_obs = global_state[self.current_aid]
+        other_obs = [global_state[i] for i in self._agent_ids if i != self.current_aid]
+        other_obs = np.concatenate(other_obs)
+        current_encoded_obs = np.concatenate(([current_obs, other_obs]))
+        current_action_masks = np.ones(self._action_space_dict[self.current_aid].n, dtype=np.float32)
+        return current_encoded_obs, current_action_masks
+
+
 
 
 
@@ -84,16 +104,64 @@ class MPE(BaseAECEnv):
         #     "agent_0": DefaultFeatureEncoder(self._action_space['agent_0'], self._observation_space['agent_0']),
         #     "agent_1": DefaultFeatureEncoder(self._action_space['agent_0'], self._observation_space['agent_0']),
         # }
-        self.global_encoder = self.cfg['global_encoder']
-        if not self.global_encoder:
-            self.feature_encoders = {
-                aid: DefaultFeatureEncoder(self._action_space(aid), self._observation_space(aid))
-                for aid in self.agent_ids
-            }
+        _global_encoder = self.cfg['global_encoder']
+        if _global_encoder is True:
+            global_encoder = self.agent_ids
+        elif _global_encoder is False:
+            global_encoder = []
+        elif isinstance(_global_encoder, str):
+            global_encoder = _global_encoder.split(',')
         else:
-            self.feature_encoders = GlobalFeatureEncoder(self._env.action_spaces,
-                                                         self._env.observation_spaces)
+            raise NotImplementedError
 
+        self.feature_encoders = {}
+        for aid in self.agent_ids:
+            if aid in global_encoder:
+                sharing_agent_action_spaces = {encoder_aid: self._env.action_spaces[encoder_aid] for encoder_aid in global_encoder}
+                sharing_agent_obs_spaces = {aid: self._env.observation_spaces[aid] for aid in global_encoder}
+
+                self.feature_encoders[aid] = IndividualGlobalFeatureEncoder(sharing_agent_action_spaces,
+                                                                            sharing_agent_obs_spaces,aid)
+            else:
+                self.feature_encoders[aid] = DefaultFeatureEncoder(self._action_space(aid), self._observation_space(aid),
+                                                                   aid)
+
+        #
+        # if isinstance(self.global_encoder, bool):
+        #     if not self.global_encoder:
+        #         self.feature_encoders = {
+        #             aid: DefaultFeatureEncoder(self._action_space(aid), self._observation_space(aid))
+        #             for aid in self.agent_ids
+        #         }
+        #         self.use_global_encoder = False
+        #     else:           #global encoder on all agents
+        #         sharing_agent = self.agent_ids
+        #         sharing_agent_action_spaces = self._env.action_spaces
+        #         sharing_agent_obs_spaces = self._env.observation_spaces
+        #         self.feature_encoders = {}
+        #         for aid in self.agent_ids:
+        #             self.feature_encoders[aid] = IndividualGlobalFeatureEncoder(sharing_agent_action_spaces,
+        #                                                                         sharing_agent_obs_spaces,aid)
+        #
+        #         #
+        #         # self.feature_encoders = GlobalFeatureEncoder(self._env.action_spaces,
+        #         #                                              self._env.observation_spaces)
+        #         self.use_global_encoder = True
+        # elif isinstance(self.global_encoder, str):      #global encoder on specific agents
+        #     sharing_agent = self.global_encoder.split(',')
+        #     sharing_agent_action_spaces = {aid: self._env.action_spaces[aid] for aid in sharing_agent}
+        #     sharing_agent_obs_spaces = {aid: self._env.observation_spaces[aid] for aid in sharing_agent}
+        #     self.feature_encoders = {}
+        #     for aid in self.agent_ids:
+        #         if aid in sharing_agent:
+        #             self.feature_encoders[aid] = IndividualGlobalFeatureEncoder(sharing_agent_action_spaces,
+        #                                                                         sharing_agent_obs_spaces, aid)
+        #         else:
+        #             self.feature_encoders[aid] = DefaultFeatureEncoder(sharing_agent_action_spaces[aid],
+        #                                                                sharing_agent_obs_spaces[aid])
+        #     self.use_global_encoder = True
+        # else:
+        #     raise NotImplementedError
 
         self.max_step = 25
 
@@ -121,24 +189,34 @@ class MPE(BaseAECEnv):
             f"{agent_id}'s reward": 0,
         } for agent_id in self.agent_ids
         }
+        self.rollout_length = custom_reset_config['rollout_length']
 
 
         observations = self._env.reset()  # {agent_id: agent_obs}
         # if not self.global_encoder:
-        if not self.global_encoder:
-            encoded_observations = {}
-            action_masks = {}
-            dones = {}
-            for agent_id in self.agent_ids:
-                _obs, _action_mask = self.feature_encoders[agent_id].encode(observations[agent_id])
-                encoded_observations[agent_id] = np.array(_obs, dtype=np.float32)
-                action_masks[agent_id] = np.array(_action_mask)
-                dones[agent_id] = np.zeros((1))
-        else:
-            encoded_observations, action_masks = self.feature_encoders.encode(observations)
-            dones = dict(zip(self.agent_ids, [np.zeros((1))]*len(self.agent_ids)))
+        # if not self.use_global_encoder:
+        #     encoded_observations = {}
+        #     action_masks = {}
+        #     dones = {}
+        #     for agent_id in self.agent_ids:
+        #         _obs, _action_mask = self.feature_encoders[agent_id].encode(observations[agent_id])
+        #         encoded_observations[agent_id] = np.array(_obs, dtype=np.float32)
+        #         action_masks[agent_id] = np.array(_action_mask)
+        #         dones[agent_id] = np.zeros((1))
+        # else:
+        #     encoded_observations, action_masks = self.feature_encoders.encode(observations)
+        #     dones = dict(zip(self.agent_ids, [np.zeros((1))]*len(self.agent_ids)))
         # else:
         #     encoded_observations =
+        encoded_observations = {}
+        action_masks = {}
+        dones = {}
+        for agent_id in self.agent_ids:
+            _obs, _action_mask = self.feature_encoders[agent_id].encode(observations)
+            encoded_observations[agent_id] = np.array(_obs, dtype=np.float32)
+            action_masks[agent_id] = np.array(_action_mask)
+            dones[agent_id] = np.zeros((1))
+
 
         rets = {
             agent_id:{
@@ -166,15 +244,22 @@ class MPE(BaseAECEnv):
         #     assert self.action_spaces[agent].contains(action), f"Action is not in space: {action} with type={type(action)}"
         observations, rewards, dones, infos = self._env.step(filtered_actions)
 
-        if not self.global_encoder:
-            encoded_observations = {}
-            action_masks = {}
-            for agent_id in self.agent_ids:
-                _obs, _action_mask = self.feature_encoders[agent_id].encode(observations[agent_id])
-                encoded_observations[agent_id] = np.array(_obs, dtype=np.float32)
-                action_masks[agent_id] = np.array(_action_mask)
-        else:
-            encoded_observations, action_masks = self.feature_encoders.encode(observations)
+
+        # if not self.global_encoder:
+        #     encoded_observations = {}
+        #     action_masks = {}
+        #     for agent_id in self.agent_ids:
+        #         _obs, _action_mask = self.feature_encoders[agent_id].encode(observations[agent_id])
+        #         encoded_observations[agent_id] = np.array(_obs, dtype=np.float32)
+        #         action_masks[agent_id] = np.array(_action_mask)
+        # else:
+        #     encoded_observations, action_masks = self.feature_encoders.encode(observations)
+        encoded_observations = {}
+        action_masks = {}
+        for agent_id in self.agent_ids:
+            _obs, _action_mask = self.feature_encoders[agent_id].encode(observations)
+            encoded_observations[agent_id] = np.array(_obs, dtype=np.float32)
+            action_masks[agent_id] = np.array(_action_mask)
 
         self._is_terminated=all(list(dones.values()))
         self.update_episode_stats(rewards)

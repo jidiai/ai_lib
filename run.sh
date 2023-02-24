@@ -23,13 +23,17 @@ export PYTHONPATH=$SCRIPT_DIR
 #python main_marl.py --config expr/mpe/mpe_simple_speaker_listener_dqn_marl.yaml
 #python main_marl.py --config expr/mpe/mpe_simple_speaker_listener_madqn_marl.yaml
 #python main_marl.py --config expr/mpe/mpe_simple_speaker_listener_ppo_marl.yaml
-python main_marl.py --config expr/mpe/mpe_simple_speaker_listener_mappo_marl.yaml
+#python main_marl.py --config expr/mpe/mpe_simple_speaker_listener_mappo_marl.yaml
 
 #python main_marl.py --config expr/mpe/mpe_simple_spread_dqn_marl.yaml
 #python main_marl.py --config expr/mpe/mpe_simple_spread_madqn_marl.yaml
 #python main_marl.py --config expr/mpe/mpe_simple_spread_ppo_marl.yaml
 #python main_marl.py --config expr/mpe/mpe_simple_spread_mappo_marl.yaml
 
+#python main_marl.py --config expr/mpe/mpe_simple_adversary_dqn_marl.yaml
+#python main_marl.py --config expr/mpe/mpe_simple_adversary_madqn_marl.yaml
+#python main_marl.py --config expr/mpe/mpe_simple_adversary_ppo_marl.yaml
+python main_marl.py --config expr/mpe/mpe_simple_adversary_mappo_marl.yaml
 
 
 
