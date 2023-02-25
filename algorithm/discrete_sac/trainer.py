@@ -1,7 +1,7 @@
 import numpy as np
 from collections import defaultdict
 from registry import registry
-from training.data_generator import recurrent_generator, simple_data_generator
+from training.data_generator import recurrent_generator, simple_data_generator, batched_data_generator
 from .loss import DiscreteSACLoss
 import torch
 import functools
@@ -39,7 +39,7 @@ class DiscreteSACTrainer(Trainer):
             assert not policy.custom_config["use_rnn"]
             num_mini_batch = policy.custom_config["num_mini_batch"]
             data_generator_fn = functools.partial(
-                simple_data_generator,
+                batched_data_generator,
                 batch,
                 num_mini_batch,
                 policy.device,

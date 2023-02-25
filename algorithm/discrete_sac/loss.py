@@ -102,15 +102,22 @@ class DiscreteSACLoss(LossFunc):
             sample[EpisodeKey.NEXT_ACTION_MASK],
         )
 
+        if EpisodeKey.CUR_STATE in sample:
+            share_obs_batch = sample[EpisodeKey.CUR_STATE]
+            share_next_obs = sample[EpisodeKey.NEXT_STATE]
+        else:
+            share_obs_batch = sample[EpisodeKey.CUR_OBS]
+            share_next_obs = sample[EpisodeKey.NEXT_OBS]
+
         pred_q_1 = self.policy.critic_1(
-            **{EpisodeKey.CUR_OBS: observations, EpisodeKey.ACTION_MASK: action_masks}
+            **{EpisodeKey.CUR_OBS: share_obs_batch, EpisodeKey.ACTION_MASK: action_masks}
         )
         pred_q_1 = pred_q_1.gather(1, actions).flatten()
 
         pred_q_2 = (
             self.policy.critic_2(
                 **{
-                    EpisodeKey.CUR_OBS: observations,
+                    EpisodeKey.CUR_OBS: share_obs_batch,
                     EpisodeKey.ACTION_MASK: action_masks,
                 }
             )
@@ -124,14 +131,14 @@ class DiscreteSACLoss(LossFunc):
         next_q = next_action_dist.probs * torch.min(
             self.policy.target_critic_1(
                 **{
-                    EpisodeKey.NEXT_OBS: next_observations,
-                    EpisodeKey.NEXT_ACTION_MASK: next_action_masks,
+                    EpisodeKey.CUR_OBS: share_next_obs,
+                    EpisodeKey.ACTION_MASK: next_action_masks,
                 }
             ),
             self.policy.target_critic_2(
                 **{
-                    EpisodeKey.NEXT_OBS: next_observations,
-                    EpisodeKey.NEXT_ACTION_MASK: next_action_masks,
+                    EpisodeKey.CUR_OBS: share_next_obs,
+                    EpisodeKey.ACTION_MASK: next_action_masks,
                 }
             ),
         )
@@ -162,13 +169,13 @@ class DiscreteSACLoss(LossFunc):
         with torch.no_grad():
             current_q_1 = self.policy.critic_1(
                 **{
-                    EpisodeKey.CUR_OBS: observations,
+                    EpisodeKey.CUR_OBS: share_obs_batch,
                     EpisodeKey.ACTION_MASK: action_masks,
                 }
             )
             current_q_2 = self.policy.critic_2(
                 **{
-                    EpisodeKey.CUR_OBS: observations,
+                    EpisodeKey.CUR_OBS: share_obs_batch,
                     EpisodeKey.ACTION_MASK: action_masks,
                 }
             )

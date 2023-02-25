@@ -133,6 +133,8 @@ class DiscreteSAC(nn.Module):
             self.use_auto_alpha = False
             self._alpha = self.custom_config.get("alpha", 0.05)
 
+        self.current_eps = 0
+
     @property
     def description(self):
         """Return a dict of basic attributes to identify policy.
@@ -212,7 +214,7 @@ class DiscreteSAC(nn.Module):
             critic_2 = self.target_critic_2
 
         with torch.no_grad():
-            obs = kwargs[EpisodeKey.CUR_OBS]
+            obs = kwargs[EpisodeKey.CUR_STATE]
             action_masks = kwargs[EpisodeKey.ACTION_MASK]
             q_values_1 = critic_1(
                 **{EpisodeKey.CUR_OBS: obs, EpisodeKey.ACTION_MASK: action_masks}
