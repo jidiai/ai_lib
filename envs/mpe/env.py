@@ -90,12 +90,14 @@ class MPE(BaseAECEnv):
         env_id = cfg["env_id"]
         env_module = importlib.import_module(f"pettingzoo.mpe.{env_id}")
         self._env = env_module.parallel_env()            #max_cycles=25, continuous_actions=False
-        self._env.seed(seed)
+        self._env.seed(seed)      #Calling seed externally is deprecated in new pettingzoo version
         self._step_ctr = 0
         self._is_terminated = False
 
-        self._observation_space = self._env.observation_space
-        self._action_space = self._env.action_space
+        self._observation_space = self._env.observation_spaces
+        self._action_space = self._env.action_spaces
+        assert isinstance(self._observation_space, dict)
+        assert isinstance(self._action_space, dict)
 
         self.agent_ids = self._env.possible_agents    #["agent_0", "agent_1"]
         self.num_players = dict(zip(self.agent_ids, [1]*len(self.agent_ids)))
@@ -123,7 +125,7 @@ class MPE(BaseAECEnv):
                 self.feature_encoders[aid] = IndividualGlobalFeatureEncoder(sharing_agent_action_spaces,
                                                                             sharing_agent_obs_spaces,aid)
             else:
-                self.feature_encoders[aid] = DefaultFeatureEncoder(self._action_space(aid), self._observation_space(aid),
+                self.feature_encoders[aid] = DefaultFeatureEncoder(self._action_space[aid], self._observation_space[aid],
                                                                    aid)
 
         #
@@ -269,7 +271,7 @@ class MPE(BaseAECEnv):
             agent_id: {
                 EpisodeKey.NEXT_OBS: observations[agent_id],
                 EpisodeKey.NEXT_STATE: encoded_observations[agent_id],
-                EpisodeKey.NEXT_ACTION_MASK: np.ones(self.action_spaces(agent_id).n, dtype=np.float32),
+                EpisodeKey.NEXT_ACTION_MASK: np.ones(self.action_spaces[agent_id].n, dtype=np.float32),
                 EpisodeKey.REWARD: np.array([rewards[agent_id]]),
                 EpisodeKey.DONE: np.array([dones[agent_id]])
             }   for agent_id in self.agent_ids

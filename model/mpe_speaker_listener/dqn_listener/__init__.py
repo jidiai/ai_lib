@@ -9,9 +9,9 @@ env = simple_speaker_listener_v3.parallel_env()
 
 class Encoder(encoder_cls):
     def __init__(self):
-        super().__init__(action_spaces=env.action_space('listener_0'),
-                         observation_spaces=env.observation_space('listener_0'),
-                         state_space=env.observation_space('listener_0'))
+        super().__init__(action_spaces=env.action_spaces['listener_0'],
+                         observation_spaces=env.observation_spaces['listener_0'],
+                         state_space=env.observation_spaces['listener_0'])
 
 
 class Rewarder:

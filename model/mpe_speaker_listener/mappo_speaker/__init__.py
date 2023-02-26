@@ -22,13 +22,13 @@ def merge_gym_box(box_list):
 
     return gym.spaces.Box(low=low,high=high, shape=(total_shape,), dtype =dtype)
 
-_state_space = merge_gym_box([env.observation_space(aid)
+_state_space = merge_gym_box([env.observation_spaces[aid]
                              for aid in env.possible_agents])
 
 class Encoder(encoder_cls):
     def __init__(self):
-        super().__init__(action_spaces=env.action_space('speaker_0'),
-                         observation_spaces=env.observation_space('speaker_0'),
+        super().__init__(action_spaces=env.action_spaces['speaker_0'],
+                         observation_spaces=env.observation_spaces['speaker_0'],
                          state_space=_state_space)
 
 class Rewarder:

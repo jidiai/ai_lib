@@ -1,5 +1,5 @@
-from ...default.ppo_actor import Actor
-from ...default.ppo_critic import Critic
+from ...default.dqn_actor import Actor
+from ...default.dqn_critic import Critic
 from ...default.encoder import Encoder as encoder_cls
 
 import numpy as np
@@ -23,14 +23,14 @@ def merge_gym_box(box_list):
 
     return gym.spaces.Box(low=low,high=high, shape=(total_shape,), dtype =dtype)
 
-_state_space = merge_gym_box([env.observation_space(aid)
+_state_space = merge_gym_box([env.observation_spaces[aid]
                              for aid in ['agent_0', 'agent_1']])
 
 
 class Encoder(encoder_cls):
     def __init__(self):
-        super().__init__(action_spaces=env.action_space('agent_0'),
-                         observation_spaces=env.observation_space('agent_0'),
+        super().__init__(action_spaces=env.action_spaces['agent_0'],
+                         observation_spaces=env.observation_spaces['agent_0'],
                          state_space=_state_space)
 
 

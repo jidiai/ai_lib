@@ -9,9 +9,9 @@ env = simple_adversary_v2.parallel_env()
 
 class Encoder(encoder_cls):
     def __init__(self):
-        super().__init__(action_spaces=env.action_space('agent_0'),
-                         observation_spaces=env.observation_space('agent_0'),
-                         state_space=env.observation_space('agent_0'))
+        super().__init__(action_spaces=env.action_spaces['agent_0'],
+                         observation_spaces=env.observation_spaces['agent_0'],
+                         state_space=env.observation_spaces['agent_0'])
 
 
 class Rewarder:

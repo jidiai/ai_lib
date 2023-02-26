@@ -9,9 +9,9 @@ env = simple_push_v2.parallel_env()
 
 class Encoder(encoder_cls):
     def __init__(self):
-        super().__init__(action_spaces=env.action_space('adversary_0'),
-                         observation_spaces=env.observation_space('adversary_0'),
-                         state_space=env.observation_space('adversary_0'))
+        super().__init__(action_spaces=env.action_spaces['adversary_0'],
+                         observation_spaces=env.observation_spaces['adversary_0'],
+                         state_space=env.observation_spaces['adversary_0'])
 
 
 class Rewarder:
