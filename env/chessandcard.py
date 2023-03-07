@@ -25,12 +25,20 @@ class ChessAndCard(Game, DictObservation):
         exec(import_path)
         func_name = "env_imported"
         self.env_core = None
-        self.env_core = eval(func_name).env()
+
+        if conf.get('env_cfg', None) is None:
+            self.env_core = eval(func_name).env()
+        else:
+            self.env_core = eval(func_name).env(**conf['env_cfg'])
+
+        # for Texas Hold'em details, see https://github.com/datamllab/rlcard/blob/master/docs/games.md#no-limit-texas-holdem
 
         if self.env_core is None:
             raise Exception("ChessAndCard env_core is None!")
 
-        self.episode_count = 30 if self.game_name in ['texas_holdem_no_limit_v3', 'texas_holdem_v3'] else 1
+        self.episode_count = 30 if self.game_name in ['texas_holdem_no_limit_v3', 'texas_holdem_v3',
+                                                      "texas_holdem_v4",
+                                                      "texas_holdem_no_limit_v5"] else 1
         self.won = {}
         self.n_return = [0] * self.n_player
         self.step_cnt = 0
@@ -203,9 +211,11 @@ class ChessAndCard(Game, DictObservation):
         for i in range(self.n_player):
             player_name = self.player_id_reverse_map[i]
             each_obs = copy.deepcopy(self.current_state)
-            if self.game_name in ['texas_holdem_no_limit_v3', 'texas_holdem_v3', 'leduc_holdem_v3']:
+            if self.game_name in ['texas_holdem_no_limit_v3', 'texas_holdem_v3',
+                                  'leduc_holdem_v3', 'texas_holdem_no_limit_v5',
+                                  "texas_holdem_v4"]:
                 if self.player_id_map[self.env_core.agent_selection] == i:
-                    each = {"obs": each_obs, "is_new_episode": is_new_episode,
+                    each = {"obs": each_obs, "is_new_episode": is_new_episode,      #
                             "current_move_player": self.env_core.agent_selection,
                             "controlled_player_index": i, "controlled_player_name": player_name}
                 else:
@@ -225,11 +235,12 @@ class ChessAndCard(Game, DictObservation):
 
     def get_info_after(self):
         info_after = ''
-        if self.game_name in ['texas_holdem_no_limit_v3', 'texas_holdem_v3']:
+        if self.game_name in ['texas_holdem_no_limit_v3', 'texas_holdem_v3',
+                              "texas_holdem_v4","texas_holdem_no_limit_v5"]:
             info_after = {}
             for i in range(self.n_player):
                 temp_info = copy.deepcopy(self.env_core.env.env.env.env.game.get_state(i))
-                if self.game_name in ['texas_holdem_no_limit_v3']:
+                if self.game_name in ['texas_holdem_no_limit_v3', 'texas_holdem_no_limit_v5']:
                     for action_index, action in enumerate(temp_info['legal_actions']):
                         temp_info['legal_actions'][action_index] = str(action)
                     temp_info['stage'] = str(temp_info['stage'])

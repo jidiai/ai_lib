@@ -98,7 +98,7 @@ Apart from the necessary dependency in `requirements.txt`, some environments req
 - `mujoco-py` https://github.com/openai/mujoco-py
 - `Classic` https://www.pettingzoo.ml/classic 
   
-  `pip install pettingzoo[classic]==1.10.0`
+  `pip install pettingzoo[classic]==1.12.0`
   
   (Using `pip install 'pettingzoo[classic]==1.10.0'` if you are using zsh.)
 - `gym-chinese-chess` https://github.com/bupticybee/gym_chinese_chess
