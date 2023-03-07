@@ -6,7 +6,7 @@ class Replay_buffer(object):
         self.storage = []
         self.max_size = max_size
 
-        self.property_list = ['states', 'states_next', 'rewards', 'dones']
+        self.property_list = ["states", "states_next", "rewards", "dones"]
         self.property_additional = trajectory_property
         self.properties_all = self.property_list + self.property_additional
         self.item_buffers = dict()
@@ -24,8 +24,8 @@ class Replay_buffer(object):
         for p in self.properties_all:
             self.item_buffers[p] = ItemBuffer(self.max_size, p)
 
-    def insert(self, item_name:str, agent_id:int, data:np.ndarray, step=None):
-        if item_name == 'dones':
+    def insert(self, item_name: str, agent_id: int, data: np.ndarray, step=None):
+        if item_name == "dones":
             agent_id = 0
         self.item_buffers[item_name].insert(agent_id, step, data)
 
@@ -65,7 +65,7 @@ class ItemBuffer(object):
         self.data = list()
         self.ptr = 0
 
-    def insert(self, agent_id:int, step:int, data:np.ndarray):
+    def insert(self, agent_id: int, step: int, data: np.ndarray):
         if len(self.data) == self.max_size:
             self.data.pop(0)
         self.data.append(data)

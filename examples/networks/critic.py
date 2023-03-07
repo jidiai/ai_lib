@@ -32,12 +32,15 @@ class Dueling_Critic(nn.Module):
         self.input_size = input_size
         self.output_size = output_size
         self.linear1 = nn.Linear(input_size, hidden_size)
+        self.linear_hid = nn.Linear(hidden_size, hidden_size)
         self.linear2 = nn.Linear(hidden_size, 1)
         self.linear3 = nn.Linear(hidden_size, output_size)
 
     def forward(self, x):
         x1 = F.relu(self.linear1(x))
+        x1 = F.relu(self.linear_hid(x1))
         x2 = F.relu(self.linear1(x))
+        x2 = F.relu(self.linear_hid(x2))
 
         # value
         y1 = self.linear2(x1)
@@ -49,26 +52,31 @@ class Dueling_Critic(nn.Module):
 
         return x3
 
-      
+
 class openai_critic(nn.Module):
     def __init__(self, obs_shape_n, action_shape_n):
         super(openai_critic, self).__init__()
         self.LReLU = nn.LeakyReLU(0.01)
-        self.linear_c1 = nn.Linear(action_shape_n+obs_shape_n, 128)
+        self.linear_c1 = nn.Linear(action_shape_n + obs_shape_n, 128)
         self.linear_c2 = nn.Linear(128, 64)
         self.linear_c = nn.Linear(64, 1)
         self.reset_parameters()
         self.train()
-    
+
     def reset_parameters(self):
-        gain = nn.init.calculate_gain('leaky_relu')
-        nn.init.xavier_uniform_(self.linear_c1.weight, gain=nn.init.calculate_gain('leaky_relu'))
-        nn.init.xavier_uniform_(self.linear_c2.weight, gain=nn.init.calculate_gain('leaky_relu'))
-        nn.init.xavier_uniform_(self.linear_c.weight, gain=nn.init.calculate_gain('leaky_relu'))
+        gain = nn.init.calculate_gain("leaky_relu")
+        nn.init.xavier_uniform_(
+            self.linear_c1.weight, gain=nn.init.calculate_gain("leaky_relu")
+        )
+        nn.init.xavier_uniform_(
+            self.linear_c2.weight, gain=nn.init.calculate_gain("leaky_relu")
+        )
+        nn.init.xavier_uniform_(
+            self.linear_c.weight, gain=nn.init.calculate_gain("leaky_relu")
+        )
 
     def forward(self, obs_input, action_input):
         x_cat = self.LReLU(self.linear_c1(torch.cat([obs_input, action_input], dim=1)))
         x = self.LReLU(self.linear_c2(x_cat))
         value = self.linear_c(x)
         return value
-

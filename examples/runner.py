@@ -29,7 +29,7 @@ class Runner:
             scenario=args.scenario,
             action_space=self.env.get_actionspace(),
             obs_space=self.env.get_observationspace(),
-            n_player=self.g_core.n_player
+            n_player=self.g_core.n_player,
         )
 
         self.run_dir, self.log_dir = make_logpath(args.scenario, args.algo)
@@ -38,23 +38,34 @@ class Runner:
         config_dir = os.path.join(os.getcwd(), "config")
         file_name = args.algo + "_" + args.scenario
 
-        if (not args.reload_config and not os.path.exists(os.path.join(self.log_dir, file_name + '.yaml'))) \
-                or (args.reload_config and not os.path.exists(os.path.join(config_dir, file_name + '.yaml')) and
-                not os.path.exists(os.path.join(self.log_dir, file_name + '.yaml'))):
+        if (
+            not args.reload_config
+            and not os.path.exists(os.path.join(self.log_dir, file_name + ".yaml"))
+        ) or (
+            args.reload_config
+            and not os.path.exists(os.path.join(config_dir, file_name + ".yaml"))
+            and not os.path.exists(os.path.join(self.log_dir, file_name + ".yaml"))
+        ):
             paras = TrainerSettings(
                 algo=args.algo,
                 hyperparameters=globals()[str(args.algo).upper() + "Settings"](),
                 envparameters=self.EnvSetting,
                 trainingparameters=TrainingDefault(),
-                seedparameters=SeedSetting())
+                seedparameters=SeedSetting(),
+            )
             save_new_paras(paras, self.log_dir, file_name)
             config_dict = load_config(self.log_dir, file_name)
 
-        elif not args.reload_config and os.path.exists(os.path.join(self.log_dir, file_name + '.yaml')):
+        elif not args.reload_config and os.path.exists(
+            os.path.join(self.log_dir, file_name + ".yaml")
+        ):
             config_dict = load_config(self.log_dir, file_name)
 
-        elif (args.reload_config and not os.path.exists(os.path.join(config_dir, file_name + '.yaml')) and
-                os.path.exists(os.path.join(self.log_dir, file_name + '.yaml'))):
+        elif (
+            args.reload_config
+            and not os.path.exists(os.path.join(config_dir, file_name + ".yaml"))
+            and os.path.exists(os.path.join(self.log_dir, file_name + ".yaml"))
+        ):
             config_dict = load_config(self.log_dir, file_name)
 
         else:
@@ -80,13 +91,18 @@ class Runner:
     def add_experience(self, states, state_next, reward, done):
         for agent_index, agent_i in enumerate(self.agent.agent):
             agent_i.memory.insert("states", agent_index, states[agent_index]["obs"])
-            agent_i.memory.insert("states_next", agent_index, state_next[agent_index]["obs"])
+            agent_i.memory.insert(
+                "states_next", agent_index, state_next[agent_index]["obs"]
+            )
             agent_i.memory.insert("rewards", agent_index, reward)
             agent_i.memory.insert("dones", agent_index, np.array(done, dtype=bool))
 
     def get_players_and_action_space_list(self):
         if sum(self.g_core.agent_nums) != self.g_core.n_player:
-            raise Exception("agents number = %d 不正确，与n_player = %d 不匹配" % (sum(self.g_core.agent_nums), self.g_core.n_player))
+            raise Exception(
+                "agents number = %d 不正确，与n_player = %d 不匹配"
+                % (sum(self.g_core.agent_nums), self.g_core.n_player)
+            )
 
         n_agent_num = list(self.g_core.agent_nums)
 
@@ -99,26 +115,39 @@ class Runner:
             if policy_i == 0:
                 players_id_list = range(n_agent_num[policy_i])
             else:
-                players_id_list = range(n_agent_num[policy_i - 1], n_agent_num[policy_i])
+                players_id_list = range(
+                    n_agent_num[policy_i - 1], n_agent_num[policy_i]
+                )
             players_id.append(players_id_list)
 
-            action_space_list = [self.g_core.get_single_action_space(player_id) for player_id in players_id_list]
+            action_space_list = [
+                self.g_core.get_single_action_space(player_id)
+                for player_id in players_id_list
+            ]
             actions_space.append(action_space_list)
 
         return players_id, actions_space
 
     # ==========================================================================================================
     # ============================ inference ==================================
-    def get_joint_action_eval(self, game, multi_part_agent_ids, policy_list, actions_spaces, all_observes):
+    def get_joint_action_eval(
+        self,
+        game,
+        multi_part_agent_ids,
+        policy_list,
+        actions_spaces,
+        all_observes,
+        if_train,
+    ):
         joint_action = []
         for policy_i in range(len(policy_list)):
             agents_id_list = multi_part_agent_ids[policy_i]
             action_space_list = actions_spaces[policy_i]
-            function_name = 'm%d' % policy_i
+            function_name = "m%d" % policy_i
             for i in range(len(agents_id_list)):
                 agent_id = agents_id_list[i]
                 a_obs = all_observes[agent_id]
-                each = self.agent.choose_action_to_env(a_obs)
+                each = self.agent.choose_action_to_env(a_obs, train=if_train)
                 joint_action.append(each)
         return joint_action
 
@@ -126,15 +155,24 @@ class Runner:
 
         multi_part_agent_ids, actions_space = self.get_players_and_action_space_list()
 
-        for i_epoch in range(1, self.paras.max_episodes+1):
+        for i_epoch in range(1, self.paras.max_episodes + 1):
             self.env.set_seed(random.randint(0, sys.maxsize))
             state = self.env.reset()
             step = 0
             Gt = 0
             while not self.g_core.is_terminal():
                 step += 1
-                joint_act = self.get_joint_action_eval(self.env, multi_part_agent_ids, self.policy, actions_space, state)
-                next_state, reward, done, info_before, info_after = self.env.step(joint_act)
+                joint_act = self.get_joint_action_eval(
+                    self.env,
+                    multi_part_agent_ids,
+                    self.policy,
+                    actions_space,
+                    state,
+                    if_train=True,
+                )
+                next_state, reward, done, info_before, info_after = self.env.step(
+                    joint_act
+                )
                 self.add_experience(state, next_state, reward, np.float32(done))
 
                 state = next_state
@@ -143,37 +181,57 @@ class Runner:
                 Gt += reward
                 if not self.paras.learn_terminal:
                     if step % self.paras.learn_freq == 0:
-                        self.agent.learn()
+                        self.agent.learn(writer=self.writer, epoch=i_epoch)
 
             if self.paras.learn_terminal:
-                self.agent.learn()
-            print('i_epoch: ', i_epoch, 'Gt: ', '%.2f' % Gt)
-            reward_tag = 'reward'
-            self.writer.add_scalars(reward_tag, global_step=i_epoch,
-                                    tag_scalar_dict={'return': Gt})
+                self.agent.learn(writer=self.writer, epoch=i_epoch)
+            print("i_epoch: ", i_epoch, "Gt: ", "%.2f" % Gt)
+            reward_tag = "reward"
+            # self.writer.add_scalars(reward_tag, global_step=i_epoch,
+            #                         tag_scalar_dict={'return': Gt})
+            self.writer.add_scalar("rollout/Rewards", Gt, global_step=i_epoch)
 
             if i_epoch % self.paras.save_interval == 0:
                 self.agent.save(self.run_dir, i_epoch)
 
-            # if i_epoch % self.paras.evaluate_rate == 0 and i_epoch > 1:
-            #     Gt_real = self.evaluate(i_epoch)
-            #     self.writer.add_scalars(reward_tag, global_step=i_epoch,
-            #                             tag_scalar_dict={'real_return': Gt_real})
-
+            if i_epoch % self.paras.evaluate_rate == 0 and i_epoch > 1:
+                Gt_real = self.evaluate(i_epoch)
+                # self.writer.add_scalars('Eval/rewards', global_step=i_epoch,
+                #                         tag_scalar_dict={'return': Gt_real})
+                self.writer.add_scalar(
+                    "rollout/Eval_Reward", Gt_real, global_step=i_epoch
+                )
 
     def evaluate(self, i_epoch):
+        multi_part_agent_ids, actions_space = self.get_players_and_action_space_list()
+
         record = []
         for _ in range(10):
             self.env.set_seed(random.randint(0, sys.maxsize))
             state = self.env.reset()
             Gt_real = 0
             for t in count():
-                action = self.agent.choose_action(state, train=False)
-                next_state, reward, done, _, _ = self.env.step(action, train=False)
+                # action = self.agent.choose_action(state, train=False)
+                joint_act = self.get_joint_action_eval(
+                    self.env,
+                    multi_part_agent_ids,
+                    self.policy,
+                    actions_space,
+                    state,
+                    if_train=False,
+                )
+
+                next_state, reward, done, _, _ = self.env.step(joint_act, train=False)
                 state = next_state
                 Gt_real += reward
                 if done:
                     record.append(Gt_real)
                     break
-        print('===============', 'i_epoch: ', i_epoch, 'Gt_real: ', '%.2f' % np.mean(record))
+        print(
+            "===============",
+            "i_epoch: ",
+            i_epoch,
+            "Gt_real: ",
+            "%.2f" % np.mean(record),
+        )
         return np.mean(record)

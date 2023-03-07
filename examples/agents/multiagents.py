@@ -1,6 +1,7 @@
 import importlib
 from pathlib import Path
 import sys
+
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
 from agents.baseagent import Baseagent
@@ -27,19 +28,19 @@ class MultiRLAgents(Baseagent):
         self.agent = self.algo.agents
 
     def action_from_algo_to_env(self, joint_action, id):
-        '''
+        """
         :param joint_action:
         :return: wrapped joint action: one-hot
-        '''
+        """
 
         joint_action_ = None
         action_a = joint_action["action"]
-        if not self.args.action_continuous:   #discrete action space
+        if not self.args.action_continuous:  # discrete action space
             each = [0] * self.args.action_space[id]
             each[action_a] = 1
             joint_action_ = each
         else:
-            joint_action_ = action_a   #continuous action space
+            joint_action_ = action_a  # continuous action space
 
         return joint_action_
 
@@ -48,7 +49,9 @@ class MultiRLAgents(Baseagent):
         obs = obs_copy["obs"]
         agent_id = obs_copy["controlled_player_index"]
         action_from_algo = self.agent[agent_id].choose_action(obs, train)
-        action_to_env = self.action_from_algo_to_env({"action": action_from_algo}, agent_id)
+        action_to_env = self.action_from_algo_to_env(
+            {"action": action_from_algo}, agent_id
+        )
         return action_to_env
 
     def learn(self):

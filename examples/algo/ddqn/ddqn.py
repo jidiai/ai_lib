@@ -9,6 +9,7 @@ from networks.critic import Critic
 import os
 from pathlib import Path
 import sys
+
 base_dir = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(base_dir))
 from common.buffer import Replay_buffer as buffer
@@ -29,8 +30,12 @@ class DDQN(object):
         self.batch_size = args.batch_size
         self.gamma = args.gamma
 
-        self.critic_eval = Critic(self.state_dim, self.action_dim, self.hidden_size)
-        self.critic_target = Critic(self.state_dim, self.action_dim, self.hidden_size)
+        self.critic_eval = Critic(
+            self.state_dim, self.action_dim, self.hidden_size, args.num_hidden_layer
+        )
+        self.critic_target = Critic(
+            self.state_dim, self.action_dim, self.hidden_size, args.num_hidden_layer
+        )
         self.optimizer = optimizer.Adam(self.critic_eval.parameters(), lr=self.lr)
 
         # exploration
@@ -76,21 +81,23 @@ class DDQN(object):
 
         data_length = len(self.memory.item_buffers["rewards"].data)
         if data_length < self.buffer_size:
-            return
+            return {}
 
         data = self.memory.sample(self.batch_size)
 
         transitions = {
-            "o_0": np.array(data['states']),
-            "o_next_0": np.array(data['states_next']),
-            "r_0": np.array(data['rewards']).reshape(-1, 1),
-            "u_0": np.array(data['action']),
-            "d_0": np.array(data['dones']).reshape(-1, 1),
+            "o_0": np.array(data["states"]),
+            "o_next_0": np.array(data["states_next"]),
+            "r_0": np.array(data["rewards"]).reshape(-1, 1),
+            "u_0": np.array(data["action"]),
+            "d_0": np.array(data["dones"]).reshape(-1, 1),
         }
 
         obs = torch.tensor(transitions["o_0"], dtype=torch.float)
         obs_ = torch.tensor(transitions["o_next_0"], dtype=torch.float)
-        action = torch.tensor(transitions["u_0"], dtype=torch.long).view(self.batch_size, -1)
+        action = torch.tensor(transitions["u_0"], dtype=torch.long).view(
+            self.batch_size, -1
+        )
         reward = torch.tensor(transitions["r_0"], dtype=torch.float)
         done = torch.tensor(transitions["d_0"], dtype=torch.float)
 
@@ -105,16 +112,23 @@ class DDQN(object):
 
         self.optimizer.zero_grad()
         loss.backward()
+
+        grad_dict = {}
+        for name, param in self.critic_eval.named_parameters():
+            grad_dict[f"critic_eval/{name} gradient"] = param.grad.mean().item()
+
         self.optimizer.step()
 
         if self.learn_step_counter % self.target_replace_iter == 0:
             self.critic_target.load_state_dict(self.critic_eval.state_dict())
         self.learn_step_counter += 1
 
-        return loss
+        training_results = {"value_loss": loss.detach().cpu().numpy()}
+        training_results.update(grad_dict)
+        return training_results
 
     def save(self, save_path, episode):
-        base_path = os.path.join(save_path, 'trained_model')
+        base_path = os.path.join(save_path, "trained_model")
         if not os.path.exists(base_path):
             os.makedirs(base_path)
 
@@ -123,5 +137,3 @@ class DDQN(object):
 
     def load(self, file):
         self.critic_eval.load_state_dict(torch.load(file))
-
-

@@ -10,7 +10,6 @@ from rl_trainer.common.utils import soft_update, hard_update, device
 
 
 class BiCNet:
-
     def __init__(self, obs_dim, act_dim, num_agent, args):
         self.obs_dim = obs_dim
         self.act_dim = act_dim
@@ -27,13 +26,17 @@ class BiCNet:
         self.output_activation = args.output_activation
 
         # Initialise actor network and critic network with ξ and θ
-        self.actor = Actor(obs_dim, act_dim, num_agent, args, self.output_activation).to(self.device)
+        self.actor = Actor(
+            obs_dim, act_dim, num_agent, args, self.output_activation
+        ).to(self.device)
         self.critic = Critic(obs_dim, act_dim, num_agent, args).to(self.device)
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=self.lr_a)
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=self.lr_c)
 
         # Initialise target network and critic network with ξ' ← ξ and θ' ← θ
-        self.actor_target = Actor(obs_dim, act_dim, num_agent, args, self.output_activation).to(self.device)
+        self.actor_target = Actor(
+            obs_dim, act_dim, num_agent, args, self.output_activation
+        ).to(self.device)
         self.critic_target = Critic(obs_dim, act_dim, num_agent, args).to(self.device)
         hard_update(self.actor, self.actor_target)
         hard_update(self.critic, self.critic_target)
@@ -58,13 +61,15 @@ class BiCNet:
         return action
 
     def random_action(self):
-        '''
+        """
         "tanh" : [-1, 1]
         "softmax": [0, 1]
         :return:
-        '''
-        if self.output_activation == 'tanh':
-            return np.random.uniform(low=-1, high=1, size=(self.num_agent, self.act_dim))
+        """
+        if self.output_activation == "tanh":
+            return np.random.uniform(
+                low=-1, high=1, size=(self.num_agent, self.act_dim)
+            )
         return np.random.uniform(low=0, high=1, size=(self.num_agent, self.act_dim))
 
     def update(self):
@@ -73,13 +78,39 @@ class BiCNet:
             return None, None
 
         # Sample a greedy_min mini-batch of M transitions from R
-        state_batch, action_batch, reward_batch, next_state_batch, done_batch = self.replay_buffer.get_batches()
+        (
+            state_batch,
+            action_batch,
+            reward_batch,
+            next_state_batch,
+            done_batch,
+        ) = self.replay_buffer.get_batches()
 
-        state_batch = torch.Tensor(state_batch).reshape(self.batch_size, self.num_agent, -1).to(self.device)
-        action_batch = torch.Tensor(action_batch).reshape(self.batch_size, self.num_agent, -1).to(self.device)
-        reward_batch = torch.Tensor(reward_batch).reshape(self.batch_size, self.num_agent, 1).to(self.device)
-        next_state_batch = torch.Tensor(next_state_batch).reshape(self.batch_size, self.num_agent, -1).to(self.device)
-        done_batch = torch.Tensor(done_batch).reshape(self.batch_size, self.num_agent, 1).to(self.device)
+        state_batch = (
+            torch.Tensor(state_batch)
+            .reshape(self.batch_size, self.num_agent, -1)
+            .to(self.device)
+        )
+        action_batch = (
+            torch.Tensor(action_batch)
+            .reshape(self.batch_size, self.num_agent, -1)
+            .to(self.device)
+        )
+        reward_batch = (
+            torch.Tensor(reward_batch)
+            .reshape(self.batch_size, self.num_agent, 1)
+            .to(self.device)
+        )
+        next_state_batch = (
+            torch.Tensor(next_state_batch)
+            .reshape(self.batch_size, self.num_agent, -1)
+            .to(self.device)
+        )
+        done_batch = (
+            torch.Tensor(done_batch)
+            .reshape(self.batch_size, self.num_agent, 1)
+            .to(self.device)
+        )
 
         # Compute target value for each agent in each transition using the Bi-RNN
         with torch.no_grad():
@@ -120,12 +151,18 @@ class BiCNet:
         return self.c_loss, self.a_loss
 
     def load_model(self):
-        print(f'\nBegin to load model: ')
-        base_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'trained_model')
-        model_actor_path = os.path.join(base_path, "actor_" + str(self.model_episode) + ".pth")
-        model_critic_path = os.path.join(base_path, "critic_" + str(self.model_episode) + ".pth")
-        print(f'Actor path: {model_actor_path}')
-        print(f'Critic path: {model_critic_path}')
+        print(f"\nBegin to load model: ")
+        base_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "trained_model"
+        )
+        model_actor_path = os.path.join(
+            base_path, "actor_" + str(self.model_episode) + ".pth"
+        )
+        model_critic_path = os.path.join(
+            base_path, "critic_" + str(self.model_episode) + ".pth"
+        )
+        print(f"Actor path: {model_actor_path}")
+        print(f"Critic path: {model_critic_path}")
 
         if os.path.exists(model_critic_path) and os.path.exists(model_actor_path):
             actor = torch.load(model_actor_path, map_location=device)
@@ -134,10 +171,12 @@ class BiCNet:
             self.critic.load_state_dict(critic)
             print("Model loaded!")
         else:
-            sys.exit(f'Model not founded!')
+            sys.exit(f"Model not founded!")
 
     def save_model(self, episode):
-        base_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'trained_model')
+        base_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "trained_model"
+        )
 
         if not os.path.exists(base_path):
             os.makedirs(base_path)

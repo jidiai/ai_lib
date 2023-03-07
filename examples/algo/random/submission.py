@@ -62,7 +62,9 @@ def sample(action_space_list_each, is_act_continuous):
                 idx = action_space_list_each[j].sample()
                 each[idx] = 1
                 player.append(each)
-            elif action_space_list_each[j].__class__.__name__ == "MultiDiscreteParticle":
+            elif (
+                action_space_list_each[j].__class__.__name__ == "MultiDiscreteParticle"
+            ):
                 each = []
                 nvec = action_space_list_each[j].high
                 sample_indexes = action_space_list_each[j].sample()
