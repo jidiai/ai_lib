@@ -152,13 +152,13 @@ class BridgeRender(BridgeBase):
         super().__init__('bridge', num_players)
 
     def render(self, mode='human'):
-        screen_height = 2000
-        screen_width = 2000
+        screen_height = 1000
+        screen_width = 1000
 
         if self.screen is None:
             if mode == "human":
                 pygame.init()
-                self.screen = pygame.display.set_mode((screen_width, screen_height))
+                self.screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
             else:
                 pygame.font.init()
                 self.screen = pygame.Surface((screen_width, screen_height))
@@ -182,13 +182,47 @@ class BridgeRender(BridgeBase):
         white = (255, 255, 255)
         cyan = (0,255,255)
         red = (255,0,0)
-        horizontal_card_gap = 60
-        vertical_card_gap = 80
+        horizontal_card_gap = 30
+        vertical_card_gap = 40
         self.screen.fill(bg_color)
         pid = ["N", "E", "S", "W"]
 
+        font = get_font(os.path.join(f'Texas_Holdem/font/Minecraft.ttf'), 18)
+        round_phase_text = font.render(f"Round Phase: {self.env.game.round.round_phase}", True, white)
+        round_phase_textRect = round_phase_text.get_rect()
+        round_phase_textRect.topleft = (15,15)
+        self.screen.blit(round_phase_text, round_phase_textRect)
+        # if self.env.game.round.round_phase == 'play card':
+        #     if self.env.game.round.get_trump_suit() is not None:
+        #         print(1)
+        stat = self.env.game.round.get_perfect_information()
+        trick_moves = stat['trick_moves']
+        trick_card_loc = [(screen_width/2-tile_short_edge/2, screen_height/2-tile_size/2-100), (screen_width/2-tile_short_edge/2+100, screen_height/2-tile_size/2),
+                          (screen_width/2-tile_short_edge/2, screen_height/2-tile_size/2+100), (screen_width/2-tile_short_edge/2-100, screen_height/2-tile_size/2)]
+        bid_loc = [(screen_width/2, screen_height/2-100), (screen_width/2+100, screen_height/2), (screen_width/2, screen_height/2+100), (screen_width/2-100, screen_height/2)]
+
+        if self.env.game.round.get_dummy() is not None:
+            dummy_player_id = self.env.game.round.get_dummy().player_id
+
+        if stat['contact'] is not None:
+            contract = stat['contact']
+            contract_text = f"Contract:  Player {contract.player.player_id}, {str(contract.action)}"
+            contract_text = font.render(contract_text, True, white)
+            contract_textRect = contract_text.get_rect()
+            contract_textRect.topleft = (15,35)
+            self.screen.blit(contract_text, contract_textRect)
+
+            won_trick_counts = self.env.game.round.won_trick_counts
+            won_text = f"Won tricks: N-S {won_trick_counts[0]} ; E-W {won_trick_counts[1]}"
+            won_text = font.render(won_text, True, cyan)
+            won_textRect = won_text.get_rect()
+            won_textRect.topleft = (15,55)
+            self.screen.blit(won_text, won_textRect)
+
+
         for i, player in enumerate(self.possible_agents):
             players_hand = self.env.game.round.players[i].hand
+            trick_move = trick_moves[i]
             for j, card in enumerate(players_hand):
                 card_img = get_image(os.path.join(f"Texas_Holdem/img/{str(card)[::-1]}.png"))
                 card_img = pygame.transform.scale(card_img, (int(tile_short_edge), int(tile_size)))
@@ -204,17 +238,45 @@ class BridgeRender(BridgeBase):
                                      screen_height/2-int(tile_size)/2-len(players_hand)/2*vertical_card_gap
                                       +vertical_card_gap*j))
 
-            font = get_font(os.path.join(f'Texas_Holdem/font/Minecraft.ttf'), 36)
+            font = get_font(os.path.join(f'Texas_Holdem/font/Minecraft.ttf'), 18)
             _text = f"Player {str(i)} - {pid[i]}"
             text = font.render(_text, True, white)
             textRect = text.get_rect()
             if i%2==0:
-                textcenter = (screen_width/2, screen_height/6*(i*2+1)+(i-1)*tile_size/2+40*(i-1))
+                textcenter = (screen_width/2, screen_height/6*(i*2+1)+(i-1)*tile_size/2+20*(i-1))
             else:
-                textcenter = (screen_width-screen_width/6*(2*i-1)-(i-2)*tile_short_edge/2-100*(i-2), screen_height/2)
+                textcenter = (screen_width-screen_width/6*(2*i-1)-(i-2)*tile_short_edge/2-50*(i-2), screen_height/2)
             textRect.center = textcenter
-
             self.screen.blit(text, textRect)
+
+            if self.env.game.round.round_phase == 'play card' and i == dummy_player_id:
+                dummy_text = font.render(f"Dummy", True, white)
+                dummy_textRect = dummy_text.get_rect()
+                if i%2==0:
+                    dummy_textRect.center = (textcenter[0]+100, textcenter[1])
+                else:
+                    dummy_textRect.center = (textcenter[0], textcenter[1]+20)
+                self.screen.blit(dummy_text, dummy_textRect)
+
+
+            if trick_move is not None:
+                trick_card_img = get_image(os.path.join(f"Texas_Holdem/img/{str(trick_move)[::-1]}.png"))
+                trick_card_img = pygame.transform.scale(trick_card_img, (int(tile_short_edge), int(tile_size)))
+                loc = trick_card_loc[i]
+                self.screen.blit(trick_card_img, loc)
+
+        if self.env.game.round.round_phase == 'make bid':
+            move_sheet_list = self.env.game.round.move_sheet[1:][-4:]
+            for idx, bid_move in enumerate(move_sheet_list):
+                pid = bid_move.player.player_id
+                bid = str(bid_move.action)
+
+                loc = bid_loc[pid]
+                bid_text = font.render(bid, True, white if idx != len(move_sheet_list)-1 else cyan)
+                bid_textRect = bid_text.get_rect()
+                bid_textRect.center = loc
+                self.screen.blit(bid_text, bid_textRect)
+
 
 
 
@@ -227,10 +289,154 @@ class BridgeRender(BridgeBase):
             observation = None
         return observation
 
+class Bridge(Game, DictObservation):
+    def __init__(self, conf, seed=None):
+        super(Bridge, self).__init__(conf['n_player'], conf['is_obs_continuous'],
+                                     conf['is_act_continuous'],conf['game_name'],
+                                     conf['agent_nums'], conf['obs_type'])
+
+        self.seed = None
+        self.done = False
+        self.dones = {}
+        self.step_cnt = 0
+        self.max_step = int(conf["max_step"])
+
+        self.env_core = BridgeRender()
+
+        self.won = {}
+        self.n_return = [0]*self.n_player
+        self.step_cnt = 0
+        self.done = False
+        self.seed = seed
+        self.env_core.seed(self.seed)
+        # self.env_core.reset()
+        self.player_id_map, self.player_id_reverse_map = self.get_player_id_map(self.env_core.agents)
+        self.new_action_spaces = self.load_action_space()
+        self.joint_action_space = self.set_action_space()
+
+        self.reset()
+
+    def reset(self):
+        self.step_cnt = 0
+        self.done = False
+        self.env_core.reset()
+        obs, _, _, _ = self.env_core.last()
+        self.current_state = obs
+        self.all_observes = self.get_all_observes()
+        self.init_info = self.get_info_after()
+        self.won = {}
+        self.n_return = [0] * self.n_player
+        return self.all_observes
+
+    def step(self, joint_action):
+        self.step_cnt += 1
+        self.is_valid_action(joint_action)
+        info_before = self.step_before_info()
+        joint_action_decode = self.decode(joint_action)
+        self.env_core.step(joint_action_decode)
+        obs, reward, done, info_after = self.env_core.last()
+        info_after = self.step_after_info()
+        self.current_state = obs
+        self.all_observes = self.get_all_observes()
+        # self.set_n_return()
+        self.step_cnt += 1
+        done = self.is_terminal()
+        return self.all_observes, reward, done, info_before, info_after
+
+    def is_valid_action(self, joint_action):
+        if len(joint_action) != self.n_player:
+            raise Exception("Input joint action dimension should be {}, not {}.".format(
+                self.n_player, len(joint_action)))
+
+    def step_before_info(self):
+        return ''
+
+    def step_after_info(self):
+        return ''
+
+    def get_info_after(self):
+        return ''
+
+    def get_all_observes(self):
+        all_observes = []
+        for i in range(self.n_player):
+            player_name = self.player_id_reverse_map[i]
+            each_obs = copy.deepcopy(self.current_state)
+            if self.player_id_map[self.env_core.agent_selection] == i:
+                each = {"obs": each_obs,
+                        "current_move_player": self.env_core.agent_selection,
+                        "controlled_player_index": i, "controlled_player_name": player_name}
+            else:
+                each = {"obs": None,
+                        "current_move_player": self.env_core.agent_selection,
+                        "controlled_player_index": i, "controlled_player_name": player_name}
+
+            all_observes.append(each)
+
+        return all_observes
+
+
+    def decode(self, joint_action):
+        if self.env_core.agent_selection not in self.env_core.agents or \
+                self.env_core.dones[self.env_core.agent_selection]:
+            return None
+        current_player_id = self.player_id_map[self.env_core.agent_selection]
+        if joint_action[current_player_id] is None or joint_action[current_player_id][0] is None:
+            return None
+        joint_action_decode = joint_action[current_player_id][0].index(1)
+        return joint_action_decode
+
+    def is_terminal(self):
+        done = self.env_core.dones
+        return any(done.values())
+
+    def check_win(self):
+        payoff=self.set_n_return()
+        if len(set(payoff))==1:
+            return '-1'
+
+        winner = np.where(np.array(payoff)==max(payoff))[0]
+        winner = ','.join(str(i) for i in winner)
+        return winner
+
+
+    def get_player_id_map(self, player_keys):
+        player_id_map = {}
+        player_id_reverse_map = {}
+        for i, key in enumerate(player_keys):
+            player_id_map[key] = i
+            player_id_reverse_map[i] = key
+        return player_id_map, player_id_reverse_map
+
+    def load_action_space(self):
+        origin_action_spaces = self.env_core.action_spaces
+        new_action_spaces = {}
+        for key, action_space in origin_action_spaces.items():
+            changed_key = self.player_id_map[key]
+            new_action_spaces[changed_key] = Discrete(action_space.n)
+
+        return new_action_spaces
+
+    def set_action_space(self):
+        action_space = [[self.new_action_spaces[i]] for i in range(self.n_player)]
+        return action_space
+
+    def get_single_action_space(self, player_id):
+        return self.joint_action_space[player_id]
+
+    def set_n_return(self):
+        payoff = self.env_core.env.get_payoffs()
+        self.n_return = payoff
+        return payoff
 
 
 
 
+
+
+
+
+############################ Modified RLCard  Env ################################3
 class BridgeEnv(Env):
     ''' Bridge Environment from rlcard
     '''
@@ -320,7 +526,7 @@ class DefaultBridgePayoffDelegate(BridgePayoffDelegate):
         contract_bid_move = game.round.contract_bid_move
         if contract_bid_move:
             declarer = contract_bid_move.player
-            bid_trick_count = contract_bid_move.action.bid_amount + 6
+            bid_trick_count = contract_bid_move.action.bid_amount + 6                   #Bids in Bridge are assumed to be a minimum of six
             won_trick_counts = game.round.won_trick_counts
             declarer_won_trick_count = won_trick_counts[declarer.player_id % 2]
             defender_won_trick_count = won_trick_counts[(declarer.player_id + 1) % 2]
@@ -502,22 +708,35 @@ class DefaultBridgeStateExtractor(BridgeStateExtractor):
         return extracted_state
 
 
-
+import time
 if __name__ == '__main__':
     cfg = {'seed': 42, "allow_step_back": False}
     raw_env = BridgeEnv(cfg)
 
     # pettingzoo_env = BridgeBase(name='bridge', num_players=4)
     # pettingzoo_env.reset()
-    env = BridgeRender()
-    env.reset()
-    done = env.dones
-    while not any(done.values()):
-        action = np.random.choice(env.next_legal_moves)
-        env.step(action)
-        done = env.dones
-        env.render()
-    print(1)
+    # while True:
+    #
+    #     env = BridgeRender()
+    #     env.reset()
+    #     i=0
+    #     time.sleep(2)
+    #     obs, reward, done, info = env.last()
+    #     # done = env.dones
+    #     while not done:
+    #
+    #         if len(env.next_legal_moves) <= 3 and 36 in env.next_legal_moves:
+    #             action = 36
+    #         else:
+    #             action = np.random.choice(env.next_legal_moves)
+    #         env.step(action)
+    #         next_obs, reward, done, info = env.last()
+    #         # done = env.dones
+    #         env.render()
+    #         obs = next_obs
+    #         # if i == 0:
+    #         #     time.sleep(5)
+    #         i+=1
 
 
 

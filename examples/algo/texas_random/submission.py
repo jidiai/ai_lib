@@ -18,15 +18,15 @@ def my_controller(observation, action_space, is_act_continuous=False):
 
     action_mask = observation['obs']['action_mask']
     selected_action = np.random.multinomial(1, np.array(action_mask)/sum(action_mask))
-    # return [list(selected_action)]
-    if action_mask[1]==1:
-        return [[0,1,0,0,0,0]]
-
-    if action_mask[2]==1:
-        return [[0,0,1,0,0,0]]
-
-    if action_mask[3]==1:
-        return [[0,0,0,1,0,0]]
+    return [list(selected_action)]
+    # if action_mask[1]==1:
+    #     return [[0,1,0,0,0,0]]
+    #
+    # if action_mask[2]==1:
+    #     return [[0,0,1,0,0,0]]
+    #
+    # if action_mask[3]==1:
+    #     return [[0,0,0,1,0,0]]
     # return [[0,0,1,0,0,0]]
     # for i in range(len(action_space)):
     #     action_ = sample_single_dim(action_space[i], is_act_continuous)

@@ -34,11 +34,10 @@ import_commmand = [
 "from .revive_refrigerator import *",
 "from .finrl_stocktrading import *",
 "from .olympics_billiard_competition import *",
-"from .FourPlayers_NoLimit_Texas_Holdem import *"
+"from .fourplayers_nolimit_texas_holdem import *",
+"from .bridge import *"
 ]
-# from .FourPlayers_NoLimit_Texas_Holdem import *
 
-#
 for i in import_commmand:
     try:
         exec(i)

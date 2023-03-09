@@ -39,7 +39,7 @@ class ActionEvent(object):  # Interface
     def from_action_id(action_id: int):
         if action_id == ActionEvent.pass_action_id:
             return PassAction()
-        elif ActionEvent.first_bid_action_id <= action_id <= 35:
+        elif ActionEvent.first_bid_action_id <= action_id <= 35:                           # 1C, 1D, 1H, 1S, 1NT, 2C, 2D, ....
             bid_amount = 1 + (action_id - ActionEvent.first_bid_action_id) // 5
             bid_suit_id = (action_id - ActionEvent.first_bid_action_id) % 5
             bid_suit = BridgeCard.suits[bid_suit_id] if bid_suit_id < 4 else None
@@ -97,7 +97,7 @@ class BidAction(CallActionEvent):
         bid_suit = self.bid_suit
         if not bid_suit:
             bid_suit = 'NT'
-        return f'{self.bid_amount}{-bid_suit}'
+        return f'{self.bid_amount}-{bid_suit}'
 
     def __repr__(self):
         return self.__str__()

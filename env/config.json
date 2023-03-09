@@ -812,6 +812,17 @@
     "obs_type": ["dict", "dict", "dict", "dict"],
     "env_cfg": {"num_players":  4}
   },
+  "bridge": {
+    "class_literal": "Bridge",
+    "n_player": 4,
+    "max_step": 10000,
+    "game_name": "Bridge",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [1,1,1,1],
+    "obs_type": ["dict", "dict", "dict", "dict"],
+    "env_cfg": {"num_players":  4}
+  },
 
   "chinesechess": {
     "class_literal": "ChineseChess",

@@ -259,8 +259,8 @@ if __name__ == "__main__":
     # "ParticleEnv-simple_tag-continuous", "ParticleEnv-simple_world_comm-continuous", "olympics-curling",
     # "delivery_two_agents", "Logistics_Transportation2", "olympics-integrated", "wilderness-navigation",
     # "chessandcard-leduc_holdem_v3", "revive-refrigerator", "finrl-stocktrading", "chessandcard-multiplayer_texas_holdem_no_limit"
-    # env_type =  "chessandcard-texas_holdem_no_limit_v3"     #"fourplayers_nolimit_texas_holdem"
-    env_type = "fourplayers_nolimit_texas_holdem"
+    # env_type =  "chessandcard-texas_holdem_no_limit_v3"     #"fourplayers_nolimit_texas_holdem"  "bridge"
+    env_type = "bridge"
     game = make(env_type)
 
     # 针对"classic_"环境，使用gym core 进行render;
