@@ -9,6 +9,8 @@ from env.simulators.game import Game
 from env.obs_interfaces.observation import *
 from utils.discrete import Discrete
 
+import pygame
+import os
 
 class ChessAndCard(Game, DictObservation):
     def __init__(self, conf, seed=None):
@@ -60,6 +62,7 @@ class ChessAndCard(Game, DictObservation):
         self.current_state = obs
         self.all_observes = self.get_all_observes()
         self.init_info = self.get_info_after()
+        self.screen = None
 
     def reset(self):
         self.step_cnt = 0
@@ -253,3 +256,100 @@ class ChessAndCard(Game, DictObservation):
                 info_after[self.player_id_reverse_map[i]] = copy.deepcopy(temp_info)
 
         return info_after
+
+
+    def render(self):
+        #only support mahjong now
+        screen_height = 1000
+        screen_width = 1000
+
+        if self.screen is None:
+            pygame.init()
+            self.screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
+
+        tile_size = screen_height/15
+        tile_short_edge = tile_size*(500/667)
+        bg_color = (7, 99, 36)
+        white = (255, 255, 255)
+        cyan = (0,255,255)
+        red = (255,0,0)
+        self.screen.fill(bg_color)
+
+        def get_image(path):
+            from os import path as os_path
+            cwd = os_path.dirname(__file__)
+            image = pygame.image.load(cwd + '/' + path)
+            return image
+
+        base_env=self.env_core.env.env.env.env
+        for i,player in enumerate(self.env_core.possible_agents):
+            state = base_env.env.game.get_state(base_env._name_to_int(player))
+            # current_hand = state['current_hand']          #has bugs causing same hand for all players
+            current_hand = base_env.env.game.players[i].hand
+            current_hand = [i.get_str() for i in current_hand]
+            sorted_hand = sorted(current_hand)
+            for j,tile in enumerate(sorted_hand):
+                tile_img = get_image(os.path.join(f"images/mahjong/{tile}.png"))
+                tile_img = pygame.transform.scale(tile_img, (int(tile_short_edge),
+                                                             int(tile_size)))
+                if i%2==0:
+                    self.screen.blit(tile_img,
+                                     (screen_width/2-len(sorted_hand)/2*tile_short_edge+j*tile_short_edge,
+                                      screen_height/8*(i*3+1)-tile_size/2))
+                else:
+                    if i==1:
+                        tile_img = pygame.transform.rotate(tile_img, 90)
+                        loc = (screen_width/8*7-tile_size/2, screen_height/2-int(tile_short_edge)/2-len(sorted_hand)/2*tile_short_edge+tile_short_edge*j)
+                    else:
+                        tile_img = pygame.transform.rotate(tile_img, -90)
+                        loc = (screen_width/8-tile_size/2, screen_height/2-int(tile_short_edge)/2-len(sorted_hand)/2*tile_short_edge+tile_short_edge*j)
+                    self.screen.blit(tile_img,
+                                     loc)
+
+            current_pile = state['players_pile'][i]
+            # if len(current_pile)>0:
+            pile_gap = 10
+            for pile_idx, pile in enumerate(current_pile):
+                for tile_idx, tile in enumerate(pile):
+                    tile_img = get_image(os.path.join(f"images/mahjong/{tile.get_str()}.png"))
+                    tile_img = pygame.transform.scale(tile_img, (int(tile_short_edge),
+                                                                 int(tile_size)))
+                    if i==0:
+                        loc = (100+tile_short_edge*tile_idx+pile_idx*(4*tile_short_edge+pile_gap), 20)
+                    elif i==1:
+                        tile_img = pygame.transform.rotate(tile_img, 90)
+                        loc = (screen_width-70, 200+tile_short_edge*tile_idx+pile_idx*(4*tile_short_edge+pile_gap))
+                    elif i==2:
+                        loc = (100+tile_short_edge*tile_idx+pile_idx*(4*tile_short_edge+pile_gap), screen_height-70)
+                    elif i==3:
+                        tile_img = pygame.transform.rotate(tile_img, -90)
+                        loc = (20, 100+tile_short_edge*tile_idx+pile_idx*(4*tile_short_edge+pile_gap))
+
+                    self.screen.blit(tile_img, loc)
+
+
+
+        table_tiles = [i.get_str() for i in state['table']]
+        tiles_per_row = 10
+        tiles_rows = len(table_tiles)//tiles_per_row
+
+        init_loc = (230,200)
+
+        for idx, tile in enumerate(table_tiles):
+            row_idx = (idx//tiles_per_row)
+            y = init_loc[1]+tile_size*row_idx
+            col_idx = (idx%tiles_per_row)
+            x = init_loc[0]+tile_short_edge*col_idx
+            loc = (x, y)
+
+            tile_img = get_image(os.path.join(f"images/mahjong/{tile}.png"))
+            tile_img = pygame.transform.scale(tile_img, (int(tile_short_edge),
+                                                         int(tile_size)))
+            self.screen.blit(tile_img, loc)
+
+        pygame.display.update()
+
+
+
+
+

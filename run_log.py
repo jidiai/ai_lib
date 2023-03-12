@@ -209,6 +209,9 @@ def run_game(g, env_name, multi_part_agent_ids, actions_spaces, policy_list, ren
         if render_mode:
             if hasattr(g, "render") and g.game_name.split("_")[0] == 'logistics':
                 g.render()
+            if hasattr(g, "render") and 'mahjong' in g.game_name:
+                g.render()
+
         if env_name.split("-")[0] in ["magent"]:
             info_dict["joint_action"] = g.decode(joint_act)
         if info_before:
@@ -260,7 +263,7 @@ if __name__ == "__main__":
     # "delivery_two_agents", "Logistics_Transportation2", "olympics-integrated", "wilderness-navigation",
     # "chessandcard-leduc_holdem_v3", "revive-refrigerator", "finrl-stocktrading", "chessandcard-multiplayer_texas_holdem_no_limit"
     # env_type =  "chessandcard-texas_holdem_no_limit_v3"     #"fourplayers_nolimit_texas_holdem"  "bridge"
-    env_type = "bridge"
+    env_type =  "chessandcard-mahjong_v3"
     game = make(env_type)
 
     # 针对"classic_"环境，使用gym core 进行render;

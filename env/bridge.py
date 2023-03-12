@@ -432,10 +432,6 @@ class Bridge(Game, DictObservation):
 
 
 
-
-
-
-
 ############################ Modified RLCard  Env ################################3
 class BridgeEnv(Env):
     ''' Bridge Environment from rlcard
