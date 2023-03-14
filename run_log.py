@@ -74,7 +74,7 @@ def get_joint_action_eval(game, multi_part_agent_ids, policy_list, actions_space
             a_obs = all_observes[agent_id]
             each = eval(function_name)(a_obs, action_space_list[i], game.is_act_continuous)
             joint_action.append(each)
-    print(joint_action)
+    # print(joint_action)
     return joint_action
 
 
@@ -262,8 +262,9 @@ if __name__ == "__main__":
     # "ParticleEnv-simple_tag-continuous", "ParticleEnv-simple_world_comm-continuous", "olympics-curling",
     # "delivery_two_agents", "Logistics_Transportation2", "olympics-integrated", "wilderness-navigation",
     # "chessandcard-leduc_holdem_v3", "revive-refrigerator", "finrl-stocktrading", "chessandcard-multiplayer_texas_holdem_no_limit"
-    # env_type =  "chessandcard-texas_holdem_no_limit_v3"     #"fourplayers_nolimit_texas_holdem"  "bridge"
-    env_type =  "chessandcard-mahjong_v3"
+    # env_type =  "chessandcard-texas_holdem_no_limit_v3"     #"fourplayers_nolimit_texas_holdem"  "bridge"  "chessandcard-mahjong_v3"
+    time1 = time.time()
+    env_type =  "bridge"
     game = make(env_type)
 
     # 针对"classic_"环境，使用gym core 进行render;
@@ -276,10 +277,13 @@ if __name__ == "__main__":
     render_in_time = False
 
     # print("可选policy 名称类型:", get_valid_agents())
-    policy_list = ["texas_random"] * len(game.agent_nums)
+    policy_list = ["random"] * len(game.agent_nums)
 
     multi_part_agent_ids, actions_space = get_players_and_action_space_list(game)
     if render_in_time:
         render_game(game)
     else:
         run_game(game, env_type, multi_part_agent_ids, actions_space, policy_list, render_mode)
+
+    total_t = time.time()-time1
+    print(f'The game last for {total_t} second and {game.step_cnt} steps')

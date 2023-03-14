@@ -768,7 +768,9 @@
     "is_obs_continuous": false,
     "is_act_continuous": false,
     "agent_nums": [1,1,1,1],
-    "obs_type": ["dict", "dict", "dict", "dict"]
+    "obs_type": ["dict", "dict", "dict", "dict"],
+    "other_cfg": {"switch_seats":  true,
+                  "same_hand":  true}
   },
   "chessandcard-texas_holdem_v3": {
     "class_literal": "ChessAndCard",
@@ -810,7 +812,9 @@
     "is_act_continuous": false,
     "agent_nums": [1,1,1,1],
     "obs_type": ["dict", "dict", "dict", "dict"],
-    "env_cfg": {"num_players":  4}
+    "env_cfg": {"num_players":  4},
+    "other_cfg": {"switch_seats":  true,
+                  "same_hand":  true}
   },
   "bridge": {
     "class_literal": "Bridge",
@@ -821,7 +825,9 @@
     "is_act_continuous": false,
     "agent_nums": [1,1,1,1],
     "obs_type": ["dict", "dict", "dict", "dict"],
-    "env_cfg": {"num_players":  4}
+    "env_cfg": {"num_players":  4},
+    "other_cfg": {"switch_seats":  true,
+                  "same_hand":  true}
   },
 
   "chinesechess": {

@@ -14,6 +14,9 @@ import random
 import numpy as np
 import rlcard
 from gym import spaces
+import math
+import itertools
+import warnings
 
 try:
     from pettingzoo import AECEnv
@@ -175,6 +178,12 @@ class BridgeRender(BridgeBase):
         def calculate_height(screen_height, divisor, multiplier, tile_size, offset):
             return int(multiplier * screen_height / divisor + tile_size * offset)
 
+        def display_text(text, coord, font, color, loc='center'):
+            _text = font.render(text, True,color)
+            _textRect = _text.get_rect()
+            setattr(_textRect, loc, coord)
+            self.screen.blit(_text, _textRect)
+
         tile_size = screen_height  /7
         tile_short_edge = tile_size*(142/197)
 
@@ -188,10 +197,10 @@ class BridgeRender(BridgeBase):
         pid = ["N", "E", "S", "W"]
 
         font = get_font(os.path.join(f'Texas_Holdem/font/Minecraft.ttf'), 18)
-        round_phase_text = font.render(f"Round Phase: {self.env.game.round.round_phase}", True, white)
-        round_phase_textRect = round_phase_text.get_rect()
-        round_phase_textRect.topleft = (15,15)
-        self.screen.blit(round_phase_text, round_phase_textRect)
+
+        display_text(f"Round Phase: {self.env.game.round.round_phase}", (15,15), font, white, loc='topleft')
+        display_text(f"Game {self.game_cnt}", (screen_width-250, 10), font, white, loc='topleft')
+        display_text(f"Payoff: {list(self.payoff.values())}", (screen_width-250, 30), font, white, loc='topleft')
         # if self.env.game.round.round_phase == 'play card':
         #     if self.env.game.round.get_trump_suit() is not None:
         #         print(1)
@@ -206,18 +215,9 @@ class BridgeRender(BridgeBase):
 
         if stat['contact'] is not None:
             contract = stat['contact']
-            contract_text = f"Contract:  Player {contract.player.player_id}, {str(contract.action)}"
-            contract_text = font.render(contract_text, True, white)
-            contract_textRect = contract_text.get_rect()
-            contract_textRect.topleft = (15,35)
-            self.screen.blit(contract_text, contract_textRect)
-
+            display_text(f"Contract:  Player {contract.player.player_id}, {str(contract.action)}", (15,35), font, white, loc='topleft')
             won_trick_counts = self.env.game.round.won_trick_counts
-            won_text = f"Won tricks: N-S {won_trick_counts[0]} ; E-W {won_trick_counts[1]}"
-            won_text = font.render(won_text, True, cyan)
-            won_textRect = won_text.get_rect()
-            won_textRect.topleft = (15,55)
-            self.screen.blit(won_text, won_textRect)
+            display_text(f"Won tricks: N-S {won_trick_counts[0]} ; E-W {won_trick_counts[1]}", (15,55), font, cyan, loc='topleft')
 
 
         for i, player in enumerate(self.possible_agents):
@@ -239,7 +239,7 @@ class BridgeRender(BridgeBase):
                                       +vertical_card_gap*j))
 
             font = get_font(os.path.join(f'Texas_Holdem/font/Minecraft.ttf'), 18)
-            _text = f"Player {str(i)} - {pid[i]}"
+            _text = f"Seat {str(i)} - {pid[i]}"
             text = font.render(_text, True, white)
             textRect = text.get_rect()
             if i%2==0:
@@ -248,6 +248,16 @@ class BridgeRender(BridgeBase):
                 textcenter = (screen_width-screen_width/6*(2*i-1)-(i-2)*tile_short_edge/2-50*(i-2), screen_height/2)
             textRect.center = textcenter
             self.screen.blit(text, textRect)
+
+            seat_player = dict(zip(self.player_seats.values(), self.player_seats.keys()))
+            player_id = seat_player[i]
+            _player_text = font.render(f"{player_id}", True, white)
+            _player_textRect = _player_text.get_rect()
+            if i%2==0:
+                _player_textRect.center = (textcenter[0], textcenter[1]+(i-1)*30)
+            else:
+                _player_textRect.center = (textcenter[0], textcenter[1]+60)
+            self.screen.blit(_player_text, _player_textRect)
 
             if self.env.game.round.round_phase == 'play card' and i == dummy_player_id:
                 dummy_text = font.render(f"Dummy", True, white)
@@ -270,12 +280,7 @@ class BridgeRender(BridgeBase):
             for idx, bid_move in enumerate(move_sheet_list):
                 pid = bid_move.player.player_id
                 bid = str(bid_move.action)
-
-                loc = bid_loc[pid]
-                bid_text = font.render(bid, True, white if idx != len(move_sheet_list)-1 else cyan)
-                bid_textRect = bid_text.get_rect()
-                bid_textRect.center = loc
-                self.screen.blit(bid_text, bid_textRect)
+                display_text(bid, bid_loc[pid], font, white if idx != len(move_sheet_list)-1 else cyan, loc='center')
 
 
 
@@ -303,16 +308,36 @@ class Bridge(Game, DictObservation):
 
         self.env_core = BridgeRender()
 
+        self.episode_count = math.factorial(self.n_player)
+
         self.won = {}
         self.n_return = [0]*self.n_player
         self.step_cnt = 0
         self.done = False
         self.seed = seed
+        self.step_cnt_episode = 0
         self.env_core.seed(self.seed)
         # self.env_core.reset()
         self.player_id_map, self.player_id_reverse_map = self.get_player_id_map(self.env_core.agents)
         self.new_action_spaces = self.load_action_space()
         self.joint_action_space = self.set_action_space()
+
+        other_cfg = conf.get('other_cfg', {})
+        self.switch_seats = other_cfg.get('switch_seats', False)
+        if self.switch_seats:
+            self.seats_permutation = list(itertools.permutations([i for i in range(self.n_player)], 4))
+            self.seats_permutation_idx = 0
+            self.player_seats = dict(zip(self.env_core.agents, self.seats_permutation[0]))
+            self.env_core.player_seats = self.player_seats
+            self.same_hand = other_cfg['same_hand']
+            if self.same_hand and self.seed is None:
+                self.seed =  random.randint(0,10000000)
+                self.env_core.seed(self.seed)
+                # self.env_core.reset()
+
+        self.payoff = dict(zip(self.env_core.agents, [0] * self.n_player))
+        self.env_core.payoff = self.payoff
+        self.action_masks_dict = dict(zip(self.env_core.agents, self.new_action_spaces.values()))
 
         self.reset()
 
@@ -320,33 +345,99 @@ class Bridge(Game, DictObservation):
         self.step_cnt = 0
         self.done = False
         self.env_core.reset()
+        self.env_core.game_cnt = 1
         obs, _, _, _ = self.env_core.last()
         self.current_state = obs
+        self.action_masks_dict[self.env_core.agent_selection] = obs['action_mask']
+
         self.all_observes = self.get_all_observes()
         self.init_info = self.get_info_after()
         self.won = {}
         self.n_return = [0] * self.n_player
         return self.all_observes
 
+    def reset_per_episode(self):
+        self.step_cnt_episode = 0
+        self.done = False
+        self.action_masks_dict = dict(zip(self.env_core.agents, self.new_action_spaces.values()))
+
+        if self.switch_seats:
+            self.seats_permutation_idx += 1
+            self.player_seats = dict(zip(self.player_seats.keys(), self.seats_permutation[self.seats_permutation_idx]))
+            self.env_core.player_seats = self.player_seats
+            if self.same_hand:
+                self.env_core.seed(self.seed)
+
+
+        self.env_core.reset()
+        self.env_core.game_cnt += 1
+        obs, _, _, _ = self.env_core.last()
+        self.current_state = obs
+        self.action_masks_dict[self.env_core.agent_selection] = obs['action_mask']
+
+        self.all_observes = self.get_all_observes()
+        self.init_info = self.get_info_after()
+        return self.all_observes
+
+
     def step(self, joint_action):
         self.step_cnt += 1
-        self.is_valid_action(joint_action)
+        self.step_cnt_episode += 1
+        joint_action=self.is_valid_action(joint_action)             #if illegal action exists, switch to random policy
         info_before = self.step_before_info()
         joint_action_decode = self.decode(joint_action)
         self.env_core.step(joint_action_decode)
-        obs, reward, done, info_after = self.env_core.last()
+        obs, reward, episode_done, info_after = self.env_core.last()
         info_after = self.step_after_info()
         self.current_state = obs
+        self.action_masks_dict[self.env_core.agent_selection] = obs['action_mask']
+
         self.all_observes = self.get_all_observes()
         # self.set_n_return()
         self.step_cnt += 1
+        if episode_done:
+            self.episode_count -= 1
+            seats_payoff = self.env_core.env.get_payoffs()
+            seats_player = dict(zip(self.player_seats.values(), self.player_seats.keys()))
+            for seat in range(len(seats_payoff)):
+                player_id = seats_player[seat]
+                self.payoff[player_id] += seats_payoff[seat]
+            self.env_core.payoff = self.payoff
+
+            if self.episode_count > 0:
+                self.all_observes = self.reset_per_episode()
+                info_after = self.init_info
+
         done = self.is_terminal()
+        if done:
+            print(self.payoff)
         return self.all_observes, reward, done, info_before, info_after
 
     def is_valid_action(self, joint_action):
         if len(joint_action) != self.n_player:
             raise Exception("Input joint action dimension should be {}, not {}.".format(
                 self.n_player, len(joint_action)))
+
+        current_seat_id = self.player_id_map[self.env_core.agent_selection]
+        seats_player = dict(zip(self.player_seats.values(), self.player_seats.keys()))
+        current_player = seats_player[current_seat_id]
+        current_idx = int(current_player[-1])
+        if len(joint_action[current_idx][0]) != self.joint_action_space[current_seat_id][0].n:
+            raise Exception("The input action dimension for player {} should be {}, not {}.".format(
+                current_seat_id, self.joint_action_space[current_seat_id][0].n,
+                len(joint_action[current_idx][0])))
+
+        if (np.array(joint_action[current_idx][0]) * self.action_masks_dict[self.env_core.agent_selection]).sum() == 0:
+            # raise Exception(f"The action of player {current_player} has illegal action, "
+            #                 f"input action = {joint_action[current_idx][0]} but the legal action should be {self.action_masks_dict[self.env_core.agent_selection]}")
+            warnings.warn(f"The action of player {current_player} has illegal action "
+                          f"input action = {joint_action[current_idx][0]} but the legal action should be {self.action_masks_dict[self.env_core.agent_selection]}")
+
+            action_mask = self.action_masks_dict[self.env_core.agent_selection]
+            rand_action = np.random.multinomial(1, np.array(action_mask) / sum(action_mask))
+            joint_action[current_idx] = [list(rand_action)]
+            return joint_action
+        return joint_action
 
     def step_before_info(self):
         return ''
@@ -372,6 +463,13 @@ class Bridge(Game, DictObservation):
                         "controlled_player_index": i, "controlled_player_name": player_name}
 
             all_observes.append(each)
+        if self.switch_seats:
+            switched_all_observes = []
+            for pid in self.env_core.agents:
+                current_seat = self.player_seats[pid]
+                _obs = all_observes[current_seat]
+                switched_all_observes.append(_obs)
+            return switched_all_observes
 
         return all_observes
 
@@ -381,14 +479,26 @@ class Bridge(Game, DictObservation):
                 self.env_core.dones[self.env_core.agent_selection]:
             return None
         current_player_id = self.player_id_map[self.env_core.agent_selection]
-        if joint_action[current_player_id] is None or joint_action[current_player_id][0] is None:
+        if not self.switch_seats and \
+                (joint_action[current_player_id] is None or joint_action[current_player_id][0] is None):
             return None
-        joint_action_decode = joint_action[current_player_id][0].index(1)
-        return joint_action_decode
+
+        current_seat_id = self.player_id_map[self.env_core.agent_selection]           #seat id
+        if self.switch_seats:
+            seats_player = dict(zip(self.player_seats.values(), self.player_seats.keys()))
+            current_player = seats_player[current_seat_id]
+            current_idx = int(current_player[-1])
+            current_action = joint_action[current_idx][0].index(1)
+            return current_action
+        else:
+            return joint_action[current_player_id][0].index(1)
+
 
     def is_terminal(self):
-        done = self.env_core.dones
-        return any(done.values())
+        # done = self.env_core.dones
+        if self.episode_count == 0:
+            self.done = True
+        return self.done  #any(done.values())
 
     def check_win(self):
         payoff=self.set_n_return()
@@ -707,7 +817,24 @@ class DefaultBridgeStateExtractor(BridgeStateExtractor):
 import time
 if __name__ == '__main__':
     cfg = {'seed': 42, "allow_step_back": False}
-    raw_env = BridgeEnv(cfg)
+    # raw_env = BridgeEnv(cfg)
+    # raw_env.reset()
+    # print(raw_env.get_perfect_information())
+    #
+    # raw_env2 = BridgeEnv(cfg)
+    # raw_env2.reset()
+    # print(raw_env2.get_perfect_information())
+
+    # raw_env = BridgeBase('bridge', 4)
+    # raw_env.seed(42)
+    # raw_env.reset()
+    # print(raw_env.env.get_perfect_information())
+    #
+    # raw_env2 = BridgeBase('bridge', 4)
+    # raw_env2.seed(42)
+    # raw_env2.reset()
+    # print(raw_env2.env.get_perfect_information())
+
 
     # pettingzoo_env = BridgeBase(name='bridge', num_players=4)
     # pettingzoo_env.reset()

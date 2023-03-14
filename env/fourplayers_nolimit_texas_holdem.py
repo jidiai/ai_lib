@@ -1,6 +1,8 @@
 # -*- coding:utf-8  -*-
 
 import copy
+import warnings
+
 from gym.utils import seeding
 from env.simulators.game import Game
 from env.obs_interfaces.observation import *
@@ -14,6 +16,8 @@ import random
 import numpy as np
 import rlcard
 from gym import spaces
+import math
+import itertools
 
 try:
     from pettingzoo import AECEnv
@@ -186,6 +190,13 @@ class raw_env(RLCardBase):
         def calculate_height(screen_height, divisor, multiplier, tile_size, offset):
             return int(multiplier * screen_height / divisor + tile_size * offset)
 
+        def display_text(text, coord, font, color, loc='center'):
+            _text = font.render(text, True,color)
+            _textRect = _text.get_rect()
+            setattr(_textRect, loc, coord)
+            self.screen.blit(_text, _textRect)
+
+
         screen_height = 1000
         screen_width = 1500  #int(screen_height * (1 / 20) + np.ceil(len(self.possible_agents) / 2) * (screen_height * 1 / 2))
 
@@ -219,6 +230,12 @@ class raw_env(RLCardBase):
                  8: {'value': 1, 'img': 'ChipWhite.png', 'number': 0}}
 
         stake_text_loc = [(150,100), (150, 800),(1300, 100), (1300, 800)]
+        font = get_font(os.path.join('Texas_Holdem/font', 'Minecraft.ttf'), 24)
+
+        display_text(f"Game {self.game_cnt}", (screen_width-350, screen_height/2), font, white, loc='topleft')
+        display_text(f"Payoff: {list(self.payoff.values())}", (screen_width-350, screen_height/2+40), font, white, loc='topleft')
+
+        display_text(f"Current Pot {self.env.game.dealer.pot}", (200, screen_height/2), font, white, loc='topleft')
 
         # Load and blit all images for each card in each player's hand
         for i, player in enumerate(self.possible_agents):
@@ -235,16 +252,19 @@ class raw_env(RLCardBase):
                     self.screen.blit(card_img, ((calculate_width(self, screen_width, i) - calculate_offset(state['hand'], j, tile_size)), calculate_height(screen_height, 4, 3, tile_size, 0)))
 
             # Load and blit text for player name
-            font = get_font(os.path.join('Texas_Holdem/font', 'Minecraft.ttf'), 36)
+
+            # player_seat = self.player_seats[player]
+            seat_player = dict(zip(self.player_seats.values(), self.player_seats.keys()))
+            player_id = seat_player[i]
 
             if i==self.small_blind_player:
-                _text = f'Player {str(i)} - small'
+                _text = f'Seat {str(i)} - small - ({player_id})'
                 _color=white
             elif i==self.big_blind_player:
-                _text = f'Player {str(i)} - big'
+                _text = f'Seat {str(i)} - big - ({player_id})'
                 _color=red
             else:
-                _text = f"Player {str(i)}"
+                _text = f"Seat {str(i)} - ({player_id})"
                 _color=white
 
             text = font.render(_text, True, _color)
@@ -286,10 +306,7 @@ class raw_env(RLCardBase):
                 textRect.center = ((calculate_width(self, screen_width, i) + tile_size * (21 / 20)), calculate_height(screen_height, 4, 3, tile_size, 1 / 2) - ((height + 1) * tile_size / 15))
             self.screen.blit(text, textRect)
 
-            stake_text = font.render(f"Stakes = {state['stakes'][i]}", True, white)
-            stake_textRect = stake_text.get_rect()
-            stake_textRect.topleft = stake_text_loc[i]
-            self.screen.blit(stake_text, stake_textRect)
+            display_text(f"Stakes = {state['stakes'][i]}", stake_text_loc[i], font, white, loc='topleft')
 
             if player in self.action_record:
                 action_name = Action(self.action_record[player]).name
@@ -298,15 +315,7 @@ class raw_env(RLCardBase):
                 else:
                     _color=white
 
-                action_text = font.render(f'{action_name}', True, _color)
-                action_textRect = action_text.get_rect()
-                action_textRect.topleft = (stake_text_loc[i][0], stake_text_loc[i][1]+30)
-                self.screen.blit(action_text, action_textRect)
-
-        # if (state['stage'].value ==0 and len(self.action_record)==3) or \
-        #         (state['stage'].value!=0 and len(self.action_record)==4):
-        # if len(self.action_record)==3:
-        #     self.action_record = {}
+                display_text(f'{action_name}', (stake_text_loc[i][0], stake_text_loc[i][1]+30), font, white, loc='topleft')
 
 
         # Load and blit public cards
@@ -342,10 +351,7 @@ class FourPlayersNoLimitTexasHoldem(Game, DictObservation):
         super(FourPlayersNoLimitTexasHoldem, self).__init__(conf['n_player'], conf['is_obs_continuous'],
                                                             conf['is_act_continuous'],conf['game_name'],
                                                             conf['agent_nums'], conf['obs_type'])
-        self.seed = None
-        self.done = False
         self.dones = {}
-        self.step_cnt = 0
         self.max_step = int(conf["max_step"])
 
         env_name = conf["game_name"]
@@ -354,18 +360,35 @@ class FourPlayersNoLimitTexasHoldem(Game, DictObservation):
 
         # for Texas Hold'em details, see https://github.com/datamllab/rlcard/blob/master/docs/games.md#no-limit-texas-holdem
 
+        self.episode_count = math.factorial(self.n_player)
 
-
-        self.episode_count = 30 if self.game_name in ['FourPlayersNoLimitTexasHoldem'] else 1
         self.won = {}
         self.n_return = [0] * self.n_player
         self.step_cnt = 0
         self.step_cnt_episode = 0
+        self.game_cnt = 1
+        self.env_core.env.env.env.game_cnt = self.game_cnt
         self.done = False
         self.seed = seed
         self.env_core.seed(self.seed)
         self.env_core.reset()
         self.player_id_map, self.player_id_reverse_map = self.get_player_id_map(self.env_core.agents)
+
+        other_cfg = conf.get('other_cfg', {})
+        self.switch_seats = other_cfg.get('switch_seats', False)
+        if self.switch_seats:
+            self.seats_permutation = list(itertools.permutations([i for i in range(self.n_player)], 4))
+            self.seats_permutation_idx = 0
+            self.player_seats = dict(zip(self.env_core.agents, self.seats_permutation[0]))
+            self.env_core.env.env.env.player_seats = self.player_seats
+            self.same_hand = other_cfg['same_hand']
+            if self.same_hand and self.seed is None:
+                self.seed =  random.randint(0,10000000)
+                self.env_core.seed(self.seed)
+                self.env_core.reset()
+
+        self.payoff = dict(zip(self.env_core.agents, [0]*self.n_player))#np.zeros(self.n_player)
+        self.env_core.env.env.env.payoff = self.payoff
 
         # set up action spaces
         self.new_action_spaces = self.load_action_space()
@@ -373,8 +396,11 @@ class FourPlayersNoLimitTexasHoldem(Game, DictObservation):
         self.action_dim = self.joint_action_space
         self.input_dimension = self.env_core.observation_spaces
 
+        self.action_masks_dict = dict(zip(self.env_core.agents, [np.ones(i[0].n) for i in self.action_dim]))
+
         # set up first all_observes
         obs, _, _, _ = self.env_core.last()
+        self.action_masks_dict[self.env_core.agent_selection] = obs['action_mask']
         self.current_state = obs
         self.all_observes = self.get_all_observes()
         self.init_info = self.get_info_after()
@@ -395,33 +421,55 @@ class FourPlayersNoLimitTexasHoldem(Game, DictObservation):
     def reset_per_episode(self):
         self.step_cnt_episode = 0
         self.done = False
+        self.game_cnt += 1
+        self.env_core.env.env.env.game_cnt = self.game_cnt
+        self.action_masks_dict = dict(zip(self.env_core.agents, [np.ones(i[0].n) for i in self.action_dim]))
+        if self.switch_seats:
+            self.seats_permutation_idx += 1
+            self.player_seats = dict(zip(list(self.player_seats.keys()),
+                                         self.seats_permutation[self.seats_permutation_idx]))
+            self.env_core.env.env.env.player_seats = self.player_seats
+            if self.same_hand:
+                self.env_core.seed(self.seed)
+
         self.env_core.reset()
         self.env_core.env.env.env.action_record = {}
         obs, _, _, _ = self.env_core.last()
         self.current_state = obs
+        self.action_masks_dict[self.env_core.agent_selection] = obs['action_mask']
         self.all_observes = self.get_all_observes()
         self.init_info = self.get_info_after()
         return self.all_observes
 
     def step(self, joint_action):
         self.step_cnt_episode += 1
-        self.is_valid_action(joint_action)
+        joint_action=self.is_valid_action(joint_action)             #if illegal action exists, switch to random policy
         info_before = self.step_before_info()
         joint_action_decode = self.decode(joint_action)
         self.env_core.step(joint_action_decode)
         obs, reward, episode_done, info_after = self.env_core.last()
         info_after = self.get_info_after()
         self.current_state = obs
+        self.action_masks_dict[self.env_core.agent_selection] = obs['action_mask']
         self.all_observes = self.get_all_observes()
         # print("debug all observes ", type(self.all_observes[0]["obs"]))
         self.set_n_return()
         self.step_cnt += 1
         if episode_done:
             self.episode_count -= 1
+            seats_payoff = np.array(self.env_core.env.env.env.env.get_payoffs())
+            seats_player = dict(zip(self.player_seats.values(), self.player_seats.keys()))
+            for seat in range(len(seats_payoff)):
+                player_id = seats_player[seat]
+                self.payoff[player_id] += seats_payoff[seat]
+            self.env_core.env.env.env.payoff = self.payoff
+
             if self.episode_count > 0:
                 self.all_observes = self.reset_per_episode()
                 info_after = self.init_info
         done = self.is_terminal()
+        if done:
+            print(f"Final payoff = {self.payoff}")
         return self.all_observes, reward, done, info_before, info_after
 
     def is_valid_action(self, joint_action):
@@ -430,19 +478,41 @@ class FourPlayersNoLimitTexasHoldem(Game, DictObservation):
             raise Exception("Input joint action dimension should be {}, not {}.".format(
                 self.n_player, len(joint_action)))
 
-        current_player_id = self.player_id_map[self.env_core.agent_selection]
-        if (self.env_core.agent_selection in self.env_core.agents) and \
-                (not self.env_core.dones[self.env_core.agent_selection]):
-            if joint_action[current_player_id] is None or joint_action[current_player_id][0] is None:
-                raise Exception("Action of current player is needed. Current player is {}, {}".format(
-                    current_player_id, self.env_core.agent_selection))
+        current_seat_id = self.player_id_map[self.env_core.agent_selection]       #actually the seat number
 
-        for i in range(self.n_player):
-            if joint_action[i] is None or joint_action[i][0] is None:
-                continue
-            if len(joint_action[i][0]) != self.joint_action_space[i][0].n:
+        if not self.switch_seats:
+            if (self.env_core.agent_selection in self.env_core.agents) and \
+                    (not self.env_core.dones[self.env_core.agent_selection]):
+                if joint_action[current_seat_id] is None or joint_action[current_seat_id][0] is None:
+                    raise Exception("Action of current player is needed. Current player is {}, {}".format(
+                        current_seat_id, self.env_core.agent_selection))
+
+            for i in range(self.n_player):
+                if joint_action[i] is None or joint_action[i][0] is None:
+                    continue
+                if len(joint_action[i][0]) != self.joint_action_space[i][0].n:
+                    raise Exception("The input action dimension for player {} should be {}, not {}.".format(
+                        i, self.joint_action_space[i][0].n, len(joint_action[i][0])))
+        else:
+            seats_player = dict(zip(self.player_seats.values(), self.player_seats.keys()))
+            current_player = seats_player[current_seat_id]
+            current_idx = int(current_player[-1])
+            if len(joint_action[current_idx][0])!=self.joint_action_space[current_seat_id][0].n:
                 raise Exception("The input action dimension for player {} should be {}, not {}.".format(
-                    i, self.joint_action_space[i][0].n, len(joint_action[i][0])))
+                    current_seat_id, self.joint_action_space[current_seat_id][0].n,
+                    len(joint_action[current_idx][0])))
+
+            if (np.array(joint_action[current_idx][0]) * self.action_masks_dict[self.env_core.agent_selection]).sum() == 0:
+                # raise Exception(f"The action of player {current_player} has illegal action, "
+                #                 f"input action = {joint_action[current_idx][0]} but the legal action should be {self.action_masks_dict[self.env_core.agent_selection]}")
+                warnings.warn(f"The action of player {current_player} has illegal action, "
+                              f"input action = {joint_action[current_idx][0]} but the legal action should be {self.action_masks_dict[self.env_core.agent_selection]}")
+
+                action_mask = self.action_masks_dict[self.env_core.agent_selection]
+                rand_action = np.random.multinomial(1, np.array(action_mask) / sum(action_mask))
+                joint_action[current_idx] = [list(rand_action)]
+
+        return joint_action
 
     def step_before_info(self, info=''):
         return info
@@ -497,10 +567,21 @@ class FourPlayersNoLimitTexasHoldem(Game, DictObservation):
         if self.env_core.agent_selection not in self.env_core.agents or \
                 self.env_core.dones[self.env_core.agent_selection]:
             return None
-        current_player_id = self.player_id_map[self.env_core.agent_selection]
-        if joint_action[current_player_id] is None or joint_action[current_player_id][0] is None:
+        current_seat_id = self.player_id_map[self.env_core.agent_selection]           #seat id
+
+        if not self.switch_seats and \
+                (joint_action[current_seat_id] is None or joint_action[current_seat_id][0] is None):
             return None
-        joint_action_decode = joint_action[current_player_id][0].index(1)
+
+        if self.switch_seats:
+            seats_player = dict(zip(self.player_seats.values(), self.player_seats.keys()))
+            current_player = seats_player[current_seat_id]
+            current_idx = int(current_player[-1])
+            current_action = joint_action[current_idx][0].index(1)
+            return current_action
+        else:
+            joint_action_decode = joint_action[current_seat_id][0].index(1)
+
         return joint_action_decode
 
     def set_n_return(self):
@@ -530,20 +611,23 @@ class FourPlayersNoLimitTexasHoldem(Game, DictObservation):
         for i in range(self.n_player):
             player_name = self.player_id_reverse_map[i]
             each_obs = copy.deepcopy(self.current_state)
-            if self.game_name in ['FourPlayersNoLimitTexasHoldem']:
-                if self.player_id_map[self.env_core.agent_selection] == i:
-                    each = {"obs": each_obs, "is_new_episode": is_new_episode,      #
-                            "current_move_player": self.env_core.agent_selection,
-                            "controlled_player_index": i, "controlled_player_name": player_name}
-                else:
-                    each = {"obs": None, "is_new_episode": is_new_episode,
-                            "current_move_player": self.env_core.agent_selection,
-                            "controlled_player_index": i, "controlled_player_name": player_name}
+            if self.player_id_map[self.env_core.agent_selection] == i:
+                each = {"obs": each_obs, "is_new_episode": is_new_episode,      #
+                        "current_move_player": self.env_core.agent_selection,
+                        "controlled_player_index": i, "controlled_player_name": player_name}
             else:
-                each = {"obs": each_obs, "is_new_episode": is_new_episode,
+                each = {"obs": None, "is_new_episode": is_new_episode,
                         "current_move_player": self.env_core.agent_selection,
                         "controlled_player_index": i, "controlled_player_name": player_name}
             all_observes.append(each)
+
+        if self.switch_seats:
+            switched_all_observes = []
+            for pid in self.env_core.agents:
+                current_seat = self.player_seats[pid]
+                _obs = all_observes[current_seat]
+                switched_all_observes.append(_obs)
+            return switched_all_observes
 
         return all_observes
 

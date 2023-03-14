@@ -8,13 +8,13 @@ import env
 import os
 
 
-def make(env_type, conf=None):
+def make(env_type, conf=None, seed=None):
     file_path = os.path.join(os.path.dirname(__file__), 'config.json')
     if not conf:
         with open(file_path) as f:
             conf = json.load(f)[env_type]
     class_literal = conf['class_literal']
-    return getattr(env, class_literal)(conf)
+    return getattr(env, class_literal)(conf, seed=seed)
 
 
 if __name__ == "__main__":
