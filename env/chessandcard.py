@@ -141,7 +141,6 @@ class ChessAndCard(Game, DictObservation):
 
         self.all_observes = self.get_all_observes()
         # print("debug all observes ", type(self.all_observes[0]["obs"]))
-        self.set_n_return()
         self.step_cnt += 1
         if episode_done:
             self.episode_count -= 1
@@ -156,6 +155,7 @@ class ChessAndCard(Game, DictObservation):
                 self.all_observes = self.reset_per_episode()
                 info_after = self.init_info
         done = self.is_terminal()
+        self.set_n_return()
         if done:
             print(f'Final payoff = {self.payoff}')
         return self.all_observes, reward, done, info_before, info_after
@@ -269,6 +269,10 @@ class ChessAndCard(Game, DictObservation):
         return joint_action_decode
 
     def set_n_return(self):
+        if self.game_name in ['mahjong_v4']:
+            self.n_return = list(self.payoff.values())
+            return
+
         for player_key, player_reward in self.env_core.rewards.items():
             player_id = self.player_id_map[player_key]
             self.n_return[player_id] += player_reward

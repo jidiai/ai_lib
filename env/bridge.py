@@ -340,7 +340,9 @@ class Bridge(Game, DictObservation):
         self.action_masks_dict = dict(zip(self.env_core.agents, self.new_action_spaces.values()))
 
         self.reset()
-
+    @property
+    def game_cnt(self):
+        return self.env_core.game_cnt
     def reset(self):
         self.step_cnt = 0
         self.done = False
@@ -409,6 +411,7 @@ class Bridge(Game, DictObservation):
                 info_after = self.init_info
 
         done = self.is_terminal()
+        self.set_n_return()
         if done:
             print(self.payoff)
         return self.all_observes, reward, done, info_before, info_after
@@ -535,9 +538,8 @@ class Bridge(Game, DictObservation):
         return self.joint_action_space[player_id]
 
     def set_n_return(self):
-        payoff = self.env_core.env.get_payoffs()
-        self.n_return = payoff
-        return payoff
+        self.n_return = list(self.payoff.values())
+        return self.n_return
 
 
 

@@ -169,7 +169,7 @@ class RLCardBase(AECEnv):
 
 
 
-class raw_env(RLCardBase):
+class RenderEnv(RLCardBase):
 
     metadata = {'render.modes': ['human', 'rgb_array'], "name": "texas_holdem_no_limit_v5"}
 
@@ -339,7 +339,7 @@ class raw_env(RLCardBase):
 
 
 def WrappedEnv(**kwargs):
-    env = raw_env(**kwargs)
+    env = RenderEnv(**kwargs)
     env = wrappers.TerminateIllegalWrapper(env, illegal_reward=-1)
     env = wrappers.AssertOutOfBoundsWrapper(env)
     env = wrappers.OrderEnforcingWrapper(env)
@@ -453,7 +453,6 @@ class FourPlayersNoLimitTexasHoldem(Game, DictObservation):
         self.action_masks_dict[self.env_core.agent_selection] = obs['action_mask']
         self.all_observes = self.get_all_observes()
         # print("debug all observes ", type(self.all_observes[0]["obs"]))
-        self.set_n_return()
         self.step_cnt += 1
         if episode_done:
             self.episode_count -= 1
@@ -463,11 +462,13 @@ class FourPlayersNoLimitTexasHoldem(Game, DictObservation):
                 player_id = seats_player[seat]
                 self.payoff[player_id] += seats_payoff[seat]
             self.env_core.env.env.env.payoff = self.payoff
+            # self.env_core.render()
 
             if self.episode_count > 0:
                 self.all_observes = self.reset_per_episode()
                 info_after = self.init_info
         done = self.is_terminal()
+        self.set_n_return()
         if done:
             print(f"Final payoff = {self.payoff}")
         return self.all_observes, reward, done, info_before, info_after
@@ -585,9 +586,10 @@ class FourPlayersNoLimitTexasHoldem(Game, DictObservation):
         return joint_action_decode
 
     def set_n_return(self):
-        for player_key, player_reward in self.env_core.rewards.items():
-            player_id = self.player_id_map[player_key]
-            self.n_return[player_id] += player_reward
+        # for player_key, player_reward in self.env_core.rewards.items():
+        #     player_id = self.player_id_map[player_key]
+        #     self.n_return[player_id] += player_reward
+        self.n_return = list(self.payoff.values())
 
     def get_player_id_map(self, player_keys):
         player_id_map = {}
@@ -636,20 +638,14 @@ class FourPlayersNoLimitTexasHoldem(Game, DictObservation):
 
     def get_info_after(self):
         info_after = ''
-        if self.game_name in ['FourPlayersNoLimitTexasHoldem']:
-            info_after = {}
-            for i in range(self.n_player):
-                temp_info = copy.deepcopy(self.env_core.env.env.env.env.game.get_state(i))
-                if self.game_name in ['FourPlayersNoLimitTexasHoldem']:
-                    for action_index, action in enumerate(temp_info['legal_actions']):
-                        temp_info['legal_actions'][action_index] = str(action)
-                    temp_info['stage'] = str(temp_info['stage'])
-                info_after[self.player_id_reverse_map[i]] = temp_info
+        # info_after = {}
+        # for i in range(self.n_player):
+        #     temp_info = self.env_core.env.env.env.env.game.get_state(i)
+        #
+        #     for action_index, action in enumerate(temp_info['legal_actions']):
+        #         temp_info['legal_actions'][action_index] = str(action)
+        #     temp_info['stage'] = str(temp_info['stage'])
+        #     info_after[self.player_id_reverse_map[i]] = temp_info
 
-        if self.game_name in ['leduc_holdem_v3']:
-            info_after = {}
-            for i in range(self.n_player):
-                temp_info = self.env_core.env.env.env.env.env.game.get_state(i)
-                info_after[self.player_id_reverse_map[i]] = copy.deepcopy(temp_info)
 
         return info_after
