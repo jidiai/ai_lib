@@ -270,7 +270,7 @@ if __name__ == "__main__":
     # 针对"classic_"环境，使用gym core 进行render;
     # gridgame类环境（"gobang_1v1", "reversi_1v1", "snakes_1v1", "sokoban_2p", "snakes_3v3",
     # "snakes_5p", "sokoban_1p", "cliffwalking"），使用replay工具包的replay.html，通过上传.json进行网页回放
-    render_mode = True
+    render_mode = False
 
     # gridgame类环境支持实时render（"gobang_1v1", "reversi_1v1", "snakes_1v1", "sokoban_2p", "snakes_3v3",
     # "snakes_5p", "sokoban_1p", "cliffwalking"）
@@ -286,4 +286,4 @@ if __name__ == "__main__":
         run_game(game, env_type, multi_part_agent_ids, actions_space, policy_list, render_mode)
 
     total_t = time.time()-time1
-    print(f'The game last for {total_t} second and {game.step_cnt} steps')
+    print(f'The game last for {total_t} second and {game.step_cnt} steps, n_return = {game.n_return}')

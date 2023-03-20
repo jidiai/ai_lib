@@ -14,7 +14,7 @@ def make(env_type, conf=None, seed=None):
         with open(file_path) as f:
             conf = json.load(f)[env_type]
     class_literal = conf['class_literal']
-    return getattr(env, class_literal)(conf, seed=seed)
+    return getattr(env, class_literal)(conf)
 
 
 if __name__ == "__main__":
