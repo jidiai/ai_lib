@@ -99,6 +99,7 @@ Apart from the necessary dependency in `requirements.txt`, some environments req
 - `Classic` https://www.pettingzoo.ml/classic 
   
   `pip install pettingzoo[classic]==1.12.0`
+- `pip install rlcard==1.0.4`
   
   (Using `pip install 'pettingzoo[classic]==1.12.0'` if you are using zsh.)
 - `gym-chinese-chess` https://github.com/bupticybee/gym_chinese_chess

@@ -308,7 +308,7 @@ class Bridge(Game, DictObservation):
 
         self.env_core = BridgeRender()
 
-        self.episode_count = math.factorial(self.n_player)
+        self.episode_count = 1 #math.factorial(self.n_player)
 
         self.won = {}
         self.n_return = [0]*self.n_player
