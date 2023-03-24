@@ -401,6 +401,8 @@ class FourPlayersNoLimitTexasHoldem(Game, DictObservation):
         # set up first all_observes
         obs, _, _, _ = self.env_core.last()
         self.action_masks_dict[self.env_core.agent_selection] = obs['action_mask']
+        obs = self.append_state(obs)
+
         self.current_state = obs
         self.all_observes = self.get_all_observes()
         self.init_info = self.get_info_after()
@@ -411,6 +413,7 @@ class FourPlayersNoLimitTexasHoldem(Game, DictObservation):
         self.done = False
         self.env_core.reset()
         obs, _, _, _ = self.env_core.last()
+        obs=self.append_state(obs)
         self.current_state = obs
         self.all_observes = self.get_all_observes()
         self.init_info = self.get_info_after()
@@ -435,11 +438,24 @@ class FourPlayersNoLimitTexasHoldem(Game, DictObservation):
         self.env_core.reset()
         self.env_core.env.env.env.action_record = {}
         obs, _, _, _ = self.env_core.last()
+        obs = self.append_state(obs)
         self.current_state = obs
         self.action_masks_dict[self.env_core.agent_selection] = obs['action_mask']
         self.all_observes = self.get_all_observes()
         self.init_info = self.get_info_after()
         return self.all_observes
+
+    def append_state(self, obs):
+        state = self.env_core.env.env.env.env.get_state(self.env_core.possible_agents.index(self.env_core.agent_selection))
+        obs['hand'] = state['raw_obs']['hand']
+        obs['public_cards'] = state['raw_obs']['public_cards']
+        obs['all_chips'] = state['raw_obs']['all_chips']
+        obs['my_chips'] = state['raw_obs']['my_chips']
+        obs['stakes'] = state['raw_obs']['stakes']
+        obs['pot'] = state['raw_obs']['pot']
+        obs['stage'] = state['raw_obs']['stage'].name
+        obs['current_player'] = state['raw_obs']['current_player']
+        return obs
 
     def step(self, joint_action):
         self.step_cnt_episode += 1
@@ -448,6 +464,7 @@ class FourPlayersNoLimitTexasHoldem(Game, DictObservation):
         joint_action_decode = self.decode(joint_action)
         self.env_core.step(joint_action_decode)
         obs, reward, episode_done, info_after = self.env_core.last()
+        obs = self.append_state(obs)
         info_after = self.get_info_after()
         self.current_state = obs
         self.action_masks_dict[self.env_core.agent_selection] = obs['action_mask']

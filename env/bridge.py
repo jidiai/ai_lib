@@ -721,7 +721,8 @@ class DefaultBridgeStateExtractor(BridgeStateExtractor):
                 hands_rep[current_player_id][card.card_id] = 1
             if game.round.is_bidding_over():
                 dummy = game.round.get_dummy()
-                other_known_player = dummy if dummy.player_id != current_player_id else game.round.get_declarer()
+                other_known_player = dummy if dummy.player_id != current_player_id else game.round.get_declarer()       #if the current player is not dummy, see the dummy
+                                                                                                                        #if the current player is dummy, see the declarer
                 for card in other_known_player.hand:
                     hands_rep[other_known_player.player_id][card.card_id] = 1
 
@@ -739,10 +740,10 @@ class DefaultBridgeStateExtractor(BridgeStateExtractor):
         if not game.is_over():
             if game.round.is_bidding_over():
                 declarer = game.round.get_declarer()
-                if current_player_id % 2 == declarer.player_id % 2:
-                    hidden_player_ids = [(current_player_id + 1) % 2, (current_player_id + 3) % 2]
+                if current_player_id % 2 == declarer.player_id % 2:     #if same team as the declarer
+                    hidden_player_ids = [(current_player_id + 1) % 4, (current_player_id + 3) % 4]      #0:[1,1]; 1: [0,0]; 2:[1,1]; 3:[0,0]
                 else:
-                    hidden_player_ids = [declarer.player_id, (current_player_id + 2) % 2]
+                    hidden_player_ids = [declarer.player_id, (current_player_id + 2) % 4]       #0: [declarer, 0], 1:[declarer, 1], 2:[declarer, 0]; 3:[declarer,1]
                 for hidden_player_id in hidden_player_ids:
                     for card in game.round.players[hidden_player_id].hand:
                         hidden_cards_rep[card.card_id] = 1
