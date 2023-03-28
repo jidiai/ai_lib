@@ -8,7 +8,7 @@ import env
 import os
 
 
-def make(env_type, conf=None):
+def make(env_type, conf=None, seed=None):
     file_path = os.path.join(os.path.dirname(__file__), 'config.json')
     if not conf:
         with open(file_path) as f:

@@ -171,9 +171,9 @@ Apart from the necessary dependency in `requirements.txt`, some environments req
 - `minigrid` https://github.com/maximecb/gym-minigrid
 - `Multi-Agent Particle Environment` https://www.pettingzoo.ml/mpe
 
-  `pip install pettingzoo[mpe]==1.10.0`
+  `pip install pettingzoo[mpe]==1.12.0`
   
-  (Using `pip install 'pettingzoo[mpe]==1.10.0'` if you are using zsh.)
+  (Using `pip install 'pettingzoo[mpe]==1.12.0'` if you are using zsh.)
 - `Overcooked-AI` https://github.com/HumanCompatibleAI/overcooked_ai
 - `MAgent` https://www.pettingzoo.ml/magent
   
@@ -201,9 +201,10 @@ Apart from the necessary dependency in `requirements.txt`, some environments req
 - `mujoco-py` https://github.com/openai/mujoco-py
 - `Classic` https://www.pettingzoo.ml/classic 
   
-  `pip install pettingzoo[classic]==1.10.0`
+  `pip install pettingzoo[classic]==1.12.0`
+- `pip install rlcard==1.0.4`
   
-  (Using `pip install 'pettingzoo[classic]==1.10.0'` if you are using zsh.)
+  (Using `pip install 'pettingzoo[classic]==1.12.0'` if you are using zsh.)
 - `gym-chinese-chess` https://github.com/bupticybee/gym_chinese_chess
 - `Wilderness Scavenger` https://github.com/inspirai/wilderness-scavenger
 - `REVIVE SDK` https://www.revive.cn/help/polixir-revive-sdk/text/introduction.html

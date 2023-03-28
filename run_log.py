@@ -4,6 +4,8 @@ import time
 import json
 import sys
 import numpy as np
+import matplotlib.pyplot as plt
+
 
 from env.chooseenv import make
 from utils.get_logger import get_logger
@@ -72,7 +74,7 @@ def get_joint_action_eval(game, multi_part_agent_ids, policy_list, actions_space
             a_obs = all_observes[agent_id]
             each = eval(function_name)(a_obs, action_space_list[i], game.is_act_continuous)
             joint_action.append(each)
-    print(joint_action)
+    # print(joint_action)
     return joint_action
 
 
@@ -201,9 +203,15 @@ def run_game(g, env_name, multi_part_agent_ids, actions_spaces, policy_list, ren
         info_dict = {"time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))}
         joint_act = get_joint_action_eval(g, multi_part_agent_ids, policy_list, actions_spaces, all_observes)
         all_observes, reward, done, info_before, info_after = g.step(joint_act)
+
+        print(reward)
+
         if render_mode:
             if hasattr(g, "render") and g.game_name.split("_")[0] == 'logistics':
                 g.render()
+            if hasattr(g, "render") and 'mahjong' in g.game_name:
+                g.render()
+
         if env_name.split("-")[0] in ["magent"]:
             info_dict["joint_action"] = g.decode(joint_act)
         if info_before:
@@ -253,8 +261,10 @@ if __name__ == "__main__":
     # "ParticleEnv-simple_speaker_listener-continuous", "ParticleEnv-simple_spread-continuous",
     # "ParticleEnv-simple_tag-continuous", "ParticleEnv-simple_world_comm-continuous", "olympics-curling",
     # "delivery_two_agents", "Logistics_Transportation2", "olympics-integrated", "wilderness-navigation",
-    # "chessandcard-leduc_holdem_v3", "revive-refrigerator", "finrl-stocktrading"
-    env_type = "olympics-billiard-competition"
+    # "chessandcard-leduc_holdem_v3", "revive-refrigerator", "finrl-stocktrading", "chessandcard-multiplayer_texas_holdem_no_limit"
+    # env_type =  "chessandcard-texas_holdem_no_limit_v3"     #"fourplayers_nolimit_texas_holdem"  "bridge"  "chessandcard-mahjong_v3"
+    time1 = time.time()
+    env_type =  "bridge"
     game = make(env_type)
 
     # 针对"classic_"环境，使用gym core 进行render;
@@ -274,3 +284,6 @@ if __name__ == "__main__":
         render_game(game)
     else:
         run_game(game, env_type, multi_part_agent_ids, actions_space, policy_list, render_mode)
+
+    total_t = time.time()-time1
+    print(f'The game last for {total_t} second and {game.step_cnt} steps, n_return = {game.n_return}')
