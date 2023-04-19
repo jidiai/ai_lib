@@ -1,0 +1,243 @@
+expr_group: mpe_simple_reference
+expr_name: marl_qmix
+log_dir: logs
+log_name: 'Marl'
+seed: 123
+eval_only: False
+
+distributed:
+  use: False
+  auto_connect:
+  auto_copy:
+  nodes:
+    master:
+      ip: 'auto'
+    workers:      
+      - ip:
+
+framework:
+  name: "marl"
+  sync_training: True
+  stopper:
+    type: "win_rate_stopper"
+    kwargs:
+      min_win_rate: 0.95
+      # min_win_rate: 0.9
+      max_steps: 300000
+
+agent_manager:
+  num_agents: 1
+  agent_ids: ['agent_0']
+  share_policies: True    #parameter-sharing
+
+evaluation_manager:
+  num_eval_rollouts: 30
+
+policy_data_manager:
+  update_func: "gym"
+  fields:
+    payoff:
+      type: "matrix"
+      missing_value: -100 
+    score:
+      type: "matrix"
+      missing_value: -100 
+    win:
+      type: "matrix"
+      missing_value: -100 
+    lose:
+      type: "matrix"
+      missing_value: -100 
+    reward:
+      type: "matrix"
+      missing_value: -100
+    exploitability:
+      type: "array"
+      missing_value: -100
+        
+monitor:
+  distributed:
+    resources:
+      num_cpus: 1
+      resources:
+        - ["node:${distributed.nodes.master.ip}",0.01]
+
+# TODO
+league:
+  role: "client"
+  server_ip: ""
+  server_port: ""
+
+rollout_manager:
+  distributed:
+    resources:
+      num_cpus: 1
+      resources:
+        - ["node:${distributed.nodes.master.ip}",0.01]
+  num_workers: 5
+  seed: 12345
+  saving_interval: 10000 # the sequence of dump model's weight
+  batch_size: ${rollout_manager.num_workers}
+  eval_batch_size: 100
+  eval_freq: 100 # epochs
+  min_samples: ${training_manager.batch_size}
+  rollout_metric_cfgs:
+    reward:
+      type: "sliding"
+      window_size: 20
+      init_list: [-10000]
+    win:
+      type: "sliding"
+      window_size: 20
+      init_list: [0,0,0,0,0]
+  worker:
+    distributed:
+      resources:
+        num_cpus: 1
+    rollout_length: 25
+    eval_rollout_length: 25
+    sample_length: 25
+    padding_length: # of not use in gr_football
+    rollout_func_name: "rollout_func_qmix"
+    rollout_func_cfg:
+      episode_mode: "traj"    #traj: whole trajectory (for PPO) and time-step
+    mix_opponent: False
+    envs:
+      - cls: "mpe"
+        id_prefix: "mpe"
+        env_id: "simple_reference_v2"
+        global_encoder: false
+
+
+training_manager:
+  distributed:
+    resources:
+      num_cpus: 1
+      resources:
+        - ["node:${distributed.nodes.master.ip}",0.01]
+ 
+  master_addr: "127.0.0.1"
+  master_port:  #"12774"
+  local_queue_size: 1
+  batch_size: 64 # how many data sample from DatasetServer per time.
+  num_prefetchers: 1
+  data_prefetcher:
+    distributed:
+      resources:
+        num_cpus: 1
+  num_trainers: 1
+  # control the frequency of remote parameter update
+  update_interval: 1
+  gpu_preload: False
+  trainer:
+    distributed:
+      resources:
+        num_cpus: 1
+        num_gpus: 1
+        resources:
+          - ["node:${distributed.nodes.master.ip}",0.01]
+    optimizer: "Adam"
+    actor_lr: 5e-4
+    critic_lr: 5e-4
+    opti_eps: 1.e-5
+    weight_decay: 0.05
+    lr_decay: False            #update_linear_schedule
+    lr_decay_epoch: 2000      #how many rollout steps till zero
+
+data_server:
+  distributed:
+    resources:
+      num_cpus: 1
+      resources:
+        - ["node:${distributed.nodes.master.ip}",0.01]
+  table_cfg:
+    capacity: 5000
+    sampler_type: "uniform"
+    sample_max_usage: 10000 # this might also be problematic when sync training...
+    rate_limiter_cfg:
+      min_size: ${training_manager.batch_size}
+      # r_w_ratio: 10.0 # cannot set it if sync training...
+  read_timeout: 120
+
+policy_server:
+  distributed:
+    resources:
+      num_cpus: 1
+      resources:
+        - ["node:${distributed.nodes.master.ip}",0.01]
+
+populations:
+  - population_id: 'pop1' # population_id
+    agent_group: "agent_0"
+    algorithm:
+      name: "QMix"
+      model_config:
+        model: "mpe_simple_reference.qmix"
+        initialization:
+          use_orthogonal: True
+          gain: 1.
+        actor:
+          network: mlp
+          layers:
+            - units: 64
+              activation: ReLU
+            - units: 32
+              activation: ReLU
+          output:
+            activation: False
+        critic:
+          network: mlp
+          layers:
+            - units: 64
+              activation: ReLU
+            - units: 32
+              activation: ReLU
+          output:
+            activation: False
+
+      # set hyper parameter
+      custom_config:
+        gamma: 0.999
+        use_cuda: False  # enable cuda or not
+        use_q_head: False
+        ppo_epoch: 5
+        num_mini_batch: 1  # the number of mini-batches
+        epsilon_start: 1.0
+        epsilon_finish: 0.05
+        epsilon_anneal_time: 3000
+        prev_act_inp: False
+        double_q: True
+        target_update_freq: 50
+
+        local_q_config:
+          n_agent: 2          #1 if parameter-sharing
+          use_orthogonal: True
+          hidden_size: 64
+          use_rnn_layer: False
+          recurrent_N: 1
+          gain: 1.
+          use_feature_normalization: True
+          use_ReLU: True
+          use_conv1d: False
+          stacked_frames: False
+          layer_N: 2
+        qmixer_config:
+          n_agent: 2
+          mixer_embed_dim: 64
+          hyper_hidden_dim: 64
+
+      policy_init_cfg:
+        agent_0: # agent_id
+          new_policy_ctr_start: -1
+          init_cfg:
+            - condition: "==0" # condition if True in order
+              strategy: random # now support pretrained, inherit_last, random
+#              policy_id: test_1
+#              policy_dir: logs/leduc_poker/marl_q_learning/Mix-2022-10-10-20-49-59/agent_0/agent_0_default_0/last # the initial policy dir
+
+            - condition: "default" # default case.
+              strategy: random # now support pretrained, inherit_last, random
+              # policy_id: defence_1
+              # policy_dir: trained_models/5v5/defence_1
+
+          initial_policies:

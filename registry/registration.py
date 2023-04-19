@@ -22,6 +22,8 @@ from algorithm.ppo.loss import PPOLoss
 from algorithm.ppo.trainer import PPOTrainer
 from algorithm.ppo.policy import PPO
 
+from algorithm.qmix.policy import QMix
+from algorithm.qmix.trainer import QMixTrainer
 
 from envs.gr_football.env import GRFootballEnv
 from envs.kuhn_poker.env import KuhnPokerEnv

@@ -2,6 +2,7 @@
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 export PYTHONPATH=$SCRIPT_DIR
 
+#python main_pbt.py --config expr/gr_football/grf_5v5_random_psro.yaml
 
 #python main_marl.py --config expr/leduc_poker/expr_q_learning_marl.yaml
 #python main_pbt.py --config expr/leduc_poker/expr_q_learning_psro.yaml
@@ -20,6 +21,9 @@ export PYTHONPATH=$SCRIPT_DIR
 #python main_marl.py --config expr/mpe/mpe_simple_reference_ppo_marl.yaml
 #python main_marl.py --config expr/mpe/mpe_simple_reference_mappo_marl.yaml
 #python main_marl.py --config expr/mpe/mpe_simple_reference_sac_marl.yaml
+#python main_marl.py --config expr/mpe/mpe_simple_reference_masac_marl.yaml
+python main_marl.py --config expr/mpe/mpe_simple_reference_qmix_marl.yaml
+
 
 #python main_marl.py --config expr/mpe/mpe_simple_speaker_listener_dqn_marl.yaml
 #python main_marl.py --config expr/mpe/mpe_simple_speaker_listener_madqn_marl.yaml
@@ -36,7 +40,7 @@ export PYTHONPATH=$SCRIPT_DIR
 #python main_marl.py --config expr/mpe/mpe_simple_adversary_ppo_marl.yaml
 #python main_marl.py --config expr/mpe/mpe_simple_adversary_mappo_marl.yaml
 
-python main_marl.py --config expr/mpe/mpe_simple_push_dqn_marl.yaml
+#python main_marl.py --config expr/mpe/mpe_simple_push_dqn_marl.yaml
 
 
 

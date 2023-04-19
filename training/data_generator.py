@@ -186,3 +186,94 @@ def recurrent_generator(data, num_mini_batch, rnn_data_chunk_length, device):
                 tmp_batch[k] = tmp_batch[k].reshape(-1, *tmp_batch[k].shape[2:])
 
         yield {k: v for k, v in tmp_batch.items()}
+
+
+def simple_team_data_generator(data, num_mini_batch, device, shuffle=False):
+    assert len(data[EpisodeKey.CUR_OBS].shape) == 4, "{}".format(
+        {k: v.shape for k, v in data.items()}
+    )
+    len_traj, n_rollout_threads, n_agent, _ = data[EpisodeKey.CUR_OBS].shape
+    batch_size = len_traj * n_rollout_threads  # * n_agent
+
+    batch = {}
+    for k in data:
+        try:
+            global_timer.record("data_copy_start")
+            if isinstance(data[k], np.ndarray):
+                batch[k] = torch.from_numpy(data[k]).to(device)
+            else:
+                batch[k] = data[k]
+            global_timer.time("data_copy_start", "data_copy_end", "data_copy")
+            batch[k] = batch[k].reshape(batch_size, *data[k].shape[2:])
+        except Exception:
+            Logger.error("k: {}".format(k))
+            raise Exception
+    # jh: special optimization
+    if num_mini_batch == 1:
+        # for k in batch:
+        #     # batch_size,n_agent,...
+        #     # -> batch_size*n_agent,...
+        #     batch[k] = batch[k].reshape(-1, *batch[k].shape[2:])
+        # global_timer.record("to_gpu_start")
+        # batch = {k: v for k, v in batch.items()}
+        # global_timer.time("to_gpu_start", "to_gpu_end", "to_gpu")
+        yield batch
+        return
+
+    mini_batch_size = int(np.ceil(batch_size // num_mini_batch))
+    assert mini_batch_size > 0
+
+    if shuffle:
+        rand = torch.randperm(batch_size)
+        sampler = [
+            rand[i * mini_batch_size : (i + 1) * mini_batch_size]
+            for i in range(num_mini_batch)
+        ]
+    else:
+        sampler = [
+            slice(i * mini_batch_size, (i + 1) * mini_batch_size)
+            for i in range(num_mini_batch)
+        ]
+    for indices in sampler:
+        tmp_batch = {}
+        for k in batch:
+            # batch_size,n_agent,...
+            # -> batch_size*n_agent,...
+            tmp_batch[k] = batch[k][indices]
+            tmp_batch[k] = tmp_batch[k].reshape(-1, *tmp_batch[k].shape[2:])
+        yield {k: v for k, v in tmp_batch.items()}
+
+def dummy_data_generator(data, num_mini_batch, device, shuffle=False):
+    assert len(data[EpisodeKey.CUR_OBS].shape) == 4, "{}".format(
+        {k: v.shape for k, v in data.items()}
+    )
+    batch_size, len_traj, n_agent, _ = data[EpisodeKey.CUR_OBS].shape
+    if num_mini_batch == 1:
+
+        yield data
+        return
+
+    mini_batch_size = int(np.ceil(batch_size // num_mini_batch))
+    assert mini_batch_size > 0
+
+    if shuffle:
+        rand = torch.randperm(batch_size)
+        sampler = [
+            rand[i * mini_batch_size : (i + 1) * mini_batch_size]
+            for i in range(num_mini_batch)
+        ]
+    else:
+        sampler = [
+            slice(i * mini_batch_size, (i + 1) * mini_batch_size)
+            for i in range(num_mini_batch)
+        ]
+    for indices in sampler:
+        tmp_batch = {}
+        for k in data:
+            # batch_size,n_agent,...
+            # -> batch_size*n_agent,...
+            tmp_batch[k] = data[k][indices]
+            tmp_batch[k] = tmp_batch[k].reshape(-1, *tmp_batch[k].shape[2:])
+        yield {k: v for k, v in tmp_batch.items()}
+
+
