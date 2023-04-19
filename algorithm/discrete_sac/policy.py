@@ -10,7 +10,7 @@ from gym.spaces import Discrete
 from torch.distributions import Categorical, Normal
 from torch import nn
 from utils.logger import Logger
-from utils.typing import DataTransferType, Tuple, Any, Dict, EpisodeID, List
+from utils._typing import DataTransferType, Tuple, Any, Dict, EpisodeID, List
 from utils.episode import EpisodeKey
 
 from algorithm.common.policy import Policy
@@ -91,6 +91,8 @@ class DiscreteSAC(nn.Module):
 
         self.observation_space = self.encoder.observation_space
         self.action_space = self.encoder.action_space
+        self.state_space = self.encoder.state_space
+
         assert isinstance(self.action_space, Discrete), str(self.action_space)
 
         self.device = torch.device(
@@ -108,7 +110,7 @@ class DiscreteSAC(nn.Module):
 
         self.critic_1 = model.Critic(
             self.model_config["critic"],
-            self.observation_space,
+            self.state_space,
             self.action_space,
             self.custom_config,
             self.model_config["initialization"],
@@ -117,7 +119,7 @@ class DiscreteSAC(nn.Module):
 
         self.critic_2 = model.Critic(
             self.model_config["critic"],
-            self.observation_space,
+            self.state_space,
             self.action_space,
             self.custom_config,
             self.model_config["initialization"],

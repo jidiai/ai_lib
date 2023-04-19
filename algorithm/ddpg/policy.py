@@ -9,7 +9,7 @@ from copy import deepcopy
 
 from torch import nn
 from utils.logger import Logger
-from utils.typing import DataTransferType, Tuple, Any, Dict, EpisodeID, List
+from utils._typing import DataTransferType, Tuple, Any, Dict, EpisodeID, List
 from utils.episode import EpisodeKey
 
 from gym.spaces import Box

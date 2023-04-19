@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 from torch.autograd import Variable
 
-from utils.typing import Dict, Any, List, Union, DataTransferType
+from utils._typing import Dict, Any, List, Union, DataTransferType
 from utils.episode import EpisodeKey
 
 

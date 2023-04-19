@@ -5,7 +5,7 @@ from functools import reduce
 import numpy as np
 from gym import spaces
 
-from .typing import DataTransferType, Dict, Sequence, Tuple, List, Any
+from ._typing import DataTransferType, Dict, Sequence, Tuple, List, Any
 
 
 def _get_batched(data: Any):

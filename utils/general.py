@@ -4,7 +4,7 @@ import torch
 import numpy as np
 import copy
 
-from .typing import Dict, Callable
+from ._typing import Dict, Callable
 
 
 # TODO(ming): will be replaced with many dicts

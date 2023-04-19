@@ -8,7 +8,7 @@ import numpy as np
 
 from torch import nn
 from utils.logger import Logger
-from utils.typing import DataTransferType, Tuple, Any, Dict, EpisodeID, List
+from utils._typing import DataTransferType, Tuple, Any, Dict, EpisodeID, List
 from utils.episode import EpisodeKey
 
 from algorithm.common.policy import Policy
@@ -93,6 +93,7 @@ class MAPPO(Policy):
 
         # jh: re-define observation space based on feature encoder
         observation_space = self.feature_encoder.observation_space
+        action_space = self.feature_encoder.action_space
 
         super(MAPPO, self).__init__(
             registered_name=registered_name,
@@ -115,6 +116,7 @@ class MAPPO(Policy):
         # global_observation_space = custom_config["global_state_space"][
         #     kwargs["env_agent_id"]
         # ]
+        breakpoint()
 
         actor = model.Actor(
             self.model_config["actor"],

@@ -10,7 +10,7 @@ from torch._C import device
 import torch.nn as nn
 
 from utils import errors
-from utils.typing import (
+from utils._typing import (
     DataTransferType,
     ModelConfig,
     Dict,
