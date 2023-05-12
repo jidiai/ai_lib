@@ -271,6 +271,8 @@ class ChessAndCard(Game, DictObservation):
     def set_n_return(self):
         if self.game_name in ['mahjong_v4']:
             self.n_return = list(self.payoff.values())
+            if 1 in self.n_return:      #someone wins, make the payoff zero-sum
+                self.n_return = [3*i if i==1 else i for i in self.n_return]
             return
 
         for player_key, player_reward in self.env_core.rewards.items():
