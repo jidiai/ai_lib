@@ -52,6 +52,109 @@ python examples/main.py --scenario classic_CartPole-v0 --algo dqn --reload_confi
 ## **训练例子 (Training Examples)**
 We provide implementations and tuned training configurations of vairous baseline reinforcement learning algorithms. More details can be found in [./examples/](examples/README.md). Feel free to try it yourself.
 
+We currently support the following benchmarking experiments:
+<table>
+    <tr>
+        <td>Algo</td>
+        <td>CartPole-v0</td> 
+        <td>MountainCar-v0</td> 
+        <td>Pendulum-v0</td> 
+        <td>gridworld</td> 
+   </tr>
+
+[comment]: <> (   <tr>)
+
+[comment]: <> (        <td colspan="2">合并行</td>    )
+
+[comment]: <> (   </tr>)
+   <tr>
+        <td>RANDOM</td> 
+        <td>√</td>
+        <td>√</td> 
+        <td>√</td> 
+        <td>√</td> 
+   </tr>
+    <tr>
+        <td>Q-learning</td> 
+        <td>-</td> 
+        <td>-</td> 
+        <td> - </td> 
+        <td> √ </td> 
+    <tr>
+        <td>Sarsa</td> 
+        <td>-</td> 
+        <td>-</td> 
+        <td> - </td> 
+        <td> √ </td> 
+    <tr>
+        <td>DQN</td> 
+        <td>√</td> 
+        <td>√</td> 
+        <td> - </td> 
+        <td> - </td> 
+    <tr>
+        <td>DDQN</td> 
+        <td>√</td> 
+        <td>√</td> 
+        <td> - </td> 
+        <td> - </td> 
+    <tr>
+        <td>Duelingq</td> 
+        <td>√</td> 
+        <td>√</td> 
+        <td> - </td>
+        <td> - </td> 
+    <tr>
+        <td>SAC</td>
+        <td>√</td> 
+        <td> √ </td> 
+        <td> √ </td>
+        <td> - </td> 
+
+[comment]: <> (        <td rowspan="8">classic_CartPole-v0</td>)
+
+   </tr>
+    <tr>
+        <td>PPO</td>
+        <td>√</td> 
+        <td> - </td> 
+        <td> - </td>
+        <td> - </td> 
+   </tr>
+    <tr>
+        <td>PG</td>
+        <td>√</td> 
+        <td> - </td> 
+        <td> - </td>
+        <td> - </td> 
+   </tr>
+     <tr>
+        <td>AC</td>
+        <td>√</td> 
+        <td> - </td> 
+        <td> - </td> 
+        <td> - </td> 
+   </tr>
+   </tr>
+     <tr>
+        <td>DDPG</td>
+        <td>√</td> 
+        <td> - </td> 
+        <td> - </td>
+        <td> - </td> 
+     <tr>
+        <td>TD3</td>
+        <td> - </td> 
+        <td> - </td> 
+        <td> √ </td>
+        <td> - </td> 
+   </tr>
+    
+
+</table>
+
+
+
 
 ## **额外项目依赖 (Extra Dependencies)**
 
