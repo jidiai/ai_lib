@@ -1080,5 +1080,26 @@
     "is_act_continuous": true,
     "agent_nums": [1, 1],
     "obs_type": ["vector", "vector"]
+  },
+  "overcookedai-integrated": {
+    "class_literal": "OvercookedAI_Integrated",
+    "n_player": 2,
+    "max_step": 2400,
+    "game_name": "overcookedai-integrated",
+    "is_obs_continuous": false,
+    "is_act_continuous": false,
+    "agent_nums": [1,1],
+    "obs_type": ["dict", "dict"],
+    "act_box": {"discrete_n": 6}
+  },
+  "taxing": {
+    "class_literal": "Taxing",
+    "n_player": 2,
+    "max_step": 500,
+    "game_name": "taxing",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [1,1],
+    "obs_type": ["vector", "vector"]
   }
 }

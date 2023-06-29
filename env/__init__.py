@@ -35,7 +35,8 @@ import_commmand = [
 "from .finrl_stocktrading import *",
 "from .olympics_billiard_competition import *",
 "from .fourplayers_nolimit_texas_holdem import *",
-"from .bridge import *"
+"from .bridge import *",
+"from .overcookedai_integrated import *",
 ]
 
 for i in import_commmand:
