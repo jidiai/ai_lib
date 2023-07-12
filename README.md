@@ -211,6 +211,7 @@ Apart from the necessary dependency in `requirements.txt`, some environments req
 - `FinRL` https://github.com/AI4Finance-Foundation/FinRL
 
   `pip install git+https://github.com/AI4Finance-Foundation/FinRL.git`
+- `TaxingAI`: clone the branch `git clone --branch jidi_version https://github.com/jidiai/TaxAI.git`
   
 - `Torch 1.7.0` 可选
   - 支持提交Torch训练后的模型.pth附属文件

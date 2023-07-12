@@ -37,6 +37,8 @@ import_commmand = [
 "from .fourplayers_nolimit_texas_holdem import *",
 "from .bridge import *",
 "from .overcookedai_integrated import *",
+"from .taxing_gov import *",
+"from .taxing_household import *",
 ]
 
 for i in import_commmand:

@@ -1092,14 +1092,24 @@
     "obs_type": ["dict", "dict"],
     "act_box": {"discrete_n": 6}
   },
-  "taxing": {
-    "class_literal": "Taxing",
-    "n_player": 2,
+  "taxing_gov": {
+    "class_literal": "Taxing_Gov",
+    "n_player": 1,
     "max_step": 500,
-    "game_name": "taxing",
+    "game_name": "taxing_gov",
     "is_obs_continuous": true,
     "is_act_continuous": true,
-    "agent_nums": [1,1],
-    "obs_type": ["vector", "vector"]
-  }
+    "agent_nums": [1],
+    "obs_type": ["dict"]
+    },
+  "taxing_household": {
+    "class_literal": "Taxing_Household",
+    "n_player": 4,
+    "max_step": 500,
+    "game_name": "taxing_household",
+    "is_obs_continuous": true,
+    "is_act_continuous": true,
+    "agent_nums": [1,1,1,1],
+    "obs_type": ["dict", "dict", "dict", "dict"]
+    }
 }
