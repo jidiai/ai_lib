@@ -41,7 +41,7 @@ conda activate ailib-venv
 ```
 **Install necessary dependencies**
 ```bash
-pip install -r requirement.txt
+pip install -r requirements.txt
 ```
 
 **Now have a go**
